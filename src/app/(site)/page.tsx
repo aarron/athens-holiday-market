@@ -26,7 +26,7 @@ const MARQUEE = [
   "Festive",
   "One of a Kind",
   "Shop Local",
-  "Under the Lights",
+  "Live Holiday Music",
 ];
 
 export default function HomePage() {

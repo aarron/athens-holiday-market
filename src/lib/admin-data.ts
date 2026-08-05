@@ -1,6 +1,6 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { applications, cycles, users } from "@/db/schema";
+import { applications, cycles, users, artists } from "@/db/schema";
 import type { Tally } from "@/components/admin/badges";
 
 /** The cycle currently being judged: the one with the most applications. */
@@ -42,6 +42,14 @@ export async function getApplication(id: number) {
         with: { user: { columns: { id: true, name: true, email: true, role: true } } },
       },
     },
+  });
+}
+
+/** The public artist profile linked to an application, if any. */
+export async function getArtistForApplication(applicationId: number) {
+  return db.query.artists.findFirst({
+    where: eq(artists.applicationId, applicationId),
+    columns: { id: true, slug: true, published: true },
   });
 }
 

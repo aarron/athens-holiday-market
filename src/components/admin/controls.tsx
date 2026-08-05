@@ -1,7 +1,15 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { castVote, addComment, setStatus, setBoothFee, sendDecision } from "@/lib/admin-actions";
+import {
+  castVote,
+  addComment,
+  setStatus,
+  setBoothFee,
+  sendDecision,
+  publishArtist,
+  unpublishArtist,
+} from "@/lib/admin-actions";
 
 type Vote = "yes" | "maybe" | "no";
 
@@ -157,6 +165,74 @@ export function DecisionControls({
         </button>
         {emailMsg && <p className="mt-2 text-sm text-ink-soft">{emailMsg}</p>}
       </div>
+    </div>
+  );
+}
+
+export function PublishControls({
+  applicationId,
+  published: initialPublished,
+  slug: initialSlug,
+}: {
+  applicationId: number;
+  published: boolean;
+  slug?: string;
+}) {
+  const [pending, start] = useTransition();
+  const [published, setPublished] = useState(initialPublished);
+  const [slug, setSlug] = useState(initialSlug);
+  const [msg, setMsg] = useState("");
+
+  return (
+    <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+      <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+        Public profile
+      </h2>
+      {published && slug ? (
+        <div className="mt-3 space-y-2">
+          <a
+            href={`/artists/${slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="block rounded-md bg-fern-soft px-4 py-2.5 text-center text-sm font-display font-bold text-fern-deep"
+          >
+            View public page ↗
+          </a>
+          <button
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                await unpublishArtist(applicationId);
+                setPublished(false);
+                setMsg("Hidden from the directory.");
+              })
+            }
+            className="w-full rounded-md border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
+          >
+            Unpublish
+          </button>
+        </div>
+      ) : (
+        <button
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              const r = await publishArtist(applicationId);
+              if (r && "ok" in r && r.ok) {
+                setPublished(true);
+                setSlug(r.slug);
+                setMsg("Published to the directory ✓");
+              } else {
+                setMsg((r && "error" in r && r.error) || "Couldn't publish.");
+              }
+            })
+          }
+          className="mt-3 w-full rounded-md bg-fern-deep px-4 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
+        >
+          {pending ? "Publishing…" : "Publish to directory"}
+        </button>
+      )}
+      {msg && <p className="mt-2 text-sm text-ink-soft">{msg}</p>}
     </div>
   );
 }

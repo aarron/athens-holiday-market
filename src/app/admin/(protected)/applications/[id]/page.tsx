@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getApplication, getJurors, tally } from "@/lib/admin-data";
+import { getApplication, getJurors, getArtistForApplication, tally } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
 import { StatusBadge, BoothFeeBadge, VoteTally } from "@/components/admin/badges";
-import { VoteButtons, CommentBox, DecisionControls } from "@/components/admin/controls";
+import { VoteButtons, CommentBox, DecisionControls, PublishControls } from "@/components/admin/controls";
 import { SafeImg } from "@/components/admin/safe-img";
 
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
@@ -23,6 +23,8 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
   const [app, jurors, me] = await Promise.all([getApplication(appId), getJurors(), getSessionUser()]);
   if (!app) notFound();
+
+  const artistProfile = await getArtistForApplication(appId);
 
   const myVote = app.votes.find((v) => v.user.email === me?.email)?.value;
   const voteByUser = new Map(app.votes.map((v) => [v.user.id, v.value]));
@@ -152,6 +154,14 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
               </div>
               <DecisionControls applicationId={app.id} status={app.status} boothFeePaid={app.boothFeePaid} />
             </div>
+          )}
+
+          {isAdmin && app.status === "accepted" && (
+            <PublishControls
+              applicationId={app.id}
+              published={artistProfile?.published ?? false}
+              slug={artistProfile?.slug}
+            />
           )}
         </aside>
       </div>

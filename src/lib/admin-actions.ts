@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { applications, votes, comments } from "@/db/schema";
+import { applications, votes, comments, artists, artistPhotos } from "@/db/schema";
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
 import { sendDecisionEmail } from "@/lib/emails";
+
+function slugify(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
 type VoteValue = "yes" | "maybe" | "no";
 type Status = "submitted" | "under_review" | "accepted" | "waitlisted" | "rejected";
@@ -65,4 +69,58 @@ export async function sendDecision(applicationId: number) {
   }
   const res = await sendDecisionEmail(app.email, app.name, app.status as "accepted" | "waitlisted" | "rejected");
   return res;
+}
+
+/** Create (or re-publish) a public artist profile from an accepted application. */
+export async function publishArtist(applicationId: number) {
+  await requireAdmin();
+  const app = await db.query.applications.findFirst({
+    where: eq(applications.id, applicationId),
+    with: { photos: { orderBy: (p, { asc }) => [asc(p.position)] } },
+  });
+  if (!app) return { error: "Not found" };
+
+  const existing = await db.query.artists.findFirst({ where: eq(artists.applicationId, applicationId) });
+  if (existing) {
+    await db.update(artists).set({ published: true }).where(eq(artists.id, existing.id));
+    revalidatePath(`/admin/applications/${applicationId}`);
+    revalidatePath("/artists");
+    return { ok: true, slug: existing.slug };
+  }
+
+  const base = slugify(app.name) || `artist-${applicationId}`;
+  let slug = base;
+  let i = 1;
+  while (await db.query.artists.findFirst({ where: eq(artists.slug, slug) })) slug = `${base}-${++i}`;
+
+  const [created] = await db
+    .insert(artists)
+    .values({
+      applicationId,
+      slug,
+      name: app.name,
+      bio: app.description,
+      medium: app.medium,
+      website: app.website || null,
+      published: true,
+    })
+    .returning({ id: artists.id });
+
+  if (app.photos.length) {
+    await db.insert(artistPhotos).values(
+      app.photos.slice(0, 6).map((p, idx) => ({ artistId: created.id, url: p.url, position: idx })),
+    );
+  }
+  revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath("/artists");
+  return { ok: true, slug };
+}
+
+/** Hide an artist from the public directory (keeps the record). */
+export async function unpublishArtist(applicationId: number) {
+  await requireAdmin();
+  await db.update(artists).set({ published: false }).where(eq(artists.applicationId, applicationId));
+  revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath("/artists");
+  return { ok: true };
 }

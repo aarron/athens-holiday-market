@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  Athens Holiday Market — mid-century modern design system.
+  Palette keyed off the logo: atomic magenta flower, flat brights, vermilion
+  frame, black slab wordmarks on warm paper. Flat color blocks, geometric
+  shapes, generous negative space. No gradients as decoration.
+*/
+
+@theme {
+  /* neutrals */
+  --color-ink: #17161b;
+  --color-ink-soft: #423e44;
+  --color-paper: #faf5ea;
+  --color-cream: #f3ead6;
+  --color-white: #ffffff;
+
+  /* brand brights (from the logo) */
+  --color-fuchsia: #d21c96; /* atomic flower / primary pop */
+  --color-poppy: #e23127; /* vermilion frame / alerts */
+  --color-fern: #6cae43; /* H */
+  --color-tangerine: #f07f22; /* o / y */
+  --color-teal: #17a898; /* l */
+  --color-chartreuse: #b7c72c; /* i */
+  --color-sky: #45bced; /* d */
+  --color-berry: #9c1c50; /* a */
+
+  /* tints for soft surfaces (secondary text on these stays from the hue) */
+  --color-fuchsia-soft: #fbe6f4;
+  --color-fern-soft: #eaf3e1;
+  --color-sky-soft: #e2f4fc;
+  --color-cream-soft: #f8f1e2;
+
+  /* type */
+  --font-display: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* radii — MCM keeps corners crisp; small rounds only */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  /* shadows — real offset + soft blur, warm-tinted */
+  --shadow-card: 0 2px 4px rgba(23, 22, 27, 0.04), 0 10px 24px -8px rgba(23, 22, 27, 0.14);
+  --shadow-lift: 0 6px 12px rgba(23, 22, 27, 0.08), 0 24px 48px -12px rgba(23, 22, 27, 0.22);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background-color: var(--color-fuchsia);
+    color: var(--color-white);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-berry);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  a {
+    color: inherit;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, ::before, ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
+
+/* Signature entrance — one authored moment, from an already-visible default */
+@keyframes ahm-rise {
+  from { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.ahm-rise {
+  animation: ahm-rise 0.9s var(--ease-out-expo) both;
+}
+
+/* Slow atomic-flower spin for the hero mark */
+@keyframes ahm-spin {
+  to { transform: rotate(360deg); }
+}
+.ahm-spin { animation: ahm-spin 60s linear infinite; }
+
+/* Marquee band */
+@keyframes ahm-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ahm-marquee { animation: ahm-marquee 32s linear infinite; }
+.ahm-marquee-group:hover .ahm-marquee { animation-play-state: paused; }

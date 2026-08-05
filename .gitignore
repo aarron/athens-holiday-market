@@ -43,5 +43,5 @@ next-env.d.ts
 # raw source assets (optimized copies go to Blob/public)
 /assets
 
-# drizzle
-/drizzle
+# drizzle (keep migrations; ignore studio cache)
+/drizzle/meta/_journal.bak

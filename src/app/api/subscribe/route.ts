@@ -4,6 +4,9 @@ import { randomUUID } from "crypto";
 import { db } from "@/db";
 import { subscribers } from "@/db/schema";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const schema = z.object({
   email: z.string().email(),
   name: z.string().max(120).optional(),

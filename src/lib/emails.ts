@@ -47,6 +47,47 @@ export async function sendApplicationReceived(to: string, name: string) {
   }
 }
 
+type Decision = "accepted" | "waitlisted" | "rejected";
+
+const DECISION_COPY: Record<Decision, { subject: string; heading: string; body: string }> = {
+  accepted: {
+    subject: `You're in! ${site.name} ${site.event.year}`,
+    heading: "Congratulations — you're in! 🎉",
+    body: `We're delighted to welcome you to the ${site.event.year} ${site.name}. We'll follow up soon with booth details, your booth fee, and setup and logistics for the market on ${site.event.days[0].label} and ${site.event.days[1].label}. Please keep an eye on your inbox.`,
+  },
+  waitlisted: {
+    subject: `${site.name} ${site.event.year} — waitlist`,
+    heading: "You're on the waitlist",
+    body: `Thank you for applying to the ${site.event.year} ${site.name}. Your work impressed the jury, and we've placed you on our waitlist. Spots do open up — if one becomes available, we'll reach out right away.`,
+  },
+  rejected: {
+    subject: `${site.name} ${site.event.year} — application update`,
+    heading: "Thank you for applying",
+    body: `Thank you for applying to the ${site.event.year} ${site.name}. We received many wonderful applications this year and, after careful review, we weren't able to offer you a booth this time. We'd genuinely love for you to apply again next year.`,
+  },
+};
+
+/** Send an applicant their decision. Best-effort. */
+export async function sendDecisionEmail(to: string, name: string, decision: Decision) {
+  if (!resend) {
+    console.warn("[emails] RESEND not configured; skipping decision email");
+    return { skipped: true as const };
+  }
+  const c = DECISION_COPY[decision];
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:24px">${c.heading}</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)},</p>
+    <p style="margin:0 0 14px;line-height:1.6">${c.body}</p>
+    <p style="margin:0;line-height:1.6">Warmly,<br/>The ${site.name} team</p>`;
+  try {
+    const res = await resend.emails.send({ from: EMAIL_FROM, to, subject: c.subject, html: wrap(inner) });
+    return res;
+  } catch (e) {
+    console.error("[emails] failed to send decision email:", e);
+    return { error: true as const };
+  }
+}
+
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }

@@ -16,7 +16,7 @@ export function SiteFooter() {
           <p className="mt-4 max-w-sm text-paper/70">{site.tagline}</p>
           <p className="mt-4 text-sm text-paper/50">
             Hosted at{" "}
-            <a href={site.host.url} className="underline underline-offset-4 hover:text-fuchsia">
+            <a href={site.host.url} className="underline underline-offset-4 hover:text-fern">
               {site.host.name}
             </a>
             , Athens, Georgia.
@@ -30,7 +30,7 @@ export function SiteFooter() {
           <ul className="mt-4 space-y-2.5">
             {site.nav.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="text-paper/80 hover:text-fuchsia">
+                <Link href={item.href} className="text-paper/80 hover:text-fern">
                   {item.label}
                 </Link>
               </li>
@@ -50,7 +50,7 @@ export function SiteFooter() {
             </div>
             <a
               href={mapsHref()}
-              className="mt-2 inline-block text-fuchsia underline underline-offset-4"
+              className="mt-2 inline-block text-fern underline underline-offset-4"
             >
               Get directions →
             </a>
@@ -63,7 +63,7 @@ export function SiteFooter() {
           <p>
             © {site.event.year} {site.name}. Shop locally for the holidays.
           </p>
-          <a href={`mailto:${site.contactEmail}`} className="hover:text-fuchsia">
+          <a href={`mailto:${site.contactEmail}`} className="hover:text-fern">
             {site.contactEmail}
           </a>
         </div>

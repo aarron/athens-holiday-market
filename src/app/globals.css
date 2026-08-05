@@ -16,7 +16,9 @@
   --color-white: #ffffff;
 
   /* brand brights (from the logo) */
-  --color-fuchsia: #d21c96; /* atomic flower / primary pop */
+  --color-fuchsia: #d21c96; /* atomic flower / logo mark */
+  --color-fern-deep: #3f7d22; /* accent on white surfaces + button fills (AA) */
+  --color-fern-deeper: #2c5817; /* button shadow */
   --color-poppy: #e23127; /* vermilion frame / alerts */
   --color-fern: #6cae43; /* H */
   --color-tangerine: #f07f22; /* o / y */
@@ -71,7 +73,7 @@
   }
 
   ::selection {
-    background-color: var(--color-fuchsia);
+    background-color: var(--color-fern-deep);
     color: var(--color-white);
   }
 
@@ -115,5 +117,5 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-.ahm-marquee { animation: ahm-marquee 32s linear infinite; }
+.ahm-marquee { animation: ahm-marquee 120s linear infinite; }
 .ahm-marquee-group:hover .ahm-marquee { animation-play-state: paused; }

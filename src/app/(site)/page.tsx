@@ -105,16 +105,18 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────────────── Marquee band ─────────────────────── */}
-      <div className="ahm-marquee-group overflow-hidden bg-fuchsia py-3.5">
+      <div className="ahm-marquee-group overflow-hidden bg-fern py-3.5">
+        {/* Two identical groups, each wide enough to exceed any viewport, so
+            translateX(-50%) loops seamlessly with no blank gap. */}
         <div className="ahm-marquee flex w-max whitespace-nowrap">
           {[0, 1].map((dup) => (
-            <div key={dup} className="flex items-center" aria-hidden={dup === 1}>
-              {MARQUEE.map((word) => (
-                <span key={word} className="flex items-center">
-                  <span className="px-6 font-display text-lg font-bold uppercase tracking-wide text-white">
+            <div key={dup} className="flex shrink-0 items-center" aria-hidden={dup === 1}>
+              {[...MARQUEE, ...MARQUEE, ...MARQUEE].map((word, i) => (
+                <span key={`${word}-${i}`} className="flex items-center">
+                  <span className="px-6 font-display text-lg font-bold uppercase tracking-wide text-ink">
                     {word}
                   </span>
-                  <Flower size={20} color="var(--color-white)" />
+                  <Flower size={20} color="var(--color-ink)" />
                 </span>
               ))}
             </div>
@@ -126,7 +128,7 @@ export default function HomePage() {
       <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div>
-            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fern-deep">
               Save the date
             </p>
             <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
@@ -192,7 +194,7 @@ export default function HomePage() {
       <section className="bg-cream-soft">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:items-center lg:py-28">
           <div className="relative">
-            <div className="overflow-hidden rounded-lg border-2 border-ink shadow-[var(--shadow-lift)]">
+            <div className="overflow-hidden rounded-lg shadow-[var(--shadow-lift)]">
               <Image
                 src="/photos/market-courtyard.jpg"
                 alt="Shoppers browsing handmade goods in the Big City Bread courtyard at the Athens Holiday Market"
@@ -311,7 +313,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────────────── Apply CTA ─────────────────────── */}
-      <section className="border-t-4 border-ink bg-fuchsia">
+      <section className="bg-fern-deep">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-5 py-16 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">

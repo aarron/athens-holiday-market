@@ -66,8 +66,8 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
           placeholder="you@email.com"
           className={`h-14 flex-1 rounded-md border-2 px-4 text-base outline-none transition-colors ${
             dark
-              ? "border-paper/25 bg-white/10 text-paper placeholder:text-paper/50 focus:border-fuchsia"
-              : "border-ink/20 bg-white text-ink placeholder:text-ink-soft/60 focus:border-fuchsia"
+              ? "border-paper/25 bg-white/10 text-paper placeholder:text-paper/50 focus:border-fern"
+              : "border-ink/20 bg-white text-ink placeholder:text-ink-soft/60 focus:border-fern-deep"
           }`}
         />
         <Button type="submit" size="lg" disabled={status === "loading"}>
@@ -84,7 +84,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
           type="checkbox"
           checked={isArtist}
           onChange={(e) => setIsArtist(e.target.checked)}
-          className="h-4.5 w-4.5 accent-fuchsia"
+          className="h-4.5 w-4.5 accent-fern-deep"
         />
         I&apos;m an artist interested in showing my work.
       </label>

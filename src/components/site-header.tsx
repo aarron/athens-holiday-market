@@ -26,7 +26,7 @@ export function SiteHeader() {
               width={1000}
               height={920}
               priority
-              className="h-[70px] w-auto sm:h-[86px]"
+              className="h-[88px] w-auto sm:h-[108px]"
             />
           </span>
         </Link>
@@ -40,12 +40,12 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 className={`relative rounded-md px-3.5 py-2 font-display text-[0.95rem] font-medium transition-colors ${
-                  active ? "text-fuchsia" : "text-ink hover:text-fuchsia"
+                  active ? "text-fern-deep" : "text-ink hover:text-fern-deep"
                 }`}
               >
                 {item.label}
                 {active && (
-                  <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 rounded-full bg-fuchsia" />
+                  <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 rounded-full bg-fern-deep" />
                 )}
               </Link>
             );

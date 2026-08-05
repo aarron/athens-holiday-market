@@ -8,7 +8,7 @@ export const site = {
   shortName: "AHM",
   tagline: "A handmade holiday, in the heart of Athens.",
   description:
-    "The Athens Holiday Market returns to the Big City Bread courtyard — two festive evenings of handmade gifts from local artists and makers. Shop locally for the holidays.",
+    "The Athens Holiday Market returns to the Big City Bread courtyard — two festive evenings of handmade gifts from local artists. Shop locally for the holidays.",
   url: "https://athensholidaymarket.com",
   contactEmail: "bcbartcollective@soupstudios.com",
   host: {

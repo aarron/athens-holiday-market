@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { site, mapsHref } from "@/lib/site";
 import { Flower, ColorWord } from "@/components/brand";
@@ -10,19 +11,19 @@ export const metadata: Metadata = {
 };
 
 const CATEGORIES = [
-  { label: "Ceramics", color: "var(--color-teal)" },
-  { label: "Textiles & Fiber", color: "var(--color-fern)" },
-  { label: "Jewelry", color: "var(--color-fuchsia)" },
-  { label: "Candles & Apothecary", color: "var(--color-tangerine)" },
-  { label: "Prints & Paper", color: "var(--color-sky)" },
-  { label: "Woodwork", color: "var(--color-berry)" },
-  { label: "Leather & Bags", color: "var(--color-chartreuse)" },
-  { label: "Tea & Treats", color: "var(--color-poppy)" },
+  { label: "Ceramics", color: "var(--color-teal)", img: "/photos/categories/ceramics.jpg" },
+  { label: "Textiles & Fiber", color: "var(--color-fern)", img: "/photos/categories/textiles.jpg" },
+  { label: "Jewelry", color: "var(--color-fuchsia)", img: "/photos/categories/jewelry.jpg" },
+  { label: "Candles & Apothecary", color: "var(--color-tangerine)", img: "/photos/categories/candles.jpg" },
+  { label: "Prints & Paper", color: "var(--color-sky)", img: "/photos/categories/prints.jpg" },
+  { label: "Woodwork", color: "var(--color-berry)", img: "/photos/categories/woodwork.jpg" },
+  { label: "Leather & Bags", color: "var(--color-chartreuse)", img: "/photos/categories/leather.jpg" },
+  { label: "Tea & Treats", color: "var(--color-poppy)", img: "/photos/categories/treats.jpg" },
 ];
 
 const MARQUEE = [
   "Handmade",
-  "Local Makers",
+  "Local Artists",
   "Festive",
   "One of a Kind",
   "Shop Local",
@@ -54,7 +55,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-5 max-w-xl text-lg text-white/85 sm:text-xl">
-              Two festive evenings of handmade gifts from local artists and makers, in the
+              Two festive evenings of handmade gifts from local artists, in the
               twinkling courtyard at {site.host.name}. {site.tagline}
             </p>
 
@@ -104,7 +105,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────────────── Marquee band ─────────────────────── */}
-      <div className="ahm-marquee-group overflow-hidden border-y-4 border-ink bg-fuchsia py-3.5">
+      <div className="ahm-marquee-group overflow-hidden bg-fuchsia py-3.5">
         <div className="ahm-marquee flex w-max whitespace-nowrap">
           {[0, 1].map((dup) => (
             <div key={dup} className="flex items-center" aria-hidden={dup === 1}>
@@ -152,7 +153,7 @@ export default function HomePage() {
               return (
                 <div
                   key={day.date}
-                  className="rounded-lg border-2 border-ink bg-white p-6 shadow-[var(--shadow-card)]"
+                  className="rounded-lg bg-white p-6 shadow-[var(--shadow-card)]"
                 >
                   <div
                     className="font-display text-6xl font-extrabold leading-none"
@@ -172,7 +173,7 @@ export default function HomePage() {
                 </div>
               );
             })}
-            <div className="rounded-lg border-2 border-dashed border-ink/30 p-6 sm:col-span-2">
+            <div className="rounded-lg bg-white p-6 shadow-[var(--shadow-card)] sm:col-span-2">
               <div className="flex items-start gap-3">
                 <Flower size={28} color="var(--color-tangerine)" />
                 <div>
@@ -211,7 +212,7 @@ export default function HomePage() {
 
           <div>
             <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-teal">
-              A courtyard full of makers
+              A courtyard full of artists
             </p>
             <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
               A little market with a lot of heart.
@@ -223,7 +224,7 @@ export default function HomePage() {
             </p>
             <p className="mt-4 text-lg text-ink-soft">
               It&apos;s the best kind of holiday shopping: no big-box, no shipping delays — just
-              good makers, warm bread, and the whole thing lit up for the season.
+              good artists, warm bread, and the whole thing lit up for the season.
             </p>
           </div>
         </div>
@@ -239,7 +240,7 @@ export default function HomePage() {
             Handmade, across every aisle.
           </h2>
           <p className="mt-5 text-lg text-ink-soft">
-            A juried mix of local artists and makers. Here&apos;s a taste of what fills the stalls —
+            A juried mix of local artists. Here&apos;s a taste of what fills the stalls —
             the full lineup drops closer to the event.
           </p>
         </div>
@@ -247,15 +248,33 @@ export default function HomePage() {
         <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {CATEGORIES.map((cat) => (
             <li key={cat.label}>
-              <div
-                className="group flex aspect-4/3 flex-col justify-between rounded-lg border-2 border-ink p-5 transition-transform duration-200 hover:-translate-y-1"
-                style={{ backgroundColor: cat.color }}
+              <Link
+                href="/artists"
+                className="group relative flex aspect-4/3 flex-col justify-end overflow-hidden rounded-lg p-4 shadow-[var(--shadow-card)] transition-transform duration-200 hover:-translate-y-1"
               >
-                <Flower size={26} color="rgba(255,255,255,0.9)" />
-                <span className="font-display text-lg font-bold leading-tight text-white">
-                  {cat.label}
-                </span>
-              </div>
+                <Image
+                  src={cat.img}
+                  alt={`${cat.label} — handmade at the Athens Holiday Market`}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                <Flower
+                  size={22}
+                  color="rgba(255,255,255,0.95)"
+                  className="absolute right-3 top-3 drop-shadow"
+                />
+                <div className="relative flex items-center gap-2">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                    style={{ backgroundColor: cat.color }}
+                  />
+                  <span className="font-display text-lg font-bold leading-tight text-white drop-shadow">
+                    {cat.label}
+                  </span>
+                </div>
+              </Link>
             </li>
           ))}
         </ul>
@@ -281,7 +300,7 @@ export default function HomePage() {
               Be the first to know.
             </h2>
             <p className="mt-4 max-w-md text-lg text-paper/70">
-              Dates, the artist lineup, and market news — straight to your inbox. Makers can opt in
+              Dates, the artist lineup, and market news — straight to your inbox. Artists can opt in
               to hear when applications open.
             </p>
           </div>

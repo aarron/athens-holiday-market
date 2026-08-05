@@ -45,7 +45,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
         <p className="font-display text-xl font-bold">You&apos;re on the list! 🎉</p>
         <p className={`mt-1 ${dark ? "text-paper/70" : "text-ink-soft"}`}>
           We&apos;ll email you as soon as this year&apos;s dates and artist lineup are set.
-          {isArtist && " We&apos;ve noted you're a maker interested in showing your work."}
+          {isArtist && " We&apos;ve noted you're an artist interested in showing your work."}
         </p>
       </div>
     );
@@ -86,7 +86,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
           onChange={(e) => setIsArtist(e.target.checked)}
           className="h-4.5 w-4.5 accent-fuchsia"
         />
-        I&apos;m an artist or maker interested in showing my work.
+        I&apos;m an artist interested in showing my work.
       </label>
 
       {status === "error" && (

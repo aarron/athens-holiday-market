@@ -13,16 +13,22 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b-2 border-ink/10 bg-paper/85 backdrop-blur-md">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-5 py-2.5 sm:px-8">
-        <Link href="/" aria-label={site.name} className="shrink-0 transition-transform hover:scale-[1.03]">
-          <Image
-            src="/brand/logo.png"
-            alt={site.name}
-            width={1000}
-            height={920}
-            priority
-            className="h-14 w-auto sm:h-16"
-          />
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+        <Link
+          href="/"
+          aria-label={site.name}
+          className="relative z-10 mt-2 shrink-0 self-start transition-transform duration-300 hover:scale-[1.02]"
+        >
+          <span className="block rounded-xl bg-white p-2.5 shadow-[var(--shadow-lift)] ring-1 ring-black/5">
+            <Image
+              src="/brand/logo.png"
+              alt={site.name}
+              width={1000}
+              height={920}
+              priority
+              className="h-[70px] w-auto sm:h-[86px]"
+            />
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">

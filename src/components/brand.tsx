@@ -17,6 +17,10 @@ export function Flower({
   spin?: boolean;
 }) {
   const petals = Array.from({ length: 8 }, (_, i) => (i * 360) / 8);
+  // Bulb-with-neck petal (rounded outer lobe pinching to a narrow neck at the
+  // center) — the mid-century atomic-flower shape from the logo.
+  const petal =
+    "M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z";
   return (
     <svg
       width={size}
@@ -28,18 +32,11 @@ export function Flower({
     >
       <g fill={color}>
         {petals.map((deg) => (
-          <ellipse
-            key={deg}
-            cx="50"
-            cy="21"
-            rx="13"
-            ry="16"
-            transform={`rotate(${deg} 50 50)`}
-          />
+          <path key={deg} d={petal} transform={`rotate(${deg} 50 50)`} />
         ))}
+        <circle cx="50" cy="50" r="9" />
       </g>
-      <circle cx="50" cy="50" r="13" fill={color} />
-      <circle cx="50" cy="50" r="6.5" fill="var(--color-white)" />
+      <circle cx="50" cy="50" r="4.5" fill="var(--color-white)" />
     </svg>
   );
 }

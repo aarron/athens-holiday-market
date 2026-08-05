@@ -25,11 +25,15 @@ export const applicationGuidelines: { title: string; body: string }[] = [
     body: "Work must be designed and made by you. No mass-produced, imported, or resale items.",
   },
   {
+    title: "Here in person, start to finish",
+    body: "You must be present at your booth to sell your own work, and stay for the full market — no early departures or breaking down early.",
+  },
+  {
     title: "Juried for quality",
     body: "A panel reviews every application. We curate for craftsmanship, originality, and a good mix across mediums.",
   },
   {
     title: "Bring your best",
-    body: "Photos should represent the actual work you'll sell at the market. (Full guidelines coming soon.)",
+    body: "Photos should represent the actual work you'll sell at the market.",
   },
 ];

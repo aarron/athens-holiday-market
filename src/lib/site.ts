@@ -31,6 +31,16 @@ export const site = {
     timeLabel: "5–9pm",
     year: 2026,
   },
+  // Artist application window. Opens the day after Labor Day; closes late October.
+  applications: {
+    opensAt: "2026-09-07T00:00:00-04:00",
+    opensLabel: "Monday, September 7, 2026",
+    closesAt: "2026-10-26T23:59:59-04:00",
+    closesLabel: "October 26, 2026",
+    decisionLabel: "a date to be announced",
+    maxPhotos: 3,
+    maxPhotoMb: 10,
+  },
   nav: [
     { href: "/", label: "Home" },
     { href: "/artists", label: "Artists" },

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { site, mapsHref } from "@/lib/site";
-import { Flower, ColorWord } from "@/components/brand";
+import { Flower } from "@/components/brand";
 import { ButtonLink } from "@/components/ui/button";
 import { SubscribeForm } from "@/components/subscribe-form";
 
@@ -48,17 +48,22 @@ export default function HomePage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/70 via-ink/45 to-ink/80" />
 
         <div className="mx-auto w-full max-w-7xl px-5 py-20 sm:px-8">
-          <div className="ahm-rise max-w-3xl">
-            <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
-              <Flower size={18} color="var(--color-fuchsia)" spin />
-              The market is back for {site.event.year}
-            </div>
-
-            <h1 className="font-display text-[clamp(2.75rem,8vw,6rem)] font-extrabold leading-[0.95] tracking-tight text-white">
-              Athens <ColorWord /> Market
+          <div className="ahm-rise max-w-2xl">
+            <h1>
+              <span className="inline-block rounded-xl bg-white p-4 shadow-[var(--shadow-lift)] sm:p-6">
+                <Image
+                  src="/brand/logo.png"
+                  alt="Athens Holiday Market"
+                  width={1000}
+                  height={920}
+                  priority
+                  className="h-auto w-[min(74vw,400px)]"
+                />
+              </span>
+              <span className="sr-only">Athens Holiday Market</span>
             </h1>
 
-            <p className="mt-5 max-w-xl text-lg text-white/85 sm:text-xl">
+            <p className="mt-7 max-w-xl text-lg text-white/85 sm:text-xl">
               Two festive evenings of handmade gifts from local artists and makers, in the
               twinkling courtyard at {site.host.name}. {site.tagline}
             </p>

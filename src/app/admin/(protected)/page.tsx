@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getJudgingCycle, listApplications, tally } from "@/lib/admin-data";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
+import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -41,6 +42,19 @@ export default async function AdminDashboard() {
     paid: apps.filter((a) => a.boothFeePaid).length,
   };
 
+  // Medium blend for the current cycle (accepted / applied per category).
+  const blendMap = new Map<string, { total: number; accepted: number }>();
+  for (const a of apps) {
+    const cat = a.mediumCategory ?? "Uncategorized";
+    const e = blendMap.get(cat) ?? { total: 0, accepted: 0 };
+    e.total += 1;
+    if (a.status === "accepted") e.accepted += 1;
+    blendMap.set(cat, e);
+  }
+  const blend: BlendRow[] = [...blendMap.entries()]
+    .map(([category, v]) => ({ category, ...v }))
+    .sort((a, b) => b.accepted - a.accepted || b.total - a.total);
+
   const rows: Row[] = apps.map((a) => ({
     id: a.id,
     name: a.name,
@@ -69,6 +83,8 @@ export default async function AdminDashboard() {
         <StatTile label="Rejected" value={stats.rejected} accent="var(--color-poppy)" />
         <StatTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" />
       </div>
+
+      <MediumBlend blend={blend} />
 
       <ApplicationsTable rows={rows} />
     </div>

@@ -11,7 +11,7 @@ import {
   PublishControls,
   SendArtistLinkButton,
 } from "@/components/admin/controls";
-import { SafeImg } from "@/components/admin/safe-img";
+import { PhotoGallery } from "@/components/admin/photo-gallery";
 
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -36,6 +36,11 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
   const voteByUser = new Map(app.votes.map((v) => [v.user.id, v.value]));
   const isAdmin = me?.role === "admin";
 
+  const socials = (app.socials ?? {}) as Record<string, string>;
+  const socialLinks = Object.entries(socials)
+    .filter(([, v]) => v && v.trim())
+    .map(([key, v]) => ({ key, url: socialUrl(key, v) }));
+
   return (
     <div>
       <Link href="/admin" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
@@ -48,7 +53,14 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             <h1 className="text-3xl font-extrabold">{app.name}</h1>
             <StatusBadge status={app.status} />
           </div>
-          <p className="mt-1 text-lg text-ink-soft">{app.medium}</p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            {app.mediumCategory && (
+              <span className="rounded-full bg-sky-soft px-2.5 py-0.5 text-xs font-bold text-sky">
+                {app.mediumCategory}
+              </span>
+            )}
+            <span className="text-lg text-ink-soft">{app.medium}</span>
+          </div>
         </div>
         <VoteTally tally={tally(app.votes)} />
       </div>
@@ -56,22 +68,8 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
         {/* Main column */}
         <div className="space-y-8">
-          {/* Photos */}
-          {app.photos.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {app.photos.map((p) => (
-                <a
-                  key={p.id}
-                  href={p.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block overflow-hidden rounded-lg bg-cream shadow-[var(--shadow-card)]"
-                >
-                  <SafeImg src={p.url} alt="Applicant work" flowerSize={32} className="aspect-square w-full object-cover" />
-                </a>
-              ))}
-            </div>
-          )}
+          {/* Photos — click to enlarge */}
+          <PhotoGallery photos={app.photos} />
 
           {/* Description */}
           <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
@@ -97,6 +95,25 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             />
             <InfoCard label="Share a booth?" value={app.shareBooth ? `Yes${app.shareBoothWith ? ` — ${app.shareBoothWith}` : ""}` : "No"} />
           </div>
+
+          {socialLinks.length > 0 && (
+            <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)]">
+              <div className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Socials</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {socialLinks.map(({ key, url }) => (
+                  <a
+                    key={key}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full border-2 border-ink/15 px-3 py-1 text-sm font-semibold capitalize hover:bg-cream"
+                  >
+                    {key} ↗
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Comments */}
           <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
@@ -185,6 +202,20 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
       </div>
     </div>
   );
+}
+
+function socialUrl(platform: string, value: string) {
+  const v = value.trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  const handle = v.replace(/^@/, "");
+  const bases: Record<string, string> = {
+    instagram: "https://instagram.com/",
+    facebook: "https://facebook.com/",
+    tiktok: "https://tiktok.com/@",
+    etsy: "https://etsy.com/shop/",
+  };
+  if (bases[platform]) return bases[platform] + handle;
+  return `https://${v}`;
 }
 
 function InfoCard({ label, value }: { label: string; value: React.ReactNode }) {

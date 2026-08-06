@@ -83,6 +83,7 @@ export async function ensureArtistForApplication(applicationId: number) {
       medium: app.medium,
       bio: app.description,
       website: app.website || null,
+      socials: (app.socials as Record<string, string>) ?? {},
       published: false,
     })
     .returning();

@@ -63,7 +63,11 @@ export const applications = pgTable(
     phone: text("phone"),
     website: text("website"),
     medium: text("medium").notNull(),
+    // Normalized canonical category (see lib/mediums.ts) for blend analysis.
+    mediumCategory: text("medium_category"),
     description: text("description").notNull(),
+    // { instagram, facebook, tiktok, etsy, ... } — reference for judges.
+    socials: jsonb("socials").$type<Record<string, string>>().default({}),
     shareBooth: boolean("share_booth").notNull().default(false),
     shareBoothWith: text("share_booth_with"),
     boothFeePaid: boolean("booth_fee_paid").notNull().default(false),

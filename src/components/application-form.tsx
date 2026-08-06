@@ -8,13 +8,18 @@ import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Flower } from "@/components/brand";
 import { site } from "@/lib/site";
+import { MEDIUM_CATEGORIES } from "@/lib/mediums";
 
 const schema = z.object({
   name: z.string().min(1, "Your name is required."),
   email: z.string().min(1, "Email is required.").email("Enter a valid email."),
   phone: z.string().min(3, "A cell number is required."),
   website: z.string().optional(),
+  instagram: z.string().optional(),
+  facebook: z.string().optional(),
+  tiktok: z.string().optional(),
   medium: z.string().min(1, "Tell us the medium of your work."),
+  mediumCategory: z.string().min(1, "Please choose a category."),
   description: z.string().min(1, "Please describe your work."),
   shareBooth: z.enum(["yes", "no"]),
   shareBoothWith: z.string().optional(),
@@ -76,12 +81,14 @@ export function ApplicationForm() {
         photoUrls.push(blob.url);
       }
       // 2) Submit the application with the photo URLs.
+      const { instagram, facebook, tiktok, ...rest } = values;
       const res = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...values,
+          ...rest,
           shareBooth: values.shareBooth === "yes",
+          socials: { instagram, facebook, tiktok },
           photoUrls,
         }),
       });
@@ -150,17 +157,52 @@ export function ApplicationForm() {
         />
       </div>
 
-      <div>
-        <label className={label} htmlFor="medium">
-          Medium of your work <span className="text-poppy">*</span>
-        </label>
-        <input
-          id="medium"
-          placeholder="e.g. Ceramics, handwoven textiles, jewelry…"
-          className={`mt-1.5 ${field}`}
-          {...register("medium")}
-        />
-        {errors.medium && <p className={errCls}>{errors.medium.message}</p>}
+      <fieldset>
+        <legend className={label}>Social channels</legend>
+        <p className="mt-0.5 text-sm text-ink-soft">
+          Optional, but they help the jury get to know your work.
+        </p>
+        <div className="mt-2 grid gap-4 sm:grid-cols-3">
+          <input placeholder="Instagram" className={field} {...register("instagram")} />
+          <input placeholder="Facebook" className={field} {...register("facebook")} />
+          <input placeholder="TikTok" className={field} {...register("tiktok")} />
+        </div>
+      </fieldset>
+
+      <div className="grid gap-7 sm:grid-cols-2">
+        <div>
+          <label className={label} htmlFor="mediumCategory">
+            Category <span className="text-poppy">*</span>
+          </label>
+          <select
+            id="mediumCategory"
+            defaultValue=""
+            className={`mt-1.5 ${field}`}
+            {...register("mediumCategory")}
+          >
+            <option value="" disabled>
+              Choose a category…
+            </option>
+            {MEDIUM_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          {errors.mediumCategory && <p className={errCls}>{errors.mediumCategory.message}</p>}
+        </div>
+        <div>
+          <label className={label} htmlFor="medium">
+            Medium of your work <span className="text-poppy">*</span>
+          </label>
+          <input
+            id="medium"
+            placeholder="e.g. hand-thrown stoneware"
+            className={`mt-1.5 ${field}`}
+            {...register("medium")}
+          />
+          {errors.medium && <p className={errCls}>{errors.medium.message}</p>}
+        </div>
       </div>
 
       <div>

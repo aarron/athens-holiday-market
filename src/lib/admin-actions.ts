@@ -102,6 +102,7 @@ export async function publishArtist(applicationId: number) {
       bio: app.description,
       medium: app.medium,
       website: app.website || null,
+      socials: (app.socials as Record<string, string>) ?? {},
       published: true,
     })
     .returning({ id: artists.id });

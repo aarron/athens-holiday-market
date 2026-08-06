@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, applicationPhotos, cycles } from "@/db/schema";
 import { applicationWindow } from "@/lib/applications";
+import { categorizeMedium } from "@/lib/mediums";
 import { site } from "@/lib/site";
 import { sendApplicationReceived } from "@/lib/emails";
 
@@ -15,7 +16,9 @@ const schema = z.object({
   email: z.string().trim().email().max(200),
   phone: z.string().trim().min(3).max(40),
   website: z.string().trim().max(300).optional().default(""),
+  socials: z.record(z.string(), z.string().max(300)).optional().default({}),
   medium: z.string().trim().min(1).max(300),
+  mediumCategory: z.string().trim().max(120).optional().default(""),
   description: z.string().trim().min(1).max(5000),
   shareBooth: z.boolean(),
   shareBoothWith: z.string().trim().max(200).optional().default(""),
@@ -59,7 +62,9 @@ export async function POST(req: Request) {
       email: d.email.toLowerCase(),
       phone: d.phone,
       website: d.website || null,
+      socials: Object.fromEntries(Object.entries(d.socials).filter(([, v]) => v && v.trim())),
       medium: d.medium,
+      mediumCategory: d.mediumCategory || categorizeMedium(`${d.mediumCategory} ${d.medium}`),
       description: d.description,
       shareBooth: d.shareBooth,
       shareBoothWith: d.shareBooth ? d.shareBoothWith || null : null,

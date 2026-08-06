@@ -112,6 +112,12 @@ export async function getParticipationHistory(
 }
 
 /** The cycle currently being judged: the one with the most applications. */
+/** The active (current) cycle, falling back to the most recent with applications. */
+export async function getActiveCycle() {
+  const list = await getCyclesWithCounts();
+  return list.find((c) => c.isActive) ?? list.find((c) => c.count > 0) ?? list[0] ?? null;
+}
+
 export async function getJudgingCycle() {
   const rows = await db
     .select({

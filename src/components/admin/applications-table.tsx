@@ -124,34 +124,31 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
           placeholder="Search artists or mediums…"
           className="h-10 min-w-[180px] flex-1 rounded-md border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
         />
-        <label className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Status</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className={selectCls}
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Payment</span>
-          <select
-            value={paymentFilter}
-            onChange={(e) => setPaymentFilter(e.target.value as typeof paymentFilter)}
-            className={selectCls}
-          >
-            {PAYMENT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Filter by:</span>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+          className={selectCls}
+          aria-label="Filter by status"
+        >
+          {STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={paymentFilter}
+          onChange={(e) => setPaymentFilter(e.target.value as typeof paymentFilter)}
+          className={selectCls}
+          aria-label="Filter by payment"
+        >
+          {PAYMENT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
         {hasFilters && (
           <button
             onClick={() => {

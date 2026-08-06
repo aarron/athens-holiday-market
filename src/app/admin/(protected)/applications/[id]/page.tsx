@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getApplication, getJurors, getArtistForApplication, tally } from "@/lib/admin-data";
+import {
+  getApplication,
+  getJurors,
+  getArtistForApplication,
+  getParticipationHistory,
+  tally,
+} from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
 import { StatusBadge, BoothFeeBadge, VoteTally } from "@/components/admin/badges";
 import {
@@ -15,6 +21,21 @@ import { PhotoGallery } from "@/components/admin/photo-gallery";
 
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
 export const dynamic = "force-dynamic";
+
+const HISTORY_LABEL: Record<string, string> = {
+  accepted: "Accepted",
+  waitlisted: "Waitlisted",
+  rejected: "Rejected",
+  submitted: "Applied",
+  under_review: "Applied",
+};
+const HISTORY_COLOR: Record<string, string> = {
+  accepted: "var(--color-fern-deep)",
+  waitlisted: "var(--color-tangerine)",
+  rejected: "var(--color-poppy)",
+  submitted: "var(--color-ink)",
+  under_review: "var(--color-sky)",
+};
 
 const VOTE_LABEL: Record<string, { label: string; color: string }> = {
   yes: { label: "Yes", color: "var(--color-fern-deep)" },
@@ -30,7 +51,10 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
   const [app, jurors, me] = await Promise.all([getApplication(appId), getJurors(), getSessionUser()]);
   if (!app) notFound();
 
-  const artistProfile = await getArtistForApplication(appId);
+  const [artistProfile, history] = await Promise.all([
+    getArtistForApplication(appId),
+    getParticipationHistory(app.email, app.name, appId),
+  ]);
 
   const myVote = app.votes.find((v) => v.user.email === me?.email)?.value;
   const voteByUser = new Map(app.votes.map((v) => [v.user.id, v.value]));
@@ -61,6 +85,24 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             )}
             <span className="text-lg text-ink-soft">{app.medium}</span>
           </div>
+          {history.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                History:
+              </span>
+              {history.map((h) => (
+                <span
+                  key={h.year}
+                  className="rounded-full bg-cream px-2.5 py-0.5 text-xs font-semibold text-ink-soft"
+                >
+                  {h.year} ·{" "}
+                  <span style={{ color: HISTORY_COLOR[h.status] ?? "var(--color-ink-soft)" }}>
+                    {HISTORY_LABEL[h.status] ?? h.status}
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <VoteTally tally={tally(app.votes)} />
       </div>

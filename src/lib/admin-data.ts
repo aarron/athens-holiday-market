@@ -1,7 +1,64 @@
-import { asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { asc, desc, eq, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, cycles, users, artists } from "@/db/schema";
 import type { Tally } from "@/components/admin/badges";
+
+/** All cycles (years) with their application counts, newest first. */
+export async function getCyclesWithCounts() {
+  return db
+    .select({
+      id: cycles.id,
+      year: cycles.year,
+      name: cycles.name,
+      isActive: cycles.isActive,
+      count: sql<number>`count(${applications.id})::int`,
+    })
+    .from(cycles)
+    .leftJoin(applications, eq(applications.cycleId, cycles.id))
+    .groupBy(cycles.id)
+    .orderBy(desc(cycles.year));
+}
+
+/** A person's participation across other years, matched by email or name. */
+export async function getParticipationHistory(
+  email: string,
+  name: string,
+  excludeApplicationId: number,
+) {
+  const conds = [];
+  const addr = (email ?? "").toLowerCase().trim();
+  if (addr && !addr.endsWith("@no-email.invalid")) {
+    conds.push(eq(sql`lower(${applications.email})`, addr));
+  }
+  const nm = (name ?? "").toLowerCase().trim();
+  if (nm && nm !== "(unknown)") {
+    conds.push(eq(sql`lower(trim(${applications.name}))`, nm));
+  }
+  if (conds.length === 0) return [];
+
+  const rows = await db
+    .select({ id: applications.id, year: cycles.year, status: applications.status })
+    .from(applications)
+    .innerJoin(cycles, eq(applications.cycleId, cycles.id))
+    .where(or(...conds))
+    .orderBy(desc(cycles.year));
+
+  // One entry per year, keeping the strongest outcome.
+  const RANK: Record<string, number> = {
+    accepted: 4,
+    waitlisted: 3,
+    submitted: 2,
+    under_review: 2,
+    rejected: 1,
+  };
+  const byYear = new Map<number, string>();
+  for (const r of rows) {
+    if (r.id === excludeApplicationId) continue;
+    const cur = byYear.get(r.year);
+    if (!cur || (RANK[r.status] ?? 0) > (RANK[cur] ?? 0)) byYear.set(r.year, r.status);
+  }
+  return [...byYear.entries()].sort((a, b) => b[0] - a[0]).map(([year, status]) => ({ year, status }));
+}
 
 /** The cycle currently being judged: the one with the most applications. */
 export async function getJudgingCycle() {

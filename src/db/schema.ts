@@ -209,6 +209,53 @@ export const contactMessages = pgTable("contact_messages", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/* ------------------------------------------------------------- broadcasts */
+export const broadcastSegmentEnum = pgEnum("broadcast_segment", [
+  "all",
+  "subscribed",
+  "artists",
+  "non_artists",
+]);
+export const broadcastStatusEnum = pgEnum("broadcast_status", ["draft", "sending", "sent"]);
+
+export const broadcasts = pgTable("broadcasts", {
+  id: serial("id").primaryKey(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(), // admin-authored markdown-ish source
+  segment: broadcastSegmentEnum("segment").notNull().default("subscribed"),
+  status: broadcastStatusEnum("status").notNull().default("draft"),
+  recipientCount: integer("recipient_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+});
+
+export const broadcastRecipients = pgTable(
+  "broadcast_recipients",
+  {
+    id: serial("id").primaryKey(),
+    broadcastId: integer("broadcast_id")
+      .notNull()
+      .references(() => broadcasts.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    resendId: text("resend_id"),
+    // sent | delivered | opened | clicked | bounced | complained
+    status: text("status").notNull().default("sent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("broadcast_recipients_resend_idx").on(t.resendId)],
+);
+
+export const broadcastsRelations = relations(broadcasts, ({ many }) => ({
+  recipients: many(broadcastRecipients),
+}));
+export const broadcastRecipientsRelations = relations(broadcastRecipients, ({ one }) => ({
+  broadcast: one(broadcasts, {
+    fields: [broadcastRecipients.broadcastId],
+    references: [broadcasts.id],
+  }),
+}));
+
 /* --------------------------------------------------------------- settings */
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),

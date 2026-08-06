@@ -44,6 +44,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 </span>
               )}
             </Link>
+            {user.role === "admin" && (
+              <>
+                <Link href="/admin/broadcasts" className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream">
+                  Broadcasts
+                </Link>
+                <Link href="/admin/subscribers" className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream">
+                  Subscribers
+                </Link>
+              </>
+            )}
           </nav>
 
           <div className="flex items-center gap-4">

@@ -1,32 +1,6 @@
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { site } from "@/lib/site";
-
-const wrap = (inner: string) => `
-  <div style="background:#faf5ea;padding:32px 16px;font-family:Helvetica,Arial,sans-serif;color:#17161b">
-    <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #ece5d6">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
-        <tr>
-          <td height="6" style="height:6px;background:#6cae43"></td>
-          <td height="6" style="height:6px;background:#f07f22"></td>
-          <td height="6" style="height:6px;background:#17a898"></td>
-          <td height="6" style="height:6px;background:#b7c72c"></td>
-          <td height="6" style="height:6px;background:#45bced"></td>
-          <td height="6" style="height:6px;background:#9c1c50"></td>
-          <td height="6" style="height:6px;background:#d21c96"></td>
-        </tr>
-      </table>
-      <div style="text-align:center;padding:30px 28px 10px">
-        <img src="${site.url}/brand/logo.png" alt="Athens Holiday Market" width="180"
-             style="width:180px;max-width:62%;height:auto;display:inline-block" />
-      </div>
-      <div style="padding:8px 34px 6px">${inner}</div>
-      <div style="padding:22px 34px 28px;border-top:1px solid #f1ebdc;color:#8a857f;font-size:12px;line-height:1.7">
-        <strong style="color:#57524d">${site.name}</strong> · ${site.location.name}<br/>
-        ${site.location.street} · ${site.location.city}, ${site.location.state}<br/>
-        Questions? <a href="mailto:${site.contactEmail}" style="color:#17a898;text-decoration:none">${site.contactEmail}</a>
-      </div>
-    </div>
-  </div>`;
+import { emailShell as wrap } from "@/lib/email-template";
 
 /** Confirmation that an artist's application was received. Best-effort. */
 export async function sendApplicationReceived(to: string, name: string) {

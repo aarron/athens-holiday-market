@@ -6,6 +6,7 @@ import { Flower, ColorWord } from "@/components/brand";
 import { ButtonLink } from "@/components/ui/button";
 import { SubscribeForm } from "@/components/subscribe-form";
 import { CalendarIcon, ClockIcon, MapPinIcon } from "@/components/icons";
+import { CountdownClock } from "@/components/countdown";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -133,6 +134,24 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+
+      {/* ─────────────────────── Countdown ─────────────────────── */}
+      <section className="bg-cream-soft">
+        <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
+          <div className="flex items-center justify-center gap-2">
+            <ClockIcon size={18} className="text-fuchsia" aria-hidden />
+            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+              The countdown is on
+            </p>
+          </div>
+          <h2 className="mt-3 text-center text-3xl font-extrabold sm:text-4xl">
+            Until the market opens.
+          </h2>
+          <div className="mt-8">
+            <CountdownClock />
+          </div>
+        </div>
+      </section>
 
       {/* ─────────────────────── Save the date ─────────────────────── */}
       <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">

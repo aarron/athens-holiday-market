@@ -4,6 +4,7 @@ import { applicationWindow, applicationGuidelines } from "@/lib/applications";
 import { ApplicationForm } from "@/components/application-form";
 import { SubscribeForm } from "@/components/subscribe-form";
 import { Flower } from "@/components/brand";
+import { getSessionUser } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {
   title: "Apply to sell",
@@ -23,11 +24,25 @@ const CHECKLIST = [
   "Whether you'd like to share a booth",
 ];
 
-export default function ApplyPage() {
-  const window = applicationWindow();
+export default async function ApplyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}) {
+  const { preview } = await searchParams;
+  // Staff can preview the live form before it opens with ?preview=1.
+  const user = preview ? await getSessionUser() : null;
+  const staffPreview = !!preview && (user?.role === "admin" || user?.role === "judge");
+  const window = staffPreview ? "open" : applicationWindow();
 
   return (
     <div className="mx-auto max-w-3xl px-5 pb-16 pt-24 sm:px-8 sm:pb-24 sm:pt-28">
+      {staffPreview && (
+        <div className="mb-6 rounded-lg border-2 border-dashed border-tangerine/60 bg-tangerine/10 px-4 py-2.5 text-center text-sm font-semibold text-tangerine">
+          Staff preview — the public sees the “opens {site.applications.opensLabel}” screen until then.
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center">
         <Flower size={52} color="var(--color-fuchsia)" spin className="mx-auto" />

@@ -1,7 +1,58 @@
 import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { applications, cycles, users, artists } from "@/db/schema";
+import { applications, cycles, users, artists, broadcasts, broadcastRecipients } from "@/db/schema";
 import type { Tally } from "@/components/admin/badges";
+
+export type CommEvent = {
+  label: string;
+  kind: "decision" | "broadcast";
+  sentAt: Date | null;
+  status: string;
+  statusAt: Date | null;
+};
+
+/**
+ * Every tracked email we've sent to this address — decision emails plus any
+ * broadcasts — with the latest Resend delivery status, newest first. Lets an
+ * admin confirm whether someone actually received (and opened) key messages.
+ */
+export async function getEmailComms(
+  email: string,
+  app: { decisionSentAt: Date | null; decisionGroup: string | null; decisionEmailStatus: string | null },
+): Promise<CommEvent[]> {
+  const addr = email.trim().toLowerCase();
+  const rows = await db
+    .select({
+      subject: broadcasts.subject,
+      sentAt: broadcasts.sentAt,
+      createdAt: broadcastRecipients.createdAt,
+      status: broadcastRecipients.status,
+      updatedAt: broadcastRecipients.updatedAt,
+    })
+    .from(broadcastRecipients)
+    .innerJoin(broadcasts, eq(broadcastRecipients.broadcastId, broadcasts.id))
+    .where(eq(sql`lower(${broadcastRecipients.email})`, addr));
+
+  const events: CommEvent[] = rows.map((r) => ({
+    label: r.subject,
+    kind: "broadcast",
+    sentAt: r.sentAt ?? r.createdAt,
+    status: r.status,
+    statusAt: r.updatedAt,
+  }));
+
+  if (app.decisionSentAt) {
+    events.push({
+      label: `Decision email${app.decisionGroup ? ` (${app.decisionGroup})` : ""}`,
+      kind: "decision",
+      sentAt: app.decisionSentAt,
+      status: app.decisionEmailStatus ?? "sent",
+      statusAt: null,
+    });
+  }
+
+  return events.sort((a, b) => (b.sentAt?.getTime() ?? 0) - (a.sentAt?.getTime() ?? 0));
+}
 
 /** All cycles (years) with their application counts, newest first. */
 export async function getCyclesWithCounts() {

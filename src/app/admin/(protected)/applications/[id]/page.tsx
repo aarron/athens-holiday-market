@@ -6,6 +6,7 @@ import {
   getJurors,
   getArtistForApplication,
   getParticipationHistory,
+  getEmailComms,
   tally,
 } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
@@ -62,9 +63,10 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
   const [app, jurors, me] = await Promise.all([getApplication(appId), getJurors(), getSessionUser()]);
   if (!app) notFound();
 
-  const [artistProfile, history] = await Promise.all([
+  const [artistProfile, history, comms] = await Promise.all([
     getArtistForApplication(appId),
     getParticipationHistory(app.email, app.name, appId),
+    getEmailComms(app.email, app),
   ]);
 
   const myVote = app.votes.find((v) => v.user.email === me?.email)?.value;
@@ -116,7 +118,6 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             </div>
           )}
         </div>
-        <VoteTally tally={tally(app.votes)} />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
@@ -133,42 +134,55 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             <p className="mt-2 whitespace-pre-line leading-relaxed">{app.description}</p>
           </div>
 
-          {/* Contact */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <InfoCard label="Email" value={<a href={`mailto:${app.email}`} className="text-fern-deep underline underline-offset-4">{app.email}</a>} />
-            <InfoCard label="Cell" value={app.phone ?? "—"} />
-            <InfoCard
-              label="Website"
-              value={
-                app.website ? (
-                  <a href={app.website.startsWith("http") ? app.website : `https://${app.website}`} target="_blank" rel="noreferrer" className="break-all text-fern-deep underline underline-offset-4">
-                    {app.website}
-                  </a>
-                ) : "—"
-              }
-            />
-            <InfoCard label="Share a booth?" value={app.shareBooth ? `Yes${app.shareBoothWith ? ` — ${app.shareBoothWith}` : ""}` : "No"} />
-          </div>
-
-          {socialLinks.length > 0 && (
-            <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)]">
-              <div className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Socials</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {socialLinks.map(({ key, url }) => (
+          {/* Artist details — everything about who they are, in one place */}
+          <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+            <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+              Artist details
+            </h2>
+            <dl className="mt-4 divide-y divide-ink/5">
+              <DetailRow label="Email">
+                <a href={`mailto:${app.email}`} className="break-all text-fern-deep underline underline-offset-4">
+                  {app.email}
+                </a>
+              </DetailRow>
+              <DetailRow label="Cell">{app.phone ?? "—"}</DetailRow>
+              <DetailRow label="Website">
+                {app.website ? (
                   <a
-                    key={key}
-                    href={url}
+                    href={app.website.startsWith("http") ? app.website : `https://${app.website}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full border-2 border-ink/15 px-3 py-1 text-sm font-semibold capitalize hover:bg-cream"
+                    className="break-all text-fern-deep underline underline-offset-4"
                   >
-                    {key}
-                    <ExternalIcon size={13} aria-hidden />
+                    {app.website}
                   </a>
-                ))}
-              </div>
-            </div>
-          )}
+                ) : (
+                  "—"
+                )}
+              </DetailRow>
+              <DetailRow label="Share a booth?">
+                {app.shareBooth ? `Yes${app.shareBoothWith ? ` — ${app.shareBoothWith}` : ""}` : "No"}
+              </DetailRow>
+              {socialLinks.length > 0 && (
+                <DetailRow label="Socials">
+                  <div className="flex flex-wrap gap-2">
+                    {socialLinks.map(({ key, url }) => (
+                      <a
+                        key={key}
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border-2 border-ink/15 px-3 py-1 text-sm font-semibold capitalize hover:bg-cream"
+                      >
+                        {key}
+                        <ExternalIcon size={13} aria-hidden />
+                      </a>
+                    ))}
+                  </div>
+                </DetailRow>
+              )}
+            </dl>
+          </div>
 
           {/* Comments */}
           <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
@@ -203,8 +217,11 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           </div>
 
           <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-            <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Jury votes</h2>
-            <ul className="mt-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Jury votes</h2>
+              <VoteTally tally={tally(app.votes)} />
+            </div>
+            <ul className="mt-4 space-y-2 border-t border-ink/5 pt-4">
               {jurors.map((j) => {
                 const v = voteByUser.get(j.id);
                 const style = v ? VOTE_LABEL[v] : null;
@@ -237,30 +254,41 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           {isAdmin && (
             <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
               <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
-                Decision email
+                Email history
               </h2>
-              {app.decisionSentAt ? (
-                <div className="mt-2 text-sm">
-                  <span className="font-semibold capitalize">{app.decisionGroup}</span> email —{" "}
-                  <span
-                    className="font-bold capitalize"
-                    style={{ color: RECEIPT_COLOR[app.decisionEmailStatus ?? "sent"] ?? "var(--color-ink)" }}
-                  >
-                    {app.decisionEmailStatus ?? "sent"}
-                  </span>
-                  <div className="mt-0.5 text-xs text-ink-soft">
-                    {new Date(app.decisionSentAt).toLocaleString()}
-                  </div>
-                </div>
-              ) : (
+              {comms.length === 0 ? (
                 <p className="mt-2 text-sm text-ink-soft">
-                  Not sent yet. Decisions go out in batches from{" "}
-                  <Link href="/admin/decisions" className="font-semibold text-fern-deep underline underline-offset-4">
-                    Send decisions
+                  No emails sent yet. Decisions and broadcasts go out from{" "}
+                  <Link href="/admin/broadcasts" className="font-semibold text-fern-deep underline underline-offset-4">
+                    Email
                   </Link>
                   .
                 </p>
+              ) : (
+                <ul className="mt-3 space-y-3">
+                  {comms.map((c, i) => (
+                    <li key={i} className="border-l-2 border-ink/10 pl-3 text-sm">
+                      <div className="font-semibold leading-snug">{c.label}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-ink-soft">
+                        <span>Sent {c.sentAt ? new Date(c.sentAt).toLocaleDateString() : "—"}</span>
+                        <span aria-hidden>·</span>
+                        <span
+                          className="font-bold capitalize"
+                          style={{ color: RECEIPT_COLOR[c.status] ?? "var(--color-ink)" }}
+                        >
+                          {c.status}
+                        </span>
+                        {c.statusAt && c.status !== "sent" && (
+                          <span>{new Date(c.statusAt).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               )}
+              <p className="mt-3 border-t border-ink/5 pt-2 text-[0.7rem] text-ink-soft/70">
+                Delivery status from Resend — confirm important emails were received &amp; opened.
+              </p>
             </div>
           )}
 
@@ -303,11 +331,11 @@ function socialUrl(platform: string, value: string) {
   return `https://${v}`;
 }
 
-function InfoCard({ label, value }: { label: string; value: React.ReactNode }) {
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-white p-4 shadow-[var(--shadow-card)]">
-      <div className="text-xs font-semibold uppercase tracking-wide text-ink-soft">{label}</div>
-      <div className="mt-1 font-medium">{value}</div>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-2.5 first:pt-0 last:pb-0">
+      <dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">{label}</dt>
+      <dd className="min-w-0 text-right font-medium">{children}</dd>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { requireStaff } from "@/lib/admin-auth";
 import { countPendingArtistReviews } from "@/lib/admin-data";
 import { signOutAction } from "@/lib/auth-actions";
+import { AdminNav } from "@/components/admin/admin-nav";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaff();
@@ -29,35 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 md:flex">
-            <Link href="/admin" className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream">
-              Applications
-            </Link>
-            <Link
-              href="/admin/artists"
-              className="relative rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream"
-            >
-              Artist pages
-              {pendingReviews > 0 && (
-                <span className="ml-1.5 rounded-full bg-tangerine px-1.5 py-0.5 text-xs font-bold text-white">
-                  {pendingReviews}
-                </span>
-              )}
-            </Link>
-            {user.role === "admin" && (
-              <>
-                <Link href="/admin/decisions" className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream">
-                  Decisions
-                </Link>
-                <Link href="/admin/broadcasts" className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream">
-                  Email
-                </Link>
-                <Link href="/admin/subscribers" className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream">
-                  Subscribers
-                </Link>
-              </>
-            )}
-          </nav>
+          <AdminNav role={user.role} pendingReviews={pendingReviews} />
 
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-ink-soft sm:inline">

@@ -36,6 +36,13 @@
       "when": 1786022285231,
       "tag": "0004_bizarre_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786024859265,
+      "tag": "0005_brief_triathlon",
+      "breakpoints": true
     }
   ]
 }

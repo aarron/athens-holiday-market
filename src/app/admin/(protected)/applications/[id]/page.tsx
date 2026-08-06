@@ -22,6 +22,16 @@ import { PhotoGallery } from "@/components/admin/photo-gallery";
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
+const RECEIPT_COLOR: Record<string, string> = {
+  sent: "var(--color-ink-soft)",
+  delivered: "var(--color-sky)",
+  opened: "var(--color-fern-deep)",
+  clicked: "var(--color-teal)",
+  bounced: "var(--color-poppy)",
+  complained: "var(--color-poppy)",
+  failed: "var(--color-poppy)",
+};
+
 const HISTORY_LABEL: Record<string, string> = {
   accepted: "Accepted",
   waitlisted: "Waitlisted",
@@ -218,6 +228,36 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                 <BoothFeeBadge paid={app.boothFeePaid} status={app.status} />
               </div>
               <DecisionControls applicationId={app.id} status={app.status} boothFeePaid={app.boothFeePaid} />
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+              <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                Decision email
+              </h2>
+              {app.decisionSentAt ? (
+                <div className="mt-2 text-sm">
+                  <span className="font-semibold capitalize">{app.decisionGroup}</span> email —{" "}
+                  <span
+                    className="font-bold capitalize"
+                    style={{ color: RECEIPT_COLOR[app.decisionEmailStatus ?? "sent"] ?? "var(--color-ink)" }}
+                  >
+                    {app.decisionEmailStatus ?? "sent"}
+                  </span>
+                  <div className="mt-0.5 text-xs text-ink-soft">
+                    {new Date(app.decisionSentAt).toLocaleString()}
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-ink-soft">
+                  Not sent yet. Decisions go out in batches from{" "}
+                  <Link href="/admin/decisions" className="font-semibold text-fern-deep underline underline-offset-4">
+                    Send decisions
+                  </Link>
+                  .
+                </p>
+              )}
             </div>
           )}
 

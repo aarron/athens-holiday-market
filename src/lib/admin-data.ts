@@ -1,4 +1,4 @@
-import { asc, desc, eq, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, cycles, users, artists } from "@/db/schema";
 import type { Tally } from "@/components/admin/badges";
@@ -135,6 +135,45 @@ export async function getArtistForAdmin(id: number) {
 export async function countPendingArtistReviews() {
   const rows = await db.select({ id: artists.id }).from(artists).where(isNotNull(artists.submittedAt));
   return rows.length;
+}
+
+export type DecisionGroup = "accepted" | "waitlist";
+const GROUP_STATUSES: Record<DecisionGroup, string[]> = {
+  accepted: ["accepted"],
+  waitlist: ["waitlisted", "rejected"],
+};
+
+export async function getDecisionGroups(cycleId: number) {
+  const apps = await db
+    .select({ status: applications.status, sent: applications.decisionSentAt })
+    .from(applications)
+    .where(eq(applications.cycleId, cycleId));
+  const build = (g: DecisionGroup) => {
+    const set = apps.filter((a) => GROUP_STATUSES[g].includes(a.status));
+    return { total: set.length, notified: set.filter((a) => a.sent).length };
+  };
+  return { accepted: build("accepted"), waitlist: build("waitlist") };
+}
+
+export async function getDecisionRecipients(cycleId: number, group: DecisionGroup) {
+  const apps = await db.query.applications.findMany({
+    where: and(
+      eq(applications.cycleId, cycleId),
+      inArray(applications.status, GROUP_STATUSES[group] as ("accepted" | "waitlisted" | "rejected")[]),
+    ),
+    with: { votes: { columns: { value: true } } },
+    orderBy: [asc(applications.name)],
+  });
+  return apps.map((a) => ({
+    id: a.id,
+    name: a.name,
+    email: a.email,
+    status: a.status,
+    hasEmail: !a.email.endsWith("@no-email.invalid"),
+    tally: tally(a.votes),
+    decisionSentAt: a.decisionSentAt ? a.decisionSentAt.toISOString() : null,
+    decisionEmailStatus: a.decisionEmailStatus,
+  }));
 }
 
 export function tally(votes: { value: "yes" | "maybe" | "no" }[]): Tally {

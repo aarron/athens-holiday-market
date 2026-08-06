@@ -26,6 +26,13 @@ function chunk<T>(arr: T[], n: number): T[][] {
 const unsubUrl = (token: string) => `${publicEnv.siteUrl}/unsubscribe?token=${token}`;
 const unsubApi = (token: string) => `${publicEnv.siteUrl}/api/unsubscribe?token=${token}`;
 
+function personalize(body: string, name: string | null) {
+  const first = (name || "").trim().split(/\s+/)[0] || "there";
+  return body
+    .replace(/\{\{\s*first_name\s*\}\}/gi, first)
+    .replace(/\{\{\s*name\s*\}\}/gi, name || "there");
+}
+
 /** Send a preview of the broadcast to the signed-in admin only. */
 export async function sendTestEmail(input: { subject: string; body: string }) {
   const admin = await requireAdmin();
@@ -33,7 +40,9 @@ export async function sendTestEmail(input: { subject: string; body: string }) {
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
   if (!resend) return { error: "Email isn't configured." };
 
-  const html = emailShell(renderMarkdown(parsed.data.body), { unsubscribeUrl: unsubUrl("preview") });
+  const html = emailShell(renderMarkdown(personalize(parsed.data.body, admin.name)), {
+    unsubscribeUrl: unsubUrl("preview"),
+  });
   try {
     await resend.emails.send({
       from: EMAIL_FROM,
@@ -63,7 +72,6 @@ export async function sendBroadcast(input: z.input<typeof composeSchema>) {
     .values({ subject, body, segment, status: "sending", recipientCount: recipients.length })
     .returning({ id: broadcasts.id });
 
-  const bodyHtml = renderMarkdown(body);
   const recRows: { broadcastId: number; email: string; resendId: string | null; status: string }[] = [];
 
   for (const batch of chunk(recipients, 100)) {
@@ -71,7 +79,7 @@ export async function sendBroadcast(input: z.input<typeof composeSchema>) {
       from: EMAIL_FROM,
       to: r.email,
       subject,
-      html: emailShell(bodyHtml, { unsubscribeUrl: unsubUrl(r.token) }),
+      html: emailShell(renderMarkdown(personalize(body, r.name)), { unsubscribeUrl: unsubUrl(r.token) }),
       headers: {
         "List-Unsubscribe": `<${unsubApi(r.token)}>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",

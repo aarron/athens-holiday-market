@@ -6,7 +6,6 @@ import {
   addComment,
   setStatus,
   setBoothFee,
-  sendDecision,
   publishArtist,
   unpublishArtist,
   sendArtistLink,
@@ -96,7 +95,6 @@ export function DecisionControls({
   const [pending, start] = useTransition();
   const [cur, setCur] = useState(status);
   const [paid, setPaid] = useState(boothFeePaid);
-  const [emailMsg, setEmailMsg] = useState("");
 
   return (
     <div className="space-y-5">
@@ -140,32 +138,6 @@ export function DecisionControls({
         </button>
       </div>
 
-      <div>
-        <p className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
-          Notify applicant
-        </p>
-        <button
-          disabled={pending}
-          onClick={() =>
-            start(async () => {
-              const res = await sendDecision(applicationId);
-              setEmailMsg(
-                res && "error" in res && res.error
-                  ? typeof res.error === "string"
-                    ? res.error
-                    : "Couldn't send — check Resend domain verification."
-                  : res && "skipped" in res
-                    ? "Email skipped (Resend not configured)."
-                    : "Decision email sent ✓",
-              );
-            })
-          }
-          className="mt-2 h-11 w-full rounded-md bg-ink text-sm font-display font-bold text-paper transition-colors hover:bg-ink-soft disabled:opacity-60"
-        >
-          {pending ? "Working…" : "Email decision"}
-        </button>
-        {emailMsg && <p className="mt-2 text-sm text-ink-soft">{emailMsg}</p>}
-      </div>
     </div>
   );
 }

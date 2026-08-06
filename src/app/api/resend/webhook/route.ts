@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { broadcastRecipients, subscribers } from "@/db/schema";
+import { broadcastRecipients, subscribers, applications } from "@/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,6 +80,18 @@ export async function POST(req: Request) {
       .update(broadcastRecipients)
       .set({ status, updatedAt: new Date() })
       .where(eq(broadcastRecipients.id, rec.id));
+  }
+
+  // Per-applicant decision-email receipts.
+  const app = await db.query.applications.findFirst({
+    where: eq(applications.decisionResendId, emailId),
+    columns: { id: true, decisionEmailStatus: true },
+  });
+  if (app && (RANK[status] ?? 0) >= (RANK[app.decisionEmailStatus ?? "sent"] ?? 0)) {
+    await db
+      .update(applications)
+      .set({ decisionEmailStatus: status })
+      .where(eq(applications.id, app.id));
   }
 
   // Suppress bounced / complained addresses from future sends.

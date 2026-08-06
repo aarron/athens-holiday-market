@@ -72,6 +72,11 @@ export const applications = pgTable(
     shareBoothWith: text("share_booth_with"),
     boothFeePaid: boolean("booth_fee_paid").notNull().default(false),
     boothFeePaidAt: timestamp("booth_fee_paid_at", { withTimezone: true }),
+    // Decision-email tracking (batch send + Resend receipts).
+    decisionGroup: text("decision_group"), // "accepted" | "waitlist"
+    decisionResendId: text("decision_resend_id"),
+    decisionEmailStatus: text("decision_email_status"), // sent|delivered|opened|bounced|failed
+    decisionSentAt: timestamp("decision_sent_at", { withTimezone: true }),
     // PayPal linkage (Phase 3)
     paypalInvoiceId: text("paypal_invoice_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

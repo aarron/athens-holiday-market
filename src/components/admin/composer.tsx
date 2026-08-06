@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
+import { getBroadcastTemplates } from "@/lib/email-templates";
 import { sendTestEmail, sendBroadcast } from "@/lib/broadcast-actions";
 
 type Segment = "all" | "artists" | "non_artists";
@@ -22,10 +23,12 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
   const [confirming, setConfirming] = useState(false);
 
   const recipientCount = counts[segment] ?? 0;
-  const previewHtml = useMemo(
-    () => emailShell(renderMarkdown(body || "_Your message will appear here…_")),
-    [body],
-  );
+  const previewHtml = useMemo(() => {
+    const sample = (body || "_Your message will appear here…_")
+      .replace(/\{\{\s*first_name\s*\}\}/gi, "Friend")
+      .replace(/\{\{\s*name\s*\}\}/gi, "Friend");
+    return emailShell(renderMarkdown(sample));
+  }, [body]);
 
   function onTest() {
     setMsg("");
@@ -52,6 +55,28 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-start">
       {/* Compose */}
       <div className="space-y-4">
+        <div>
+          <label className="mb-1 block text-sm font-semibold text-ink-soft">Start from a template</label>
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              const t = getBroadcastTemplates().find((x) => x.id === e.target.value);
+              if (t) {
+                setSubject(t.subject);
+                setBody(t.body);
+              }
+            }}
+            className="h-11 w-full rounded-md border-2 border-ink/15 bg-white px-3 text-sm outline-none focus:border-fern-deep"
+          >
+            <option value="">Blank — write from scratch</option>
+            {getBroadcastTemplates().map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <label className="mb-1 block text-sm font-semibold text-ink-soft">Subject</label>
           <input

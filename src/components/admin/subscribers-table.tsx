@@ -20,13 +20,20 @@ const STATUS_STYLES: Record<string, string> = {
   unsubscribed: "bg-[#fde7e6] text-poppy",
 };
 
-const FILTERS = ["all", "subscribed", "pending", "unsubscribed"] as const;
+const FILTERS = ["active", "subscribed", "pending", "unsubscribed", "all"] as const;
+const FILTER_LABEL: Record<string, string> = {
+  active: "Active",
+  subscribed: "Subscribed",
+  pending: "Pending",
+  unsubscribed: "Unsubscribed",
+  all: "All",
+};
 
 export function SubscribersTable({ rows }: { rows: SubRow[] }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("active");
   const [artistOnly, setArtistOnly] = useState(false);
 
   // add form
@@ -39,7 +46,8 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
     const needle = q.trim().toLowerCase();
     return rows.filter((r) => {
       if (needle && !`${r.email} ${r.name ?? ""}`.toLowerCase().includes(needle)) return false;
-      if (filter !== "all" && r.status !== filter) return false;
+      if (filter === "active" && r.status === "unsubscribed") return false;
+      else if (filter !== "active" && filter !== "all" && r.status !== filter) return false;
       if (artistOnly && !r.isArtist) return false;
       return true;
     });
@@ -121,11 +129,11 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`rounded-full px-3 py-1.5 text-sm font-semibold capitalize transition-colors ${
+                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                   filter === f ? "bg-ink text-paper" : "bg-cream text-ink-soft hover:bg-cream/70"
                 }`}
               >
-                {f}
+                {FILTER_LABEL[f]}
               </button>
             ))}
           </div>
@@ -141,7 +149,6 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
               <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
                 <th className="px-4 py-3 font-semibold">Subscriber</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Source</th>
                 <th className="px-4 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
@@ -162,7 +169,6 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-ink-soft">{r.source ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
                       {r.status === "unsubscribed" ? (

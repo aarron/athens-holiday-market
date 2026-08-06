@@ -16,7 +16,7 @@ async function main() {
   const values = rows.map((r) => ({
     email: r.email,
     name: r.name,
-    isArtist: false,
+    isArtist: true,
     status: r.status,
     unsubscribeToken: randomUUID(),
     source: "mailchimp",

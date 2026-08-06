@@ -3,6 +3,7 @@ import { site, mapsHref } from "@/lib/site";
 import { ContactForm } from "@/components/contact-form";
 import { Flower } from "@/components/brand";
 import { ButtonLink } from "@/components/ui/button";
+import { MapPinIcon, MailIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -42,12 +43,17 @@ export default function ContactPage() {
             <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-teal">
               Find the market
             </h2>
-            <p className="mt-3 font-display text-xl font-extrabold">{site.location.name}</p>
-            <address className="mt-1 not-italic text-ink-soft">
-              {site.location.street}
-              <br />
-              {site.location.city}, {site.location.state}
-            </address>
+            <div className="mt-3 flex items-start gap-2.5">
+              <MapPinIcon size={24} className="mt-0.5 shrink-0 text-teal" aria-hidden />
+              <div>
+                <p className="font-display text-xl font-extrabold">{site.location.name}</p>
+                <address className="mt-1 not-italic text-ink-soft">
+                  {site.location.street}
+                  <br />
+                  {site.location.city}, {site.location.state}
+                </address>
+              </div>
+            </div>
             <p className="mt-4 text-sm text-ink-soft">
               Held outside at{" "}
               <a
@@ -79,7 +85,8 @@ export default function ContactPage() {
             />
           </div>
 
-          <p className="text-center text-sm text-ink-soft">
+          <p className="flex flex-wrap items-center justify-center gap-1.5 text-center text-sm text-ink-soft">
+            <MailIcon size={16} className="text-fuchsia" aria-hidden />
             Prefer email? <a href={`mailto:${site.contactEmail}`} className="font-semibold text-fuchsia underline underline-offset-4">{site.contactEmail}</a>
           </p>
         </div>

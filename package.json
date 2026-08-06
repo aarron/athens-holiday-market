@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",
+    "@central-icons-react/round-outlined-radius-1-stroke-2": "^1.1.305",
     "@hookform/resolvers": "^5.7.1",
     "@neondatabase/serverless": "^1.1.0",
     "@react-email/components": "^1.0.12",

@@ -46,3 +46,6 @@ next-env.d.ts
 # drizzle (keep migrations; ignore studio cache)
 /drizzle/meta/_journal.bak
 scripts/data/
+
+# Claude Code local settings
+.claude/settings.local.json

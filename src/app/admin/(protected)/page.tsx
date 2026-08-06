@@ -34,14 +34,12 @@ export default async function AdminDashboard({
     );
   }
 
-  // Resolve the cycle to show: requested year → active-with-apps → most-recent-with-apps.
+  // Resolve the cycle to show: requested year → current (active) year → most-recent-with-apps.
   const withApps = cyclesList.filter((c) => c.count > 0);
-  const activeWithApps = cyclesList.find((c) => c.isActive && c.count > 0);
   const current =
     (year && cyclesList.find((c) => String(c.year) === year)) ||
-    activeWithApps ||
-    withApps[0] ||
     cyclesList.find((c) => c.isActive) ||
+    withApps[0] ||
     cyclesList[0];
 
   const isArchive = !current.isActive;

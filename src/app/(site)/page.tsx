@@ -5,6 +5,7 @@ import { site, mapsHref } from "@/lib/site";
 import { Flower, ColorWord } from "@/components/brand";
 import { ButtonLink } from "@/components/ui/button";
 import { SubscribeForm } from "@/components/subscribe-form";
+import { CalendarIcon, ClockIcon, MapPinIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -61,30 +62,39 @@ export default function HomePage() {
 
             {/* Event quick-facts */}
             <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-                  When
-                </dt>
-                <dd className="mt-1 font-display text-lg font-bold text-white">
-                  Dec {new Date(site.event.days[0].date + "T00:00").getDate()}–
-                  {new Date(site.event.days[1].date + "T00:00").getDate()}, {site.event.year}
-                </dd>
+              <div className="flex items-start gap-2.5">
+                <CalendarIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                    When
+                  </dt>
+                  <dd className="mt-1 font-display text-lg font-bold text-white">
+                    Dec {new Date(site.event.days[0].date + "T00:00").getDate()}–
+                    {new Date(site.event.days[1].date + "T00:00").getDate()}, {site.event.year}
+                  </dd>
+                </div>
               </div>
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-                  Time
-                </dt>
-                <dd className="mt-1 font-display text-lg font-bold text-white">
-                  {site.event.timeLabel}
-                </dd>
+              <div className="flex items-start gap-2.5">
+                <ClockIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                    Time
+                  </dt>
+                  <dd className="mt-1 font-display text-lg font-bold text-white">
+                    {site.event.timeLabel}
+                  </dd>
+                </div>
               </div>
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-                  Where
-                </dt>
-                <dd className="mt-1 font-display text-lg font-bold text-white">
-                  {site.location.name}
-                </dd>
+              <div className="flex items-start gap-2.5">
+                <MapPinIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                    Where
+                  </dt>
+                  <dd className="mt-1 font-display text-lg font-bold text-white">
+                    {site.location.name}
+                  </dd>
+                </div>
               </div>
             </dl>
 
@@ -169,15 +179,16 @@ export default function HomePage() {
                   <div className="text-ink-soft">
                     {d.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                   </div>
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-sm font-semibold">
-                    <Flower size={14} color={colors[i]} /> {site.event.timeLabel}
+                  <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-cream px-3 py-1 text-sm font-semibold">
+                    <ClockIcon size={15} style={{ color: colors[i] }} aria-hidden />
+                    {site.event.timeLabel}
                   </div>
                 </div>
               );
             })}
             <div className="rounded-lg bg-white p-6 shadow-[var(--shadow-card)] sm:col-span-2">
               <div className="flex items-start gap-3">
-                <Flower size={28} color="var(--color-tangerine)" />
+                <MapPinIcon size={26} className="mt-0.5 shrink-0 text-tangerine" aria-hidden />
                 <div>
                   <div className="font-display text-lg font-bold">{site.location.name}</div>
                   <div className="text-ink-soft">

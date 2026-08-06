@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { site, mapsHref } from "@/lib/site";
 import { Flower } from "@/components/brand";
+import { MapPinIcon, MailIcon, ArrowRightIcon } from "@/components/icons";
 
 export function SiteFooter() {
   return (
@@ -42,18 +43,22 @@ export function SiteFooter() {
           <h3 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-paper/50">
             Visit
           </h3>
-          <address className="mt-4 space-y-1 not-italic text-paper/80">
-            <div>{site.location.name}</div>
-            <div>{site.location.street}</div>
-            <div>
-              {site.location.city}, {site.location.state}
+          <address className="mt-4 flex gap-2.5 not-italic text-paper/80">
+            <MapPinIcon size={20} className="mt-0.5 shrink-0 text-fern" aria-hidden />
+            <div className="space-y-1">
+              <div>{site.location.name}</div>
+              <div>{site.location.street}</div>
+              <div>
+                {site.location.city}, {site.location.state}
+              </div>
+              <a
+                href={mapsHref()}
+                className="mt-2 inline-flex items-center gap-1 text-fern underline underline-offset-4"
+              >
+                Get directions
+                <ArrowRightIcon size={15} aria-hidden />
+              </a>
             </div>
-            <a
-              href={mapsHref()}
-              className="mt-2 inline-block text-fern underline underline-offset-4"
-            >
-              Get directions →
-            </a>
           </address>
         </div>
       </div>
@@ -63,7 +68,8 @@ export function SiteFooter() {
           <p>
             © {site.event.year} {site.name}. Shop locally for the holidays.
           </p>
-          <a href={`mailto:${site.contactEmail}`} className="hover:text-fern">
+          <a href={`mailto:${site.contactEmail}`} className="inline-flex items-center gap-1.5 hover:text-fern">
+            <MailIcon size={16} aria-hidden />
             {site.contactEmail}
           </a>
         </div>

@@ -10,7 +10,7 @@ export const site = {
   description:
     "The Athens Holiday Market returns to the Big City Bread courtyard — two festive evenings of handmade gifts from local artists. Shop locally for the holidays.",
   url: "https://athensholidaymarket.com",
-  contactEmail: "bcbartcollective@soupstudios.com",
+  contactEmail: "hello@athensholidaymarket.com",
   host: {
     name: "Big City Bread Cafe",
     url: "https://www.bigcitybreadcafe.com/",

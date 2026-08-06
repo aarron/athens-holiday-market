@@ -2,17 +2,28 @@ import { resend, EMAIL_FROM } from "@/lib/resend";
 import { site } from "@/lib/site";
 
 const wrap = (inner: string) => `
-  <div style="background:#faf5ea;padding:32px 0;font-family:Helvetica,Arial,sans-serif;color:#17161b">
-    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden">
-      <div style="background:#3f7d22;padding:22px 28px">
-        <div style="color:#fff;font-size:20px;font-weight:800;letter-spacing:-0.02em">
-          Athens <span style="color:#c6d42f">Holiday</span> Market
-        </div>
+  <div style="background:#faf5ea;padding:32px 16px;font-family:Helvetica,Arial,sans-serif;color:#17161b">
+    <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #ece5d6">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr>
+          <td height="6" style="height:6px;background:#6cae43"></td>
+          <td height="6" style="height:6px;background:#f07f22"></td>
+          <td height="6" style="height:6px;background:#17a898"></td>
+          <td height="6" style="height:6px;background:#b7c72c"></td>
+          <td height="6" style="height:6px;background:#45bced"></td>
+          <td height="6" style="height:6px;background:#9c1c50"></td>
+          <td height="6" style="height:6px;background:#d21c96"></td>
+        </tr>
+      </table>
+      <div style="text-align:center;padding:30px 28px 10px">
+        <img src="${site.url}/brand/logo.png" alt="Athens Holiday Market" width="180"
+             style="width:180px;max-width:62%;height:auto;display:inline-block" />
       </div>
-      <div style="padding:28px">${inner}</div>
-      <div style="padding:18px 28px;border-top:1px solid #eee;color:#7a7580;font-size:12px">
-        ${site.name} · ${site.location.name}, ${site.location.city}, ${site.location.state}<br/>
-        Questions? <a href="mailto:${site.contactEmail}" style="color:#3f7d22">${site.contactEmail}</a>
+      <div style="padding:8px 34px 6px">${inner}</div>
+      <div style="padding:22px 34px 28px;border-top:1px solid #f1ebdc;color:#8a857f;font-size:12px;line-height:1.7">
+        <strong style="color:#57524d">${site.name}</strong> · ${site.location.name}<br/>
+        ${site.location.street} · ${site.location.city}, ${site.location.state}<br/>
+        Questions? <a href="mailto:${site.contactEmail}" style="color:#17a898;text-decoration:none">${site.contactEmail}</a>
       </div>
     </div>
   </div>`;
@@ -44,6 +55,33 @@ export async function sendApplicationReceived(to: string, name: string) {
   } catch (e) {
     console.error("[emails] failed to send application-received:", e);
     return { error: true };
+  }
+}
+
+export const CONTACT_TO = "redacted@example.com";
+
+/** Forward a contact-form message to the organizer inbox. */
+export async function sendContactEmail(name: string, email: string, message: string) {
+  if (!resend) {
+    console.warn("[emails] RESEND not configured; contact message not forwarded");
+    return { skipped: true as const };
+  }
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:22px">New message from the website</h1>
+    <p style="margin:0 0 6px"><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p style="margin:0 0 14px"><strong>Email:</strong> ${escapeHtml(email)}</p>
+    <div style="border-top:1px solid #e6e0d2;padding-top:14px;white-space:pre-wrap;line-height:1.6">${escapeHtml(message)}</div>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to: CONTACT_TO,
+      replyTo: email,
+      subject: `Contact form: ${name}`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to forward contact message:", e);
+    return { error: true as const };
   }
 }
 

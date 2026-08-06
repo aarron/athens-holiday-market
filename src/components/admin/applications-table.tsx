@@ -16,12 +16,18 @@ export type Row = {
   photo: string | null;
 };
 
-const FILTERS = [
-  { key: "all", label: "All" },
-  { key: "pending", label: "To review" },
-  { key: "accepted", label: "Accepted" },
-  { key: "waitlisted", label: "Waitlisted" },
-  { key: "rejected", label: "Rejected" },
+const STATUS_OPTIONS = [
+  { value: "all", label: "All statuses" },
+  { value: "pending", label: "To review" },
+  { value: "accepted", label: "Accepted" },
+  { value: "waitlisted", label: "Waitlisted" },
+  { value: "rejected", label: "Rejected" },
+] as const;
+
+const PAYMENT_OPTIONS = [
+  { value: "all", label: "Any payment" },
+  { value: "paid", label: "Fee paid" },
+  { value: "unpaid", label: "Fee unpaid" },
 ] as const;
 
 type SortCol = "name" | "medium" | "yes" | "status" | "fee" | "recent";
@@ -33,16 +39,20 @@ const STATUS_RANK: Record<string, number> = {
   rejected: 4,
 };
 
+const selectCls =
+  "h-10 rounded-md border-2 border-ink/15 bg-paper px-2.5 text-sm font-semibold text-ink outline-none focus:border-fern-deep";
+
 export function ApplicationsTable({ rows }: { rows: Row[] }) {
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]["value"]>("all");
+  const [paymentFilter, setPaymentFilter] =
+    useState<(typeof PAYMENT_OPTIONS)[number]["value"]>("all");
   const [sortCol, setSortCol] = useState<SortCol>("recent");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
 
   function sortBy(col: SortCol) {
-    if (col === sortCol) {
-      setDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
+    if (col === sortCol) setDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
       setSortCol(col);
       setDir(col === "name" || col === "medium" ? "asc" : "desc");
     }
@@ -52,9 +62,16 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
     const needle = q.trim().toLowerCase();
     const out = rows.filter((r) => {
       if (needle && !`${r.name} ${r.medium}`.toLowerCase().includes(needle)) return false;
-      if (filter === "all") return true;
-      if (filter === "pending") return r.status === "submitted" || r.status === "under_review";
-      return r.status === filter;
+      // status
+      if (statusFilter === "pending") {
+        if (r.status !== "submitted" && r.status !== "under_review") return false;
+      } else if (statusFilter !== "all" && r.status !== statusFilter) {
+        return false;
+      }
+      // payment (only meaningful for accepted artists)
+      if (paymentFilter === "paid" && !(r.status === "accepted" && r.boothFeePaid)) return false;
+      if (paymentFilter === "unpaid" && !(r.status === "accepted" && !r.boothFeePaid)) return false;
+      return true;
     });
     out.sort((a, b) => {
       let cmp = 0;
@@ -80,10 +97,12 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
       return dir === "asc" ? cmp : -cmp;
     });
     return out;
-  }, [rows, q, filter, sortCol, dir]);
+  }, [rows, q, statusFilter, paymentFilter, sortCol, dir]);
 
-  const Th = ({ col, label, className = "" }: { col: SortCol; label: string; className?: string }) => (
-    <th className={`px-4 py-3 font-semibold ${className}`}>
+  const hasFilters = q || statusFilter !== "all" || paymentFilter !== "all";
+
+  const Th = ({ col, label }: { col: SortCol; label: string }) => (
+    <th className="px-4 py-3 font-semibold">
       <button
         onClick={() => sortBy(col)}
         className={`inline-flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-ink ${
@@ -91,9 +110,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
         }`}
       >
         {label}
-        <span className="text-[0.6rem]">
-          {sortCol === col ? (dir === "asc" ? "▲" : "▼") : "↕"}
-        </span>
+        <span className="text-[0.6rem]">{sortCol === col ? (dir === "asc" ? "▲" : "▼") : "↕"}</span>
       </button>
     </th>
   );
@@ -105,21 +122,48 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search artists or mediums…"
-          className="h-10 flex-1 rounded-md border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
+          className="h-10 min-w-[180px] flex-1 rounded-md border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
         />
-        <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
-                filter === f.key ? "bg-ink text-paper" : "bg-cream text-ink-soft hover:bg-cream/70"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <label className="flex items-center gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Status</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            className={selectCls}
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Payment</span>
+          <select
+            value={paymentFilter}
+            onChange={(e) => setPaymentFilter(e.target.value as typeof paymentFilter)}
+            className={selectCls}
+          >
+            {PAYMENT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {hasFilters && (
+          <button
+            onClick={() => {
+              setQ("");
+              setStatusFilter("all");
+              setPaymentFilter("all");
+            }}
+            className="h-10 rounded-md px-3 text-sm font-semibold text-ink-soft hover:bg-cream"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       <div className="overflow-x-auto">

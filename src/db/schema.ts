@@ -195,6 +195,16 @@ export const subscribers = pgTable("subscribers", {
   confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
 });
 
+/* -------------------------------------------------------- contact messages */
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  message: text("message").notNull(),
+  ip: text("ip"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /* --------------------------------------------------------------- settings */
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),

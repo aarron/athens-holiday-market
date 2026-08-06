@@ -18,7 +18,7 @@ export default async function ArtistsPage() {
   const artists = await listPublishedArtists();
 
   return (
-    <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
+    <div className="mx-auto max-w-7xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-28">
       <div className="max-w-2xl">
         <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fern-deep">
           The lineup

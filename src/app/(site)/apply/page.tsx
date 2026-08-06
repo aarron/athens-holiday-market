@@ -27,7 +27,7 @@ export default function ApplyPage() {
   const window = applicationWindow();
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
+    <div className="mx-auto max-w-3xl px-5 pb-16 pt-24 sm:px-8 sm:pb-24 sm:pt-28">
       {/* Header */}
       <div className="text-center">
         <Flower size={52} color="var(--color-fuchsia)" spin className="mx-auto" />

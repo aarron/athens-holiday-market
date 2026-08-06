@@ -53,7 +53,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   const socialEntries = Object.entries(socials).filter(([, v]) => v);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
+    <div className="mx-auto max-w-6xl px-5 pb-12 pt-24 sm:px-8 sm:pb-16 sm:pt-28">
       <Link href="/artists" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
         ← All artists
       </Link>

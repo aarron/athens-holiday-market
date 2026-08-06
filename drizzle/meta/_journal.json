@@ -15,6 +15,13 @@
       "when": 1785976534357,
       "tag": "0001_lean_devos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785980839596,
+      "tag": "0002_magical_cardiac",
+      "breakpoints": true
     }
   ]
 }

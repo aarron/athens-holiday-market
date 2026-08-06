@@ -124,3 +124,64 @@ export async function unpublishArtist(applicationId: number) {
   revalidatePath("/artists");
   return { ok: true };
 }
+
+/** Approve an artist's pending submission → copy it live and publish. */
+export async function approveArtistSubmission(artistId: number) {
+  await requireAdmin();
+  const artist = await db.query.artists.findFirst({ where: eq(artists.id, artistId) });
+  if (!artist || !artist.pendingContent) return { error: "Nothing to approve." };
+  const pc = artist.pendingContent;
+
+  await db
+    .update(artists)
+    .set({
+      bio: pc.bio ?? artist.bio,
+      website: pc.website ?? artist.website,
+      socials: pc.socials ?? artist.socials,
+      logoUrl: pc.logoUrl ?? null,
+      published: true,
+      pendingContent: null,
+      submittedAt: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(artists.id, artistId));
+
+  if (pc.photoUrls) {
+    await db.delete(artistPhotos).where(eq(artistPhotos.artistId, artistId));
+    if (pc.photoUrls.length) {
+      await db.insert(artistPhotos).values(
+        pc.photoUrls.slice(0, 6).map((url, i) => ({ artistId, url, position: i })),
+      );
+    }
+  }
+  revalidatePath("/admin/artists");
+  revalidatePath("/artists");
+  revalidatePath(`/artists/${artist.slug}`);
+  return { ok: true };
+}
+
+/** Return a submission to the artist without publishing (clears pending). */
+export async function returnArtistSubmission(artistId: number) {
+  await requireAdmin();
+  await db
+    .update(artists)
+    .set({ pendingContent: null, submittedAt: null })
+    .where(eq(artists.id, artistId));
+  revalidatePath("/admin/artists");
+  return { ok: true };
+}
+
+/** Email an accepted artist their magic sign-in link (admin-initiated). */
+export async function sendArtistLink(email: string) {
+  await requireAdmin();
+  const { resolveIdentity, createMagicToken } = await import("@/lib/magic");
+  const { sendMagicLink } = await import("@/lib/emails");
+  const { publicEnv } = await import("@/lib/env");
+  const identity = await resolveIdentity(email);
+  if (!identity || identity.role !== "artist") {
+    return { error: "That email isn't an accepted artist." };
+  }
+  const raw = await createMagicToken(email);
+  const res = await sendMagicLink(email, `${publicEnv.siteUrl}/auth/verify?token=${raw}`);
+  return { ok: true, skipped: !!(res && "skipped" in res) };
+}

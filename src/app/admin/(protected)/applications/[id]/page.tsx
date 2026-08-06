@@ -4,7 +4,13 @@ import { notFound } from "next/navigation";
 import { getApplication, getJurors, getArtistForApplication, tally } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
 import { StatusBadge, BoothFeeBadge, VoteTally } from "@/components/admin/badges";
-import { VoteButtons, CommentBox, DecisionControls, PublishControls } from "@/components/admin/controls";
+import {
+  VoteButtons,
+  CommentBox,
+  DecisionControls,
+  PublishControls,
+  SendArtistLinkButton,
+} from "@/components/admin/controls";
 import { SafeImg } from "@/components/admin/safe-img";
 
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
@@ -157,11 +163,23 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           )}
 
           {isAdmin && app.status === "accepted" && (
-            <PublishControls
-              applicationId={app.id}
-              published={artistProfile?.published ?? false}
-              slug={artistProfile?.slug}
-            />
+            <>
+              <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+                <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                  Artist page
+                </h2>
+                <SendArtistLinkButton email={app.email} />
+                <p className="mt-2 text-xs text-ink-soft/70">
+                  Sends a magic link so the artist builds their own page — you review before it goes
+                  live. Or publish directly from their application:
+                </p>
+              </div>
+              <PublishControls
+                applicationId={app.id}
+                published={artistProfile?.published ?? false}
+                slug={artistProfile?.slug}
+              />
+            </>
           )}
         </aside>
       </div>

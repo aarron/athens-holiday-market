@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, cycles, users, artists } from "@/db/schema";
 import type { Tally } from "@/components/admin/badges";
@@ -56,6 +56,28 @@ export async function getArtistForApplication(applicationId: number) {
 /** All jury members + admins, for per-judge vote columns. */
 export async function getJurors() {
   return db.query.users.findMany({ orderBy: [users.id] });
+}
+
+export async function listArtistsForAdmin() {
+  return db.query.artists.findMany({
+    orderBy: [desc(artists.submittedAt), asc(artists.name)],
+    with: { photos: { limit: 1, orderBy: (p, { asc }) => [asc(p.position)] } },
+  });
+}
+
+export async function getArtistForAdmin(id: number) {
+  return db.query.artists.findFirst({
+    where: eq(artists.id, id),
+    with: {
+      photos: { orderBy: (p, { asc }) => [asc(p.position)] },
+      application: { columns: { id: true, name: true, email: true } },
+    },
+  });
+}
+
+export async function countPendingArtistReviews() {
+  const rows = await db.select({ id: artists.id }).from(artists).where(isNotNull(artists.submittedAt));
+  return rows.length;
 }
 
 export function tally(votes: { value: "yes" | "maybe" | "no" }[]): Tally {

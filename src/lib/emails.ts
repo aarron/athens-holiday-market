@@ -47,6 +47,31 @@ export async function sendApplicationReceived(to: string, name: string) {
   }
 }
 
+/** Send a one-time magic sign-in link. */
+export async function sendMagicLink(to: string, url: string) {
+  // Always log in dev so links are testable without a verified sending domain.
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`\n🔗 Magic link for ${to}:\n${url}\n`);
+  }
+  if (!resend) return { skipped: true as const };
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:24px">Sign in to ${site.name}</h1>
+    <p style="margin:0 0 16px;line-height:1.6">Click the button below to sign in. This link works once and expires in 30 minutes.</p>
+    <p style="margin:0 0 20px"><a href="${url}" style="display:inline-block;background:#17161b;color:#faf5ea;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Sign in</a></p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6;word-break:break-all">Or paste this link into your browser:<br/>${url}</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Your sign-in link for ${site.name}`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send magic link:", e);
+    return { error: true as const };
+  }
+}
+
 type Decision = "accepted" | "waitlisted" | "rejected";
 
 const DECISION_COPY: Record<Decision, { subject: string; heading: string; body: string }> = {

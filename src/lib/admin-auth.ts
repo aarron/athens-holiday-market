@@ -1,56 +1,66 @@
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { auth, type AppRole } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { getSession } from "@/lib/session";
+import type { AppRole } from "@/lib/roles";
 
 export type SessionUser = {
   email: string;
   name: string | null;
-  image: string | null;
   role: AppRole;
+  artistId?: number;
 };
 
-/** The signed-in, allowlisted user — or null. */
+/** The signed-in user — or null. */
 export async function getSessionUser(): Promise<SessionUser | null> {
-  // Local-only bypass for previewing the admin without OAuth. Hard-gated to
+  // Local-only bypass for previewing the admin without email. Hard-gated to
   // non-production so it can never activate on Vercel.
   if (process.env.NODE_ENV !== "production" && process.env.ADMIN_DEV_BYPASS === "1") {
-    return { email: "admin@example.com", name: "Aarron (dev)", image: null, role: "admin" };
+    return { email: "admin@example.com", name: "Aarron (dev)", role: "admin" };
   }
-
-  const session = await auth();
-  if (!session?.user?.email || !session.user.role) return null;
-  return {
-    email: session.user.email.toLowerCase(),
-    name: session.user.name ?? null,
-    image: session.user.image ?? null,
-    role: session.user.role,
-  };
+  const s = await getSession();
+  if (!s) return null;
+  return { email: s.email, name: s.name ?? null, role: s.role, artistId: s.artistId };
 }
 
-/** Require any allowlisted user; redirect to login otherwise. */
+/** Require any signed-in user; redirect to login otherwise. */
 export async function requireAuth(): Promise<SessionUser> {
   const user = await getSessionUser();
   if (!user) redirect("/admin/login");
   return user;
 }
 
+/** Require staff (admin or judge); artists get sent to their own portal. */
+export async function requireStaff(): Promise<SessionUser> {
+  const user = await getSessionUser();
+  if (!user) redirect("/admin/login");
+  if (user.role === "artist") redirect("/artist");
+  return user;
+}
+
 /** Require an admin; judges get bounced to the dashboard. */
 export async function requireAdmin(): Promise<SessionUser> {
-  const user = await requireAuth();
+  const user = await requireStaff();
   if (user.role !== "admin") redirect("/admin");
   return user;
 }
 
-/** Find-or-create the DB user row for the current session (for votes/comments). */
+/** Require a signed-in artist; redirect to the artist login otherwise. */
+export async function requireArtist(): Promise<SessionUser> {
+  const user = await getSessionUser();
+  if (!user || user.role !== "artist") redirect("/artist/login");
+  return user;
+}
+
+/** Find-or-create the DB user row for the current staff session (votes/comments). */
 export async function ensureDbUser() {
-  const session = await requireAuth();
-  let row = await db.query.users.findFirst({ where: eq(users.email, session.email) });
+  const s = await requireStaff();
+  let row = await db.query.users.findFirst({ where: eq(users.email, s.email) });
   if (!row) {
     [row] = await db
       .insert(users)
-      .values({ email: session.email, name: session.name, image: session.image, role: session.role })
+      .values({ email: s.email, name: s.name, role: s.role === "admin" ? "admin" : "judge" })
       .returning();
   }
   return row;

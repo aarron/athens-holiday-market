@@ -24,32 +24,82 @@ const FILTERS = [
   { key: "rejected", label: "Rejected" },
 ] as const;
 
-type SortKey = "recent" | "name" | "yes";
+type SortCol = "name" | "medium" | "yes" | "status" | "fee" | "recent";
+const STATUS_RANK: Record<string, number> = {
+  accepted: 0,
+  waitlisted: 1,
+  under_review: 2,
+  submitted: 3,
+  rejected: 4,
+};
 
 export function ApplicationsTable({ rows }: { rows: Row[] }) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
-  const [sort, setSort] = useState<SortKey>("recent");
+  const [sortCol, setSortCol] = useState<SortCol>("recent");
+  const [dir, setDir] = useState<"asc" | "desc">("desc");
+
+  function sortBy(col: SortCol) {
+    if (col === sortCol) {
+      setDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortCol(col);
+      setDir(col === "name" || col === "medium" ? "asc" : "desc");
+    }
+  }
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    let out = rows.filter((r) => {
+    const out = rows.filter((r) => {
       if (needle && !`${r.name} ${r.medium}`.toLowerCase().includes(needle)) return false;
       if (filter === "all") return true;
       if (filter === "pending") return r.status === "submitted" || r.status === "under_review";
       return r.status === filter;
     });
-    out = [...out].sort((a, b) => {
-      if (sort === "name") return a.name.localeCompare(b.name);
-      if (sort === "yes") return b.tally.yes - a.tally.yes;
-      return b.submittedAt.localeCompare(a.submittedAt);
+    out.sort((a, b) => {
+      let cmp = 0;
+      switch (sortCol) {
+        case "name":
+          cmp = a.name.localeCompare(b.name);
+          break;
+        case "medium":
+          cmp = a.medium.localeCompare(b.medium);
+          break;
+        case "yes":
+          cmp = a.tally.yes - b.tally.yes;
+          break;
+        case "status":
+          cmp = (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9);
+          break;
+        case "fee":
+          cmp = Number(a.boothFeePaid) - Number(b.boothFeePaid);
+          break;
+        default:
+          cmp = a.submittedAt.localeCompare(b.submittedAt);
+      }
+      return dir === "asc" ? cmp : -cmp;
     });
     return out;
-  }, [rows, q, filter, sort]);
+  }, [rows, q, filter, sortCol, dir]);
+
+  const Th = ({ col, label, className = "" }: { col: SortCol; label: string; className?: string }) => (
+    <th className={`px-4 py-3 font-semibold ${className}`}>
+      <button
+        onClick={() => sortBy(col)}
+        className={`inline-flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-ink ${
+          sortCol === col ? "text-ink" : ""
+        }`}
+      >
+        {label}
+        <span className="text-[0.6rem]">
+          {sortCol === col ? (dir === "asc" ? "▲" : "▼") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
 
   return (
     <div className="rounded-xl bg-white shadow-[var(--shadow-card)]">
-      {/* Controls */}
       <div className="flex flex-wrap items-center gap-3 border-b border-ink/10 p-4">
         <input
           value={q}
@@ -70,27 +120,17 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
             </button>
           ))}
         </div>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          className="h-10 rounded-md border-2 border-ink/15 bg-paper px-2 text-sm outline-none"
-        >
-          <option value="recent">Newest</option>
-          <option value="name">Name A–Z</option>
-          <option value="yes">Most “yes”</option>
-        </select>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
-            <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
-              <th className="px-4 py-3 font-semibold">Artist</th>
-              <th className="px-4 py-3 font-semibold">Medium</th>
-              <th className="px-4 py-3 font-semibold">Votes</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold">Booth fee</th>
+            <tr className="border-b border-ink/10 text-xs text-ink-soft">
+              <Th col="name" label="Artist" />
+              <Th col="medium" label="Medium" />
+              <Th col="yes" label="Votes" />
+              <Th col="status" label="Status" />
+              <Th col="fee" label="Booth fee" />
             </tr>
           </thead>
           <tbody>
@@ -104,9 +144,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
                       flowerSize={16}
                       className="h-10 w-10 shrink-0 rounded-md object-cover"
                     />
-                    <span className="font-display font-bold group-hover:text-fern-deep">
-                      {r.name}
-                    </span>
+                    <span className="font-display font-bold group-hover:text-fern-deep">{r.name}</span>
                   </Link>
                 </td>
                 <td className="max-w-[260px] px-4 py-3 text-ink-soft">

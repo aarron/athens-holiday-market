@@ -1,24 +1,50 @@
 import Link from "next/link";
-import { signOut } from "@/auth";
-import { requireAuth } from "@/lib/admin-auth";
-import { Flower } from "@/components/brand";
+import Image from "next/image";
+import { requireStaff } from "@/lib/admin-auth";
+import { countPendingArtistReviews } from "@/lib/admin-data";
+import { signOutAction } from "@/lib/auth-actions";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireAuth();
+  const user = await requireStaff();
+  const pendingReviews = await countPendingArtistReviews();
 
   return (
     <div className="min-h-screen bg-paper">
       <header className="sticky top-0 z-40 border-b-2 border-ink/10 bg-white">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-4 px-5 sm:px-8">
-          <Link href="/admin" className="flex items-center gap-2.5">
-            <Flower size={30} color="var(--color-fuchsia)" />
-            <span className="font-display text-lg font-extrabold tracking-tight">
-              Jury Console
-            </span>
-            <span className="hidden rounded-full bg-cream px-2.5 py-0.5 text-xs font-semibold text-ink-soft sm:inline">
-              Athens Holiday Market
+          <Link
+            href="/admin"
+            aria-label="Athens Holiday Market — Jury Console"
+            className="relative z-10 mt-2 shrink-0 self-start transition-transform duration-300 hover:scale-[1.02]"
+          >
+            <span className="block rounded-xl bg-white p-2.5 shadow-[var(--shadow-lift)] ring-1 ring-black/5">
+              <Image
+                src="/brand/logo.png"
+                alt="Athens Holiday Market"
+                width={1000}
+                height={920}
+                priority
+                className="h-14 w-auto sm:h-16"
+              />
             </span>
           </Link>
+
+          <nav className="hidden items-center gap-1 md:flex">
+            <Link href="/admin" className="rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream">
+              Applications
+            </Link>
+            <Link
+              href="/admin/artists"
+              className="relative rounded-md px-3 py-2 text-sm font-semibold hover:bg-cream"
+            >
+              Artist pages
+              {pendingReviews > 0 && (
+                <span className="ml-1.5 rounded-full bg-tangerine px-1.5 py-0.5 text-xs font-bold text-white">
+                  {pendingReviews}
+                </span>
+              )}
+            </Link>
+          </nav>
 
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-ink-soft sm:inline">
@@ -27,12 +53,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 {user.role}
               </span>
             </span>
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/admin/login" });
-              }}
-            >
+            <form action={signOutAction}>
               <button className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-cream">
                 Sign out
               </button>

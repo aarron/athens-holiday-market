@@ -8,6 +8,13 @@
       "when": 1785967198461,
       "tag": "0000_faulty_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785976534357,
+      "tag": "0001_lean_devos",
+      "breakpoints": true
     }
   ]
 }

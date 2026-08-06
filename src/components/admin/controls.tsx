@@ -9,6 +9,7 @@ import {
   sendDecision,
   publishArtist,
   unpublishArtist,
+  sendArtistLink,
 } from "@/lib/admin-actions";
 
 type Vote = "yes" | "maybe" | "no";
@@ -232,6 +233,34 @@ export function PublishControls({
           {pending ? "Publishing…" : "Publish to directory"}
         </button>
       )}
+      {msg && <p className="mt-2 text-sm text-ink-soft">{msg}</p>}
+    </div>
+  );
+}
+
+export function SendArtistLinkButton({ email }: { email: string }) {
+  const [pending, start] = useTransition();
+  const [msg, setMsg] = useState("");
+  return (
+    <div>
+      <button
+        disabled={pending}
+        onClick={() =>
+          start(async () => {
+            const r = await sendArtistLink(email);
+            setMsg(
+              r && "ok" in r && r.ok
+                ? r.skipped
+                  ? "Link created (email not configured yet)."
+                  : "Edit link emailed ✓"
+                : r?.error || "Couldn't send.",
+            );
+          })
+        }
+        className="w-full rounded-md border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
+      >
+        {pending ? "Sending…" : "Email artist their edit link"}
+      </button>
       {msg && <p className="mt-2 text-sm text-ink-soft">{msg}</p>}
     </div>
   );

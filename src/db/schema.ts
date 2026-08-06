@@ -129,6 +129,16 @@ export const comments = pgTable("comments", {
 });
 
 /* ------------------------------------------------- artists (public pages) */
+
+/** An artist's self-submitted draft, held for admin review before going live. */
+export type PendingArtistContent = {
+  bio?: string;
+  website?: string;
+  socials?: Record<string, string>;
+  logoUrl?: string | null;
+  photoUrls?: string[];
+};
+
 export const artists = pgTable("artists", {
   id: serial("id").primaryKey(),
   applicationId: integer("application_id").references(() => applications.id, {
@@ -141,11 +151,25 @@ export const artists = pgTable("artists", {
   website: text("website"),
   // { instagram, facebook, tiktok, etsy, ... }
   socials: jsonb("socials").$type<Record<string, string>>().default({}),
+  logoUrl: text("logo_url"),
   published: boolean("published").notNull().default(false),
   featured: boolean("featured").notNull().default(false),
   sortOrder: integer("sort_order").notNull().default(0),
+  // Artist's submitted-but-unreviewed edits; null when nothing is pending.
+  pendingContent: jsonb("pending_content").$type<PendingArtistContent>(),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* ---------------------------------------------------- login tokens (magic) */
+export const loginTokens = pgTable("login_tokens", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const artistPhotos = pgTable("artist_photos", {

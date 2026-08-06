@@ -16,6 +16,14 @@ export { IconNote1 as MusicIcon } from "@central-icons-react/round-outlined-radi
 export { IconGift1 as GiftIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconGift1";
 export { IconSparkle as SparkleIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconSparkle";
 export { IconArrowRight as ArrowRightIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconArrowRight";
+export { IconArrowLeft as BackIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconArrowLeft";
+export { IconArrowUpRight as ExternalIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconArrowUpRight";
+export { IconChevronLargeTop as ChevronUpIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconChevronLargeTop";
+export { IconChevronLargeDown as ChevronDownIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconChevronLargeDown";
+export { IconCrossLarge as CloseIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconCrossLarge";
+export { IconCelebrate as CelebrateIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconCelebrate";
+export { IconTree as TreeIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconTree";
+export { IconMailbox as MailboxIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconMailbox";
 export { IconInstagram as InstagramIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconInstagram";
 export { IconFacebook as FacebookIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconFacebook";
 export { IconGlobe as GlobeIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconGlobe";

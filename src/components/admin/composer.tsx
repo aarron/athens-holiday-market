@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
 import { getBroadcastTemplates } from "@/lib/email-templates";
 import { sendTestEmail, sendBroadcast } from "@/lib/broadcast-actions";
+import { ArrowRightIcon } from "@/components/icons";
 
 type Segment = "all" | "artists" | "non_artists";
 const SEGMENTS: { value: Segment; label: string }[] = [
@@ -132,9 +133,10 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
             <button
               disabled={pending || !subject || !body || recipientCount === 0}
               onClick={() => setConfirming(true)}
-              className="rounded-md bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
             >
-              Send broadcast →
+              Send broadcast
+              <ArrowRightIcon size={16} aria-hidden />
             </button>
           </div>
         ) : (

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackIcon } from "@/components/icons";
 import { requireAdmin } from "@/lib/admin-auth";
 import { segmentCounts } from "@/lib/broadcast-data";
 import { Composer } from "@/components/admin/composer";
@@ -14,8 +15,9 @@ export default async function NewBroadcastPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/admin/broadcasts" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
-          ← Broadcasts
+        <Link href="/admin/broadcasts" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
+          <BackIcon size={16} aria-hidden />
+          Broadcasts
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">New broadcast</h1>
         <p className="mt-1 text-ink-soft">

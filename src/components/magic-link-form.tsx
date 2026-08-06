@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { requestMagicLink, type MagicState } from "@/lib/auth-actions";
 import { Button } from "@/components/ui/button";
+import { MailboxIcon } from "@/components/icons";
 
 export function MagicLinkForm() {
   const [state, action, pending] = useActionState<MagicState, FormData>(requestMagicLink, {});
@@ -10,7 +11,10 @@ export function MagicLinkForm() {
   if (state.ok) {
     return (
       <div className="rounded-lg border-2 border-fern/40 bg-fern-soft p-6 text-center" role="status">
-        <p className="font-display text-lg font-bold text-ink">Check your email 📬</p>
+        <p className="flex items-center justify-center gap-2 font-display text-lg font-bold text-ink">
+          <MailboxIcon size={22} className="text-fern-deep" aria-hidden />
+          Check your email
+        </p>
         <p className="mt-1 text-sm text-ink-soft">
           If that address has access, we just sent a sign-in link. It expires in 30 minutes.
         </p>

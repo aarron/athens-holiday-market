@@ -3,7 +3,7 @@ import { site, mapsHref } from "@/lib/site";
 import { ContactForm } from "@/components/contact-form";
 import { Flower } from "@/components/brand";
 import { ButtonLink } from "@/components/ui/button";
-import { MapPinIcon, MailIcon } from "@/components/icons";
+import { MapPinIcon, MailIcon, ArrowRightIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -67,8 +67,9 @@ export default function ContactPage() {
               .
             </p>
             <div className="mt-5">
-              <ButtonLink href={mapsHref()} variant="ink" size="md">
-                Get directions →
+              <ButtonLink href={mapsHref()} variant="ink" size="md" className="inline-flex items-center gap-1.5">
+                Get directions
+                <ArrowRightIcon size={16} aria-hidden />
               </ButtonLink>
             </div>
           </div>

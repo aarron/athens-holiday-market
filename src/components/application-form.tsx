@@ -7,6 +7,7 @@ import { z } from "zod";
 import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Flower } from "@/components/brand";
+import { CelebrateIcon } from "@/components/icons";
 import { site } from "@/lib/site";
 import { MEDIUM_CATEGORIES } from "@/lib/mediums";
 
@@ -109,7 +110,10 @@ export function ApplicationForm() {
     return (
       <div className="rounded-xl bg-fern-soft p-8 text-center shadow-[var(--shadow-card)]">
         <Flower size={56} color="var(--color-fuchsia)" spin className="mx-auto" />
-        <h2 className="mt-5 text-3xl font-extrabold">Application received! 🎉</h2>
+        <h2 className="mt-5 flex items-center justify-center gap-2.5 text-3xl font-extrabold">
+          <CelebrateIcon size={30} className="text-fuchsia" aria-hidden />
+          Application received!
+        </h2>
         <p className="mx-auto mt-3 max-w-md text-lg text-ink-soft">
           Thank you for applying to the {site.event.year} {site.name}. We&apos;ve emailed you a
           confirmation, and the jury will be in touch on {site.applications.decisionLabel}.

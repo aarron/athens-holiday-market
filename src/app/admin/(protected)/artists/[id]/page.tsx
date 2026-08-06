@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackIcon, ExternalIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { getArtistForAdmin } from "@/lib/admin-data";
 import { SafeImg } from "@/components/admin/safe-img";
@@ -20,8 +21,9 @@ export default async function AdminArtistReview({ params }: { params: Promise<{ 
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Link href="/admin/artists" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
-        ← All artist pages
+      <Link href="/admin/artists" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
+        <BackIcon size={16} aria-hidden />
+        All artist pages
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -34,9 +36,10 @@ export default async function AdminArtistReview({ params }: { params: Promise<{ 
             href={`/artists/${artist.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md bg-fern-soft px-4 py-2 text-sm font-display font-bold text-fern-deep"
+            className="inline-flex items-center gap-1.5 rounded-md bg-fern-soft px-4 py-2 text-sm font-display font-bold text-fern-deep"
           >
-            View live page ↗
+            View live page
+            <ExternalIcon size={14} aria-hidden />
           </a>
         )}
       </div>

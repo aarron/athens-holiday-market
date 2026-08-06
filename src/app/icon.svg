@@ -1,12 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#d21c96" transform="rotate(0 50 50)"/>
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#f07f22" transform="rotate(45 50 50)"/>
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#17a898" transform="rotate(90 50 50)"/>
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#b7c72c" transform="rotate(135 50 50)"/>
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#45bced" transform="rotate(180 50 50)"/>
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#9c1c50" transform="rotate(225 50 50)"/>
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#6cae43" transform="rotate(270 50 50)"/>
-  <path d="M41 30 C39 22 39 6 50 6 C61 6 61 22 59 30 C58 35 55 39 54 44 L46 44 C45 39 42 35 41 30 Z" fill="#e23127" transform="rotate(315 50 50)"/>
-  <circle cx="50" cy="50" r="9" fill="#17161b"/>
-  <circle cx="50" cy="50" r="4.5" fill="#ffffff"/>
+  <mask id="ahm-favicon-hole">
+    <rect width="100" height="100" fill="#fff"/>
+    <circle cx="50" cy="50" r="9" fill="#000"/>
+  </mask>
+  <g mask="url(#ahm-favicon-hole)">
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#d21c96" transform="rotate(0 50 50)"/>
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#f07f22" transform="rotate(45 50 50)"/>
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#17a898" transform="rotate(90 50 50)"/>
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#b7c72c" transform="rotate(135 50 50)"/>
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#45bced" transform="rotate(180 50 50)"/>
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#9c1c50" transform="rotate(225 50 50)"/>
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#6cae43" transform="rotate(270 50 50)"/>
+    <path d="M45 47 C44 40 44 33 44 28 A 13 13 0 1 0 56 28 C56 33 56 40 55 47 Z" fill="#e23127" transform="rotate(315 50 50)"/>
+  </g>
 </svg>

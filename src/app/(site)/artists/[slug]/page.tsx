@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getArtistBySlug, allPublishedSlugs } from "@/lib/artists-data";
 import { SafeImg } from "@/components/admin/safe-img";
 import { Flower } from "@/components/brand";
+import { BackIcon, ExternalIcon } from "@/components/icons";
 import { site } from "@/lib/site";
 
 export const revalidate = 300;
@@ -54,8 +55,9 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-12 pt-24 sm:px-8 sm:pb-16 sm:pt-28">
-      <Link href="/artists" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
-        ← All artists
+      <Link href="/artists" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
+        <BackIcon size={16} aria-hidden />
+        All artists
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
@@ -103,9 +105,10 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
                   href={artist.website.startsWith("http") ? artist.website : `https://${artist.website}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-full bg-ink px-4 py-2 text-sm font-display font-semibold text-paper transition-colors hover:bg-ink-soft"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-display font-semibold text-paper transition-colors hover:bg-ink-soft"
                 >
-                  Visit website ↗
+                  Visit website
+                  <ExternalIcon size={15} aria-hidden />
                 </a>
               )}
               {socialEntries.map(([key, url]) => (

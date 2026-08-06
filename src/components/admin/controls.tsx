@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { ExternalIcon } from "@/components/icons";
 import {
   castVote,
   addComment,
@@ -167,9 +168,10 @@ export function PublishControls({
             href={`/artists/${slug}`}
             target="_blank"
             rel="noreferrer"
-            className="block rounded-md bg-fern-soft px-4 py-2.5 text-center text-sm font-display font-bold text-fern-deep"
+            className="flex items-center justify-center gap-1.5 rounded-md bg-fern-soft px-4 py-2.5 text-center text-sm font-display font-bold text-fern-deep"
           >
-            View public page ↗
+            View public page
+            <ExternalIcon size={14} aria-hidden />
           </a>
           <button
             disabled={pending}

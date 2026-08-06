@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getCyclesWithCounts, getDecisionRecipients } from "@/lib/admin-data";
@@ -37,8 +38,9 @@ export default async function DecisionGroupPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <Link href="/admin/decisions" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
-          ← Send decisions
+        <Link href="/admin/decisions" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
+          <BackIcon size={16} aria-hidden />
+          Send decisions
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">
           {group === "accepted" ? "Acceptance" : "Waitlist"} emails

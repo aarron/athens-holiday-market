@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { site } from "@/lib/site";
+import { TreeIcon } from "@/components/icons";
 
 // Event start: 5pm ET on the first market evening (ET is EST/-05:00 in December).
 const TARGET = new Date(`${site.event.days[0].date}T17:00:00-05:00`).getTime();
@@ -117,8 +118,9 @@ export function CountdownClock() {
 
   if (over) {
     return (
-      <p className="text-center font-display text-2xl font-extrabold text-fern-deep sm:text-3xl">
-        The market is here — come on by! 🎄
+      <p className="flex items-center justify-center gap-2.5 text-center font-display text-2xl font-extrabold text-fern-deep sm:text-3xl">
+        <TreeIcon size={30} className="text-fern-deep" aria-hidden />
+        The market is here — come on by!
       </p>
     );
   }

@@ -18,6 +18,7 @@ import {
   SendArtistLinkButton,
 } from "@/components/admin/controls";
 import { PhotoGallery } from "@/components/admin/photo-gallery";
+import { BackIcon, ExternalIcon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -77,8 +78,9 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
   return (
     <div>
-      <Link href="/admin" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
-        ← All applications
+      <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
+        <BackIcon size={16} aria-hidden />
+        All applications
       </Link>
 
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
@@ -158,9 +160,10 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-full border-2 border-ink/15 px-3 py-1 text-sm font-semibold capitalize hover:bg-cream"
+                    className="inline-flex items-center gap-1 rounded-full border-2 border-ink/15 px-3 py-1 text-sm font-semibold capitalize hover:bg-cream"
                   >
-                    {key} ↗
+                    {key}
+                    <ExternalIcon size={13} aria-hidden />
                   </a>
                 ))}
               </div>

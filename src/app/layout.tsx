@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Jost, Inter } from "next/font/google";
 import { site } from "@/lib/site";
+import { FlowerDefs } from "@/components/brand";
 import "./globals.css";
 
 const jost = Jost({
@@ -51,7 +52,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${jost.variable} ${inter.variable} h-full`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <FlowerDefs />
+        {children}
+      </body>
     </html>
   );
 }

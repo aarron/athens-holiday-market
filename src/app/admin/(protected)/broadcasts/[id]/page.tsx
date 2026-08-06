@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getBroadcast, broadcastReceipts } from "@/lib/broadcast-data";
@@ -36,8 +37,9 @@ export default async function BroadcastDetail({ params }: { params: Promise<{ id
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <Link href="/admin/broadcasts" className="text-sm font-semibold text-ink-soft hover:text-fern-deep">
-          ← Broadcasts
+        <Link href="/admin/broadcasts" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
+          <BackIcon size={16} aria-hidden />
+          Broadcasts
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">{broadcast.subject}</h1>
         <p className="mt-1 text-ink-soft">

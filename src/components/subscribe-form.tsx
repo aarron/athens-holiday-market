@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CelebrateIcon } from "@/components/icons";
 
 export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
   const [email, setEmail] = useState("");
@@ -42,7 +43,10 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
         }`}
         role="status"
       >
-        <p className="font-display text-xl font-bold">You&apos;re on the list! 🎉</p>
+        <p className="flex items-center gap-2 font-display text-xl font-bold">
+          <CelebrateIcon size={22} className={dark ? "text-chartreuse" : "text-fuchsia"} aria-hidden />
+          You&apos;re on the list!
+        </p>
         <p className={`mt-1 ${dark ? "text-paper/70" : "text-ink-soft"}`}>
           We&apos;ll email you as soon as this year&apos;s dates and artist lineup are set.
           {isArtist && " We&apos;ve noted you're an artist interested in showing your work."}

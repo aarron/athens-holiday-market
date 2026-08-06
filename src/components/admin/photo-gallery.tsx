@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SafeImg } from "@/components/admin/safe-img";
+import { CloseIcon } from "@/components/icons";
 
 export function PhotoGallery({ photos }: { photos: { id: number; url: string }[] }) {
   const [idx, setIdx] = useState<number | null>(null);
@@ -52,10 +53,10 @@ export function PhotoGallery({ photos }: { photos: { id: number; url: string }[]
         >
           <button
             onClick={() => setIdx(null)}
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-xl text-white hover:bg-white/25"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
             aria-label="Close"
           >
-            ✕
+            <CloseIcon size={20} aria-hidden />
           </button>
 
           {photos.length > 1 && (

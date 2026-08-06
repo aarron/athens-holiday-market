@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Flower } from "@/components/brand";
+import { CelebrateIcon } from "@/components/icons";
 
 export function ContactForm() {
   const [name, setName] = useState("");
@@ -47,7 +48,10 @@ export function ContactForm() {
         role="status"
       >
         <Flower size={44} color="var(--color-fern-deep)" className="mx-auto" />
-        <p className="mt-4 font-display text-xl font-bold">Message sent! 🎉</p>
+        <p className="mt-4 flex items-center gap-2 font-display text-xl font-bold">
+          <CelebrateIcon size={22} className="text-fern-deep" aria-hidden />
+          Message sent!
+        </p>
         <p className="mt-1 text-ink-soft">
           Thanks for reaching out — we&apos;ll get back to you as soon as we can.
         </p>

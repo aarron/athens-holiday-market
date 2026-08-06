@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { StatusBadge, BoothFeeBadge, VoteTally, type Tally } from "@/components/admin/badges";
 import { SafeImg } from "@/components/admin/safe-img";
+import { ChevronUpIcon, ChevronDownIcon } from "@/components/icons";
 
 export type Row = {
   id: number;
@@ -110,7 +111,15 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
         }`}
       >
         {label}
-        <span className="text-[0.6rem]">{sortCol === col ? (dir === "asc" ? "▲" : "▼") : "↕"}</span>
+        {sortCol === col ? (
+          dir === "asc" ? (
+            <ChevronUpIcon size={12} aria-hidden />
+          ) : (
+            <ChevronDownIcon size={12} aria-hidden />
+          )
+        ) : (
+          <ChevronDownIcon size={12} className="opacity-30" aria-hidden />
+        )}
       </button>
     </th>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { site } from "@/lib/site";
 
 // Event start: 5pm ET on the first market evening (ET is EST/-05:00 in December).
@@ -40,20 +40,82 @@ const UNITS: { key: keyof Parts; label: string; color: string }[] = [
   { key: "seconds", label: "Seconds", color: "var(--color-berry)" },
 ];
 
-export function CountdownClock() {
-  // Start null so server and first client render match; fill in after mount.
-  const [parts, setParts] = useState<Parts | null>(null);
-  const [mounted, setMounted] = useState(false);
+/** One split-flap digit that flips the old value away to reveal the new one. */
+function FlapDigit({ value }: { value: string }) {
+  const [display, setDisplay] = useState(value);
+  const [prev, setPrev] = useState(value);
+  const [flipping, setFlipping] = useState(false);
+  const current = useRef(value);
 
   useEffect(() => {
-    setMounted(true);
-    setParts(compute(Date.now()));
-    const id = setInterval(() => setParts(compute(Date.now())), 1000);
+    if (value === current.current) return;
+    setPrev(current.current);
+    setDisplay(value);
+    current.current = value;
+    setFlipping(true);
+    const t = setTimeout(() => setFlipping(false), 580);
+    return () => clearTimeout(t);
+  }, [value]);
+
+  return (
+    <span className="flap-digit">
+      {/* Static halves: top = new; bottom = old until the unfold covers it. */}
+      <span className="flap-face flap-top">
+        <span className="n">{display}</span>
+      </span>
+      <span className="flap-face flap-bottom">
+        <span className="n">{flipping ? prev : display}</span>
+      </span>
+      {flipping && (
+        <>
+          <span className="flap-face flap-top flap-fold">
+            <span className="n">{prev}</span>
+          </span>
+          <span className="flap-face flap-bottom flap-unfold">
+            <span className="n">{display}</span>
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
+
+function FlapPair({ value }: { value: number }) {
+  const s = String(value).padStart(2, "0");
+  return (
+    <span className="flex gap-1">
+      <FlapDigit value={s[0]} />
+      <FlapDigit value={s[1]} />
+    </span>
+  );
+}
+
+function Separator() {
+  return (
+    <span className="flex h-[1.28em] flex-col items-center justify-center gap-[0.26em] self-start">
+      <span className="block h-[0.11em] w-[0.11em] rounded-full bg-ink/25" />
+      <span className="block h-[0.11em] w-[0.11em] rounded-full bg-ink/25" />
+    </span>
+  );
+}
+
+export function CountdownClock() {
+  // Start at zeros so server and first client render match; fill in after mount.
+  const [parts, setParts] = useState<Parts>({ months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [over, setOver] = useState(false);
+
+  useEffect(() => {
+    const tick = () => {
+      const p = compute(Date.now());
+      if (p) setParts(p);
+      else setOver(true);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Event is here or has passed.
-  if (mounted && parts === null) {
+  if (over) {
     return (
       <p className="text-center font-display text-2xl font-extrabold text-fern-deep sm:text-3xl">
         The market is here — come on by! 🎄
@@ -62,22 +124,22 @@ export function CountdownClock() {
   }
 
   return (
-    <div className="mx-auto grid max-w-3xl grid-cols-5 gap-2 sm:gap-4">
-      {UNITS.map(({ key, label, color }) => (
-        <div
-          key={key}
-          className="rounded-xl bg-white px-1 py-4 text-center shadow-[var(--shadow-card)] sm:py-6"
-        >
-          <div
-            className="font-display text-3xl font-extrabold tabular-nums leading-none sm:text-6xl"
-            style={{ color }}
-          >
-            {parts ? String(parts[key]).padStart(2, "0") : "––"}
-          </div>
-          <div className="mt-1.5 text-[0.6rem] font-bold uppercase tracking-wide text-ink-soft sm:mt-2 sm:text-xs">
-            {label}
-          </div>
-        </div>
+    <div className="mx-auto flex w-fit max-w-full items-start justify-center gap-2 overflow-x-auto rounded-2xl bg-white px-4 py-6 shadow-[var(--shadow-lift)] sm:gap-3 sm:px-9 sm:py-8">
+      {UNITS.map((u, i) => (
+        <Fragment key={u.key}>
+          <span className="flex flex-col items-center gap-2.5">
+            <span className="font-display text-3xl font-extrabold sm:text-6xl">
+              <FlapPair value={parts[u.key]} />
+            </span>
+            <span
+              className="text-[0.6rem] font-bold uppercase tracking-wide sm:text-xs"
+              style={{ color: u.color }}
+            >
+              {u.label}
+            </span>
+          </span>
+          {i < UNITS.length - 1 && <Separator />}
+        </Fragment>
       ))}
     </div>
   );

@@ -119,3 +119,77 @@
 }
 .ahm-marquee { animation: ahm-marquee 120s linear infinite; }
 .ahm-marquee-group:hover .ahm-marquee { animation-play-state: paused; }
+
+/* ── Split-flap countdown digit (Solari board) ── */
+.flap-digit {
+  position: relative;
+  display: inline-block;
+  width: 0.82em;
+  height: 1.28em;
+  border-radius: 0.1em;
+  background: #17161b;
+  color: #faf5ea;
+  perspective: 300px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
+}
+.flap-face {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: #17161b;
+  backface-visibility: hidden;
+}
+.flap-face .n {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.28em;
+  line-height: 1.28em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.flap-top {
+  top: 0;
+  border-radius: 0.1em 0.1em 0 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+}
+.flap-top .n {
+  top: 0;
+}
+.flap-bottom {
+  bottom: 0;
+  border-radius: 0 0 0.1em 0.1em;
+}
+.flap-bottom .n {
+  top: -0.64em;
+}
+.flap-fold {
+  transform-origin: 50% 100%;
+  animation: flap-fold 0.28s ease-in forwards;
+  z-index: 3;
+}
+.flap-unfold {
+  transform-origin: 50% 0%;
+  transform: rotateX(90deg);
+  animation: flap-unfold 0.28s ease-out 0.28s forwards;
+  z-index: 3;
+}
+@keyframes flap-fold {
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+@keyframes flap-unfold {
+  to {
+    transform: rotateX(0deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flap-fold,
+  .flap-unfold {
+    animation-duration: 0.001s;
+    animation-delay: 0s;
+  }
+}

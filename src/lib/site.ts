@@ -22,7 +22,7 @@ export const site = {
     state: "GA",
     mapsQuery: "Big City Bread Cafe, Meigs St & Finley St, Athens, GA 30601",
   },
-  // 2026 placeholders — CONFIRM. Second Thu/Fri of December, evening market.
+  // Confirmed 2026 dates: Thursday & Friday, December 10–11, evening market.
   event: {
     days: [
       { date: "2026-12-10", label: "Thursday, December 10" },

@@ -9,6 +9,7 @@ export const MEDIUM_CATEGORIES = [
   "Textiles & Fiber",
   "Leather",
   "Painting & Drawing",
+  "Photography",
   "Printmaking & Paper",
   "Woodwork",
   "Glass",
@@ -16,32 +17,38 @@ export const MEDIUM_CATEGORIES = [
   "Candles & Apothecary",
   "Bath & Body",
   "Food & Drink",
+  "Home & Decor",
   "Mixed Media & Sculpture",
   "Other",
 ] as const;
 
 export type MediumCategory = (typeof MEDIUM_CATEGORIES)[number];
 
-// Keyword → category, checked in order (most specific first).
+// Keyword → category, checked in order (first match wins), so the primary craft
+// goes ahead of secondary materials. Word boundaries (\b) matter: an un-anchored
+// "tin" matches "pain*tin*g", which used to mis-file painters as Metalwork.
 const RULES: [RegExp, MediumCategory][] = [
-  [/ceramic|pottery|clay|stoneware|porcelain|mosaic|cone \d/i, "Ceramics & Pottery"],
-  [/jewel|earring|necklace|bracelet|ring\b|gold.?filled|brass jewelry/i, "Jewelry"],
-  [/stained glass|blown glass|glass\b/i, "Glass"],
+  [/ceramic|pottery|\bclay\b|stoneware|porcelain|mosaic|\bcone \d/i, "Ceramics & Pottery"],
+  [/jewel|earring|necklace|bracelet|\bring(s|z)?\b|pendant|\bbead|pearl|\bsilver\b|gold.?fill|\benamel/i, "Jewelry"],
+  [/stained glass|blown glass|fused glass|\bglass\b/i, "Glass"],
   [/leather/i, "Leather"],
-  [/candle|diffuser|apothecary|salt soak|essential oil|incense|elixir? spray/i, "Candles & Apothecary"],
-  [/soap|shea butter|sea moss|cbd|balm|lotion|bath|body care|shampoo/i, "Bath & Body"],
-  [/tea|treat|jam|honey|baked|food|chocolate|elixir|spice|herb|drink|dog treat/i, "Food & Drink"],
-  [/print|block.?print|screen.?print|risograph|paper|puzzle|card|zine/i, "Printmaking & Paper"],
-  [/wood|woodcarv|woodwork|carv/i, "Woodwork"],
-  [/metal|tin|steel|iron|weld/i, "Metalwork"],
-  [/textile|fiber|fibre|weav|woven|knit|crochet|embroider|felt|fabric|quilt|handbag|bag\b|sew/i, "Textiles & Fiber"],
-  [/paint|acrylic|oil\b|watercolor|watercolour|ink\b|gouache|drawing|illustrat|silk paint/i, "Painting & Drawing"],
-  [/mixed media|sculpt|3d|folk ?art|assemblage|resin|collage/i, "Mixed Media & Sculpture"],
+  [/candle|diffuser|apothecar|salt soak|essential oil|incense|\belixir/i, "Candles & Apothecary"],
+  [/\bsoap\b|shea butter|sea moss|\bcbd\b|\bbalm\b|lotion|\bbath\b|body care|skin ?care|shampoo|lip ?balm/i, "Bath & Body"],
+  [/\bteas?\b|\btreat|\bjam\b|jelly|honey|beekeep|baked|\bfood\b|chocolate|\bspice|\bherb|\bdrink|preserve|pickle|granola|sauce|\bcandy\b|confection|\bbaker|cookie|\bcake|macaron|\bcider\b|vinegar|\bpie(s)?\b/i, "Food & Drink"],
+  [/photograph|\bphoto\b/i, "Photography"],
+  [/paint|acrylic|\boil\b|watercolo|\bink\b|gouache|drawing|\bdraw\b|illustrat|\bart print|fine art|\bpastel/i, "Painting & Drawing"],
+  [/print|block.?print|screen.?print|risograph|\bpaper\b|puzzle|\bcard\b|\bzine\b|stationer|sticker|\bbooks?\b|cookbook|calendar|notebook/i, "Printmaking & Paper"],
+  [/textile|\bfiber\b|\bfibre\b|weav|woven|\bknit|crochet|embroider|\bfelt|macram|\bbatik\b|tie ?dye|fabric|quilt|handbag|\bbag(s)?\b|\bsew|apparel|clothing|\bcotton\b|\byarn\b|tapestry|scarf|scarves|\bhat(s)?\b/i, "Textiles & Fiber"],
+  [/\bwood|woodcarv|woodwork|\bcarv|whittl|\blathe\b|turned wood/i, "Woodwork"],
+  [/\bmetal|\btin\b|\bsteel\b|\biron\b|\bweld|\bcopper\b|pewter|\bwire\b|blacksmith|forge/i, "Metalwork"],
+  [/wreath|\bfloral\b|greenery|grapevine|\bornament|home ?d[eé]cor|\bdecor\b|centerpiece|dried flower|\bplant(s)?\b|terrarium/i, "Home & Decor"],
+  [/mixed media|\bmixed\b|sculpt|\bresin\b|collage|assemblage|\b3d\b|folk ?art|decoupage|upcycl|found (object|material)|reclaim/i, "Mixed Media & Sculpture"],
 ];
 
 /** Map a free-text medium to a canonical category. */
 export function categorizeMedium(text: string | null | undefined): MediumCategory {
   const t = (text ?? "").toLowerCase();
+  if (!t.trim() || t.includes("not recorded")) return "Other";
   for (const [re, cat] of RULES) if (re.test(t)) return cat;
   return "Other";
 }

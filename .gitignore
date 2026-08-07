@@ -49,3 +49,6 @@ scripts/data/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Downloaded past-application photos — migrated to Vercel Blob, never commit (privacy + size)
+public/photos/backfill/

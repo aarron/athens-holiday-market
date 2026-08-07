@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listArtistsForAdmin } from "@/lib/admin-data";
 import { SafeImg } from "@/components/admin/safe-img";
+import { EmailLogisticsButton } from "@/components/admin/email-logistics-button";
 
 export const metadata: Metadata = { title: "Artists", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -26,6 +27,8 @@ export default async function AdminArtists() {
             : "No submissions awaiting review."}
         </p>
       </div>
+
+      <EmailLogisticsButton />
 
       {artists.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">

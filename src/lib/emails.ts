@@ -112,6 +112,38 @@ export async function sendArtistPageReminder(to: string, name: string) {
 
 export const CONTACT_TO = "redacted@example.com";
 
+/** Event-day logistics for an accepted artist (setup, booth, what to bring). */
+export async function sendArtistLogistics(to: string, name: string) {
+  if (!resend) return { skipped: true as const };
+  const setup = site.artistInfo.setup
+    .map((s) => `<li style="margin:0 0 6px;line-height:1.6">${escapeHtml(s)}</li>`)
+    .join("");
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:23px">Getting ready for the market 🎪</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, we can't wait to see you at the ${site.event.year}
+      ${site.name}! Here's what you need for event day.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px">
+      <tr><td style="padding:2px 0;line-height:1.6"><strong>When:</strong> ${site.event.days[0].label} &amp; ${site.event.days[1].label}, ${site.event.timeLabel}</td></tr>
+      <tr><td style="padding:2px 0;line-height:1.6"><strong>Where:</strong> ${site.location.name}, ${site.location.street}, ${site.location.city}</td></tr>
+    </table>
+    <p style="margin:0 0 6px;font-weight:700">Setup &amp; load-in</p>
+    <ul style="margin:0 0 14px;padding-left:20px">${setup}</ul>
+    <p style="margin:0 0 14px;line-height:1.6">${escapeHtml(site.artistInfo.menuNote)}</p>
+    <p style="margin:0 0 18px"><a href="${site.url}/artist" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open your artist hub →</a></p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Your hub always has the latest — booth layout, setup times, and the Big City Bread menu. Log in with this email address.</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Event-day details for the ${site.name}`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send artist logistics:", e);
+    return { error: true as const };
+  }
+}
+
 /** Annual nudge to submit paid-ad info to NPR + The Flagpole. Best-effort. */
 export async function sendNprFlagpoleReminder(to: string) {
   if (!resend) return { skipped: true as const };

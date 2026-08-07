@@ -1,14 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { applications, votes, comments, artists, artistPhotos } from "@/db/schema";
+import { applications, votes, comments, artists, artistPhotos, cycles } from "@/db/schema";
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
 import {
   sendDecisionEmail,
   sendArtistPageLive,
   sendJudgeSocialKit,
+  sendArtistLogistics,
   SOCIAL_POSTING_TEAM,
 } from "@/lib/emails";
 
@@ -122,6 +123,24 @@ export async function publishArtist(applicationId: number) {
   revalidatePath("/artists");
   await sendArtistPageLive(app.email, app.name, slug);
   return { ok: true, slug };
+}
+
+/** Email event-day logistics to every accepted artist in the active cycle. */
+export async function emailAcceptedArtistsLogistics() {
+  await requireAdmin();
+  const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
+  if (!cycle) return { error: "No active cycle." };
+  const accepted = await db
+    .select({ email: applications.email, name: applications.name })
+    .from(applications)
+    .where(and(eq(applications.cycleId, cycle.id), eq(applications.status, "accepted")));
+
+  let sent = 0;
+  for (const a of accepted) {
+    const res = await sendArtistLogistics(a.email, a.name);
+    if (!(res && "skipped" in res) && !(res && "error" in res)) sent++;
+  }
+  return { ok: true, total: accepted.length, sent };
 }
 
 /** Email the posting team a prompt to download + share artist spotlights. */

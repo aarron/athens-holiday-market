@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, votes, comments, artists, artistPhotos, cycles } from "@/db/schema";
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
@@ -93,6 +93,48 @@ export async function publishArtist(applicationId: number) {
     revalidatePath(`/admin/applications/${applicationId}`);
     revalidatePath("/artists");
     return { ok: true, slug: existing.slug };
+  }
+
+  // One page per artist across years: if this person (matched by email) already
+  // has a page from a prior application, refresh THAT page with this year's
+  // content instead of minting a duplicate slug (emily-nuckols-2).
+  const email = (app.email || "").toLowerCase().trim();
+  if (email && !email.endsWith("@no-email.invalid")) {
+    const priorApps = await db
+      .select({ id: applications.id })
+      .from(applications)
+      .where(eq(sql`lower(${applications.email})`, email));
+    const priorIds = priorApps.map((a) => a.id).filter((id) => id !== applicationId);
+    const samePerson = priorIds.length
+      ? await db.query.artists.findFirst({ where: inArray(artists.applicationId, priorIds) })
+      : null;
+    if (samePerson) {
+      await db
+        .update(artists)
+        .set({
+          applicationId,
+          name: app.name,
+          statement: app.description,
+          bio: app.bio ?? null,
+          medium: app.medium,
+          website: app.website || null,
+          socials: (app.socials as Record<string, string>) ?? {},
+          published: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(artists.id, samePerson.id));
+      // Replace photos with this application's set.
+      await db.delete(artistPhotos).where(eq(artistPhotos.artistId, samePerson.id));
+      if (app.photos.length) {
+        await db.insert(artistPhotos).values(
+          app.photos.slice(0, 6).map((p, idx) => ({ artistId: samePerson.id, url: p.url, position: idx })),
+        );
+      }
+      revalidatePath(`/admin/applications/${applicationId}`);
+      revalidatePath("/artists");
+      revalidatePath(`/artists/${samePerson.slug}`);
+      return { ok: true, slug: samePerson.slug, updatedExisting: true };
+    }
   }
 
   const base = slugify(app.name) || `artist-${applicationId}`;

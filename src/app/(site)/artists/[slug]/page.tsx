@@ -77,7 +77,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   const socialEntries = Object.entries(socials).filter(([, v]) => v);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-12 pt-24 sm:px-8 sm:pb-16 sm:pt-28">
+    <div className="mx-auto max-w-7xl px-5 pb-12 pt-24 sm:px-8 sm:pb-16 sm:pt-28">
       <Link href="/artists" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
         <BackIcon size={16} aria-hidden />
         All artists
@@ -160,7 +160,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
           <ArtistShareButtons url={`${site.url}/artists/${artist.slug}`} name={artist.name} />
 
-          <div className="mt-8 rounded-xl bg-cream-soft p-5">
+          <div className="mt-8 border-t border-ink/10 pt-5">
             <p className="text-sm text-ink-soft">
               Find {artist.name.split(" ")[0]} at the {site.event.year} {site.name} —{" "}
               {site.location.name}, {site.event.days[0].label} &amp; {site.event.days[1].label}.

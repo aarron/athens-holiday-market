@@ -8,6 +8,7 @@ import { getScheduledSends } from "@/lib/scheduled-sends";
 import { TextArtists } from "@/components/admin/text-artists";
 import { ScheduledSends } from "@/components/admin/scheduled-sends";
 import { SectionTabs } from "@/components/admin/section-tabs";
+import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
 
 export const metadata: Metadata = { title: "Email", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -16,6 +17,9 @@ const SEGMENT_LABEL: Record<string, string> = {
   all: "Everyone",
   artists: "Artists",
   non_artists: "Non-artists",
+  accepted: "Accepted artists",
+  waitlisted: "Waitlisted",
+  applicants: "All applicants",
 };
 
 function DecisionCard({
@@ -129,26 +133,37 @@ export default async function EmailHubPage() {
       ) : (
         <ul className="space-y-3">
           {broadcasts.map((b) => (
-            <li key={b.id}>
+            <li key={b.id} className="flex items-stretch gap-2">
               <Link
                 href={`/admin/broadcasts/${b.id}`}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
+                className="flex flex-1 flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
               >
                 <div>
                   <p className="font-display text-lg font-bold">{b.subject}</p>
                   <p className="text-sm text-ink-soft">
                     {SEGMENT_LABEL[b.segment] ?? b.segment} · {b.recipientCount} recipients
-                    {b.sentAt && ` · ${new Date(b.sentAt).toLocaleDateString()}`}
+                    {b.status === "scheduled" && b.scheduledFor
+                      ? ` · sends ${new Date(b.scheduledFor).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`
+                      : b.sentAt && ` · ${new Date(b.sentAt).toLocaleDateString()}`}
                   </p>
                 </div>
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                    b.status === "sent" ? "bg-fern-soft text-fern-deep" : "bg-cream text-ink-soft"
+                    b.status === "sent"
+                      ? "bg-fern-soft text-fern-deep"
+                      : b.status === "scheduled"
+                        ? "bg-sky-soft text-sky-deep"
+                        : "bg-cream text-ink-soft"
                   }`}
                 >
                   {b.status}
                 </span>
               </Link>
+              {b.status === "scheduled" && (
+                <div className="flex items-center">
+                  <CancelBroadcastButton id={b.id} />
+                </div>
+              )}
             </li>
           ))}
         </ul>

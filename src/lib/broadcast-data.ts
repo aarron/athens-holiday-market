@@ -1,17 +1,28 @@
 import "server-only";
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { subscribers, broadcasts, broadcastRecipients } from "@/db/schema";
+import { subscribers, broadcasts, broadcastRecipients, applications, cycles } from "@/db/schema";
 
-export type Segment = "all" | "artists" | "non_artists";
+export type Segment =
+  | "all"
+  | "artists"
+  | "non_artists"
+  | "accepted"
+  | "waitlisted"
+  | "applicants";
 
-export const SEGMENTS: { value: Segment; label: string }[] = [
-  { value: "all", label: "Everyone" },
-  { value: "artists", label: "Artists only" },
-  { value: "non_artists", label: "Everyone except artists" },
+export const SEGMENTS: { value: Segment; label: string; group: "list" | "cycle" }[] = [
+  { value: "all", label: "Everyone", group: "list" },
+  { value: "artists", label: "Artists only", group: "list" },
+  { value: "non_artists", label: "Everyone except artists", group: "list" },
+  { value: "accepted", label: "Accepted artists (this year)", group: "cycle" },
+  { value: "waitlisted", label: "Waitlisted (this year)", group: "cycle" },
+  { value: "applicants", label: "All applicants (this year)", group: "cycle" },
 ];
 
-/** Filter for a segment — always excludes unsubscribed. */
+const CYCLE_SEGMENTS = new Set<string>(["accepted", "waitlisted", "applicants"]);
+
+/** Subscriber-list filter for a segment — always excludes unsubscribed. */
 export function segmentWhere(segment: string) {
   const active = ne(subscribers.status, "unsubscribed");
   if (segment === "artists") return and(active, eq(subscribers.isArtist, true));
@@ -19,7 +30,34 @@ export function segmentWhere(segment: string) {
   return active;
 }
 
+/** Recipients (email/name/unsubscribe token) for any segment. Cycle segments
+ *  read this year's applications and reuse a subscriber's token when one exists. */
 export async function segmentRecipients(segment: string) {
+  if (CYCLE_SEGMENTS.has(segment)) {
+    const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
+    if (!cycle) return [];
+    const conds = [eq(applications.cycleId, cycle.id)];
+    if (segment === "accepted") conds.push(eq(applications.status, "accepted"));
+    if (segment === "waitlisted") conds.push(eq(applications.status, "waitlisted"));
+    const rows = await db
+      .select({
+        email: applications.email,
+        name: applications.name,
+        token: subscribers.unsubscribeToken,
+      })
+      .from(applications)
+      .leftJoin(subscribers, eq(sql`lower(${subscribers.email})`, sql`lower(${applications.email})`))
+      .where(and(...conds));
+    const seen = new Set<string>();
+    return rows
+      .filter((r) => {
+        const e = (r.email || "").toLowerCase();
+        if (!e || e.endsWith("@no-email.invalid") || seen.has(e)) return false;
+        seen.add(e);
+        return true;
+      })
+      .map((r) => ({ email: r.email, name: r.name, token: r.token ?? "" }));
+  }
   return db
     .select({
       email: subscribers.email,
@@ -31,13 +69,17 @@ export async function segmentRecipients(segment: string) {
 }
 
 export async function segmentCounts() {
-  const out: Record<Segment, number> = { all: 0, artists: 0, non_artists: 0 };
+  const out = {} as Record<Segment, number>;
   for (const s of SEGMENTS) {
-    const r = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(subscribers)
-      .where(segmentWhere(s.value));
-    out[s.value] = r[0]?.n ?? 0;
+    if (CYCLE_SEGMENTS.has(s.value)) {
+      out[s.value] = (await segmentRecipients(s.value)).length;
+    } else {
+      const r = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(subscribers)
+        .where(segmentWhere(s.value));
+      out[s.value] = r[0]?.n ?? 0;
+    }
   }
   return out;
 }

@@ -1,37 +1,27 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { broadcasts, broadcastRecipients } from "@/db/schema";
+import { broadcasts } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-auth";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
 import { segmentRecipients } from "@/lib/broadcast-data";
-import { publicEnv } from "@/lib/env";
+import { deliverBroadcast, personalize, unsubUrl } from "@/lib/broadcast-send";
+
+const SEGMENT_VALUES = ["all", "artists", "non_artists", "accepted", "waitlisted", "applicants"] as const;
 
 const composeSchema = z.object({
   subject: z.string().trim().min(1, "Add a subject.").max(200),
   body: z.string().trim().min(1, "Write a message.").max(20000),
-  segment: z.enum(["all", "artists", "non_artists"]),
+  segment: z.enum(SEGMENT_VALUES),
 });
 
-function chunk<T>(arr: T[], n: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
-  return out;
-}
-
-const unsubUrl = (token: string) => `${publicEnv.siteUrl}/unsubscribe?token=${token}`;
-const unsubApi = (token: string) => `${publicEnv.siteUrl}/api/unsubscribe?token=${token}`;
-
-function personalize(body: string, name: string | null) {
-  const first = (name || "").trim().split(/\s+/)[0] || "there";
-  return body
-    .replace(/\{\{\s*first_name\s*\}\}/gi, first)
-    .replace(/\{\{\s*name\s*\}\}/gi, name || "there");
-}
+const scheduleSchema = composeSchema.extend({
+  scheduledFor: z.string().min(1, "Pick a date and time."),
+});
 
 /** Send a preview of the broadcast to the signed-in admin only. */
 export async function sendTestEmail(input: { subject: string; body: string }) {
@@ -56,7 +46,7 @@ export async function sendTestEmail(input: { subject: string; body: string }) {
   }
 }
 
-/** Send the broadcast to everyone in the chosen segment. */
+/** Send the broadcast to everyone in the chosen segment, right now. */
 export async function sendBroadcast(input: z.input<typeof composeSchema>) {
   await requireAdmin();
   const parsed = composeSchema.safeParse(input);
@@ -72,40 +62,37 @@ export async function sendBroadcast(input: z.input<typeof composeSchema>) {
     .values({ subject, body, segment, status: "sending", recipientCount: recipients.length })
     .returning({ id: broadcasts.id });
 
-  const recRows: { broadcastId: number; email: string; resendId: string | null; status: string }[] = [];
+  const r = await deliverBroadcast({ id: bc.id, subject, body, segment });
+  revalidatePath("/admin/broadcasts");
+  return "ok" in r ? { ok: true, id: bc.id, count: r.count } : { error: r.error };
+}
 
-  for (const batch of chunk(recipients, 100)) {
-    const payload = batch.map((r) => ({
-      from: EMAIL_FROM,
-      to: r.email,
-      subject,
-      html: emailShell(renderMarkdown(personalize(body, r.name)), { unsubscribeUrl: unsubUrl(r.token) }),
-      headers: {
-        "List-Unsubscribe": `<${unsubApi(r.token)}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-    }));
-    try {
-      const res = await resend.batch.send(payload);
-      const items =
-        ((res as { data?: { data?: { id: string }[] } | { id: string }[] }).data as
-          | { data?: { id: string }[] }
-          | { id: string }[]
-          | undefined) ?? [];
-      const ids = Array.isArray(items) ? items : (items.data ?? []);
-      batch.forEach((r, i) =>
-        recRows.push({ broadcastId: bc.id, email: r.email, resendId: ids[i]?.id ?? null, status: "sent" }),
-      );
-    } catch {
-      batch.forEach((r) =>
-        recRows.push({ broadcastId: bc.id, email: r.email, resendId: null, status: "failed" }),
-      );
-    }
-  }
+/** Schedule the broadcast for a future date — saved as "scheduled"; the daily
+ *  cron delivers it once its time has passed. Editable/cancelable until then. */
+export async function scheduleBroadcast(input: z.input<typeof scheduleSchema>) {
+  await requireAdmin();
+  const parsed = scheduleSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
 
-  for (const c of chunk(recRows, 500)) await db.insert(broadcastRecipients).values(c);
-  await db.update(broadcasts).set({ status: "sent", sentAt: new Date() }).where(eq(broadcasts.id, bc.id));
+  const { subject, body, segment, scheduledFor } = parsed.data;
+  const when = new Date(scheduledFor);
+  if (isNaN(when.getTime())) return { error: "That date didn't parse." };
+  if (when.getTime() < Date.now() - 60_000) return { error: "Pick a time in the future." };
+
+  const recipients = await segmentRecipients(segment);
+  const [bc] = await db
+    .insert(broadcasts)
+    .values({ subject, body, segment, status: "scheduled", scheduledFor: when, recipientCount: recipients.length })
+    .returning({ id: broadcasts.id });
 
   revalidatePath("/admin/broadcasts");
-  return { ok: true, id: bc.id, count: recipients.length };
+  return { ok: true, id: bc.id, count: recipients.length, scheduledFor: when.toISOString() };
+}
+
+/** Cancel a scheduled broadcast before it sends (only while still scheduled). */
+export async function cancelScheduledBroadcast(id: number) {
+  await requireAdmin();
+  await db.delete(broadcasts).where(and(eq(broadcasts.id, id), eq(broadcasts.status, "scheduled")));
+  revalidatePath("/admin/broadcasts");
+  return { ok: true };
 }

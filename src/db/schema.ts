@@ -229,8 +229,17 @@ export const broadcastSegmentEnum = pgEnum("broadcast_segment", [
   "subscribed",
   "artists",
   "non_artists",
+  // Status-based (this year's applications, resolved against the active cycle).
+  "accepted",
+  "waitlisted",
+  "applicants",
 ]);
-export const broadcastStatusEnum = pgEnum("broadcast_status", ["draft", "sending", "sent"]);
+export const broadcastStatusEnum = pgEnum("broadcast_status", [
+  "draft",
+  "scheduled",
+  "sending",
+  "sent",
+]);
 
 export const broadcasts = pgTable("broadcasts", {
   id: serial("id").primaryKey(),
@@ -239,6 +248,9 @@ export const broadcasts = pgTable("broadcasts", {
   segment: broadcastSegmentEnum("segment").notNull().default("subscribed"),
   status: broadcastStatusEnum("status").notNull().default("draft"),
   recipientCount: integer("recipient_count").notNull().default(0),
+  // Set when the admin schedules instead of sending now; the daily cron sends
+  // any scheduled broadcast whose time has passed.
+  scheduledFor: timestamp("scheduled_for", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   sentAt: timestamp("sent_at", { withTimezone: true }),
 });

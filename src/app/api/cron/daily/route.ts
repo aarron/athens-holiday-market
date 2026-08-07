@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runArtistPageReminders } from "@/lib/artist-reminders";
 import { runEventReminders } from "@/lib/event-reminders";
 import { runNprFlagpoleReminder } from "@/lib/npr-flagpole-reminder";
+import { runScheduledBroadcasts } from "@/lib/broadcast-send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export async function GET(req: Request) {
     ["artistReminders", runArtistPageReminders],
     ["eventReminders", runEventReminders],
     ["nprFlagpole", runNprFlagpoleReminder],
+    ["scheduledBroadcasts", runScheduledBroadcasts],
   ] as const;
 
   const results: Record<string, unknown> = {};

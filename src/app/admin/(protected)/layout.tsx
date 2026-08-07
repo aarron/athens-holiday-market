@@ -11,6 +11,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-paper">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:font-display focus:font-semibold focus:text-paper focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-fern-deep"
+      >
+        Skip to content
+      </a>
       <header className="sticky top-0 z-40 border-b-2 border-ink/10 bg-white">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-4 px-5 sm:px-8">
           <Link
@@ -36,7 +42,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-5 pb-10 pt-24 sm:px-8">
+      <main id="main-content" className="mx-auto max-w-[1400px] px-5 pb-10 pt-24 sm:px-8">
         <AdminMobileNav role={user.role} pendingReviews={pendingReviews} />
         {children}
       </main>

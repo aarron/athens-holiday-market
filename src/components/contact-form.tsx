@@ -80,6 +80,7 @@ export function ContactForm() {
           <span className="mb-1 block text-sm font-semibold text-ink-soft">Your name</span>
           <input
             required
+            autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="h-12 w-full rounded-md border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
@@ -90,6 +91,8 @@ export function ContactForm() {
           <input
             required
             type="email"
+            autoComplete="email"
+            inputMode="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="h-12 w-full rounded-md border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"

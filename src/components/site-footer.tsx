@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { site, mapsHref } from "@/lib/site";
 import { Flower } from "@/components/brand";
-import { MapPinIcon, MailIcon, ArrowRightIcon } from "@/components/icons";
+import { MapPinIcon, MailIcon, ArrowRightIcon, BugFaceIcon } from "@/components/icons";
 
 export function SiteFooter() {
   return (
@@ -64,14 +64,31 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-paper/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-sm text-paper/50 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-paper/50 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>
             © {site.event.year} {site.name}. Shop locally for the holidays.
           </p>
-          <a href={`mailto:${site.contactEmail}`} className="inline-flex items-center gap-1.5 hover:text-fern">
-            <MailIcon size={16} aria-hidden />
-            {site.contactEmail}
-          </a>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <a href={`mailto:${site.contactEmail}`} className="inline-flex items-center gap-1.5 hover:text-fern">
+              <MailIcon size={16} aria-hidden />
+              {site.contactEmail}
+            </a>
+            <a
+              href={`${site.repoUrl}/issues/new`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-fern"
+            >
+              <BugFaceIcon size={16} aria-hidden />
+              Report a bug
+            </a>
+            <span>
+              Built by{" "}
+              <a href="http://aarronwalter.com" target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-fern">
+                Aarron Walter
+              </a>
+            </span>
+          </div>
         </div>
       </div>
     </footer>

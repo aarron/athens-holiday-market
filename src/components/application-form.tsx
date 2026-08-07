@@ -133,7 +133,7 @@ export function ApplicationForm() {
         <label className={label} htmlFor="name">
           Your name <span className="text-poppy">*</span>
         </label>
-        <input id="name" className={`mt-1.5 ${field}`} {...register("name")} />
+        <input id="name" autoComplete="name" className={`mt-1.5 ${field}`} {...register("name")} />
         {errors.name && <p className={errCls}>{errors.name.message}</p>}
       </div>
 
@@ -142,14 +142,14 @@ export function ApplicationForm() {
           <label className={label} htmlFor="email">
             Email address <span className="text-poppy">*</span>
           </label>
-          <input id="email" type="email" className={`mt-1.5 ${field}`} {...register("email")} />
+          <input id="email" type="email" autoComplete="email" inputMode="email" className={`mt-1.5 ${field}`} {...register("email")} />
           {errors.email && <p className={errCls}>{errors.email.message}</p>}
         </div>
         <div>
           <label className={label} htmlFor="phone">
             Mobile number <span className="text-poppy">*</span>
           </label>
-          <input id="phone" type="tel" className={`mt-1.5 ${field}`} {...register("phone")} />
+          <input id="phone" type="tel" autoComplete="tel" inputMode="tel" className={`mt-1.5 ${field}`} {...register("phone")} />
           {errors.phone && <p className={errCls}>{errors.phone.message}</p>}
         </div>
       </div>

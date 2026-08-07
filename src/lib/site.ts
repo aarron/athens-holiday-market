@@ -10,6 +10,7 @@ export const site = {
   description:
     "The Athens Holiday Market returns to the Big City Bread courtyard — two festive evenings of handmade gifts from local artists. Shop locally for the holidays.",
   url: "https://athensholidaymarket.com",
+  repoUrl: "https://github.com/aarron/athens-holiday-market",
   contactEmail: "hello@athensholidaymarket.com",
   social: {
     instagram: "@athensholidaymarket",

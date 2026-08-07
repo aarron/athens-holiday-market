@@ -7,6 +7,12 @@ export default async function ArtistPortalLayout({ children }: { children: React
   const user = await requireArtist();
   return (
     <div className="min-h-screen bg-paper">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:font-display focus:font-semibold focus:text-paper focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-fern-deep"
+      >
+        Skip to content
+      </a>
       <header className="border-b-2 border-ink/10 bg-white">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-4 px-5">
           <Link href="/artist" className="flex items-center gap-2.5">
@@ -23,7 +29,7 @@ export default async function ArtistPortalLayout({ children }: { children: React
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-5 py-8">{children}</main>
+      <main id="main-content" className="mx-auto max-w-3xl px-5 py-8">{children}</main>
     </div>
   );
 }

@@ -71,7 +71,7 @@ export async function sendArtistPageLive(to: string, name: string, slug: string)
       ready-made graphics and captions to post on Instagram and Facebook, plus everything you'll need for
       event day — booth layout, setup times, and the Big City Bread menu.</p>
     <p style="margin:0 0 18px"><a href="${site.url}/artist" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open your artist hub →</a></p>
-    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Sign in with this email address — the link is one-time, no password needed. Tag ${site.social.instagram} in your posts and we'll reshare you.</p>`;
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Log in with this email address — the link is one-time, no password needed. Tag ${site.social.instagram} in your posts and we'll reshare you.</p>`;
   try {
     return await resend.emails.send({
       from: EMAIL_FROM,
@@ -93,10 +93,10 @@ export async function sendArtistPageReminder(to: string, name: string) {
     <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, congratulations again on being accepted to the
       ${site.event.year} ${site.name}! We noticed your artist page isn't live yet.</p>
     <p style="margin:0 0 14px;line-height:1.6">It only takes a few minutes — we've pre-filled it with your
-      application photos and words. Just sign in, review, add any photos you like, and submit.
+      application photos and words. Just log in, review, add any photos you like, and submit.
       A great page helps shoppers find you and plan their visit.</p>
     <p style="margin:0 0 18px"><a href="${site.url}/artist/login" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Finish your artist page →</a></p>
-    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Sign in with the email you applied with — the button sends a one-time link, no password needed.</p>`;
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Log in with the email you applied with — the button sends a one-time link, no password needed.</p>`;
   try {
     return await resend.emails.send({
       from: EMAIL_FROM,
@@ -132,7 +132,7 @@ export async function sendJudgeSocialKit(to: string[]) {
       the market (${site.event.days[0].label} &amp; ${site.event.days[1].label}) on Instagram and Facebook. Each image is
       sized for both feed and stories.</p>
     <p style="margin:0 0 18px"><a href="${url}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open the social kit →</a></p>
-    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Sign in with this email address (one-time link, no
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Log in with this email address (one-time link, no
       password). Tag ${site.social.instagram} so posts are easy to reshare.</p>`;
   try {
     return await resend.emails.send({
@@ -172,7 +172,7 @@ export async function sendContactEmail(name: string, email: string, message: str
   }
 }
 
-/** Send a one-time magic sign-in link. */
+/** Send a one-time magic login link. */
 export async function sendMagicLink(to: string, url: string) {
   // Always log in dev so links are testable without a verified sending domain.
   if (process.env.NODE_ENV !== "production") {
@@ -180,15 +180,15 @@ export async function sendMagicLink(to: string, url: string) {
   }
   if (!resend) return { skipped: true as const };
   const inner = `
-    <h1 style="margin:0 0 12px;font-size:24px">Sign in to ${site.name}</h1>
-    <p style="margin:0 0 16px;line-height:1.6">Click the button below to sign in. This link works once and expires in 30 minutes.</p>
-    <p style="margin:0 0 20px"><a href="${url}" style="display:inline-block;background:#17161b;color:#faf5ea;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Sign in</a></p>
+    <h1 style="margin:0 0 12px;font-size:24px">Log in to ${site.name}</h1>
+    <p style="margin:0 0 16px;line-height:1.6">Click the button below to log in. This link works once and expires in 30 minutes.</p>
+    <p style="margin:0 0 20px"><a href="${url}" style="display:inline-block;background:#17161b;color:#faf5ea;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Log in</a></p>
     <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6;word-break:break-all">Or paste this link into your browser:<br/>${url}</p>`;
   try {
     return await resend.emails.send({
       from: EMAIL_FROM,
       to,
-      subject: `Your sign-in link for ${site.name}`,
+      subject: `Your login link for ${site.name}`,
       html: wrap(inner),
     });
   } catch (e) {
@@ -233,10 +233,10 @@ export async function sendDecisionEmail(to: string, name: string, decision: Deci
     decision === "accepted"
       ? `<div style="margin:0 0 18px;padding:16px 18px;background:#f1f7ec;border-radius:10px">
            <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — build your artist page.</strong>
-           We've started it for you with your application photos and words. Sign in with this email address
+           We've started it for you with your application photos and words. Log in with this email address
            (<strong>${escapeHtml(to)}</strong>), review it, add or swap photos, and submit it for us to publish.</p>
            ${ctaButton(`${site.url}/artist/login`, "Build your artist page →")}
-           <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">The button emails you a one-time sign-in link — no password needed.</p>
+           <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">The button emails you a one-time login link — no password needed.</p>
          </div>`
       : "";
   const inner = `

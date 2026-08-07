@@ -4,11 +4,11 @@ import { getSessionUser } from "@/lib/admin-auth";
 import { Flower } from "@/components/brand";
 import { MagicLinkForm } from "@/components/magic-link-form";
 
-export const metadata: Metadata = { title: "Staff sign in", robots: { index: false } };
+export const metadata: Metadata = { title: "Staff login", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const ERRORS: Record<string, string> = {
-  invalid: "That sign-in link was invalid. Please request a new one.",
+  invalid: "That login link was invalid. Please request a new one.",
   expired: "That link has expired or was already used. Please request a new one.",
   noaccess: "That email isn't on the jury/organizer list.",
 };
@@ -29,7 +29,7 @@ export default async function AdminLogin({
         <Flower size={56} color="var(--color-fuchsia)" className="mx-auto" />
         <h1 className="mt-6 text-3xl font-extrabold">Jury &amp; Admin</h1>
         <p className="mt-2 text-ink-soft">
-          Enter your email and we&apos;ll send you a one-time sign-in link.
+          Enter your email and we&apos;ll send you a one-time login link.
         </p>
 
         {error && ERRORS[error] && (

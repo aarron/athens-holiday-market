@@ -17,7 +17,7 @@ export default async function ArtistPortalLayout({ children }: { children: React
             <span className="hidden text-sm text-ink-soft sm:inline">{user.email}</span>
             <form action={signOutAction}>
               <button className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream">
-                Sign out
+                Log out
               </button>
             </form>
           </div>

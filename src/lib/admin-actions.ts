@@ -198,7 +198,7 @@ export async function returnArtistSubmission(artistId: number) {
   return { ok: true };
 }
 
-/** Email an accepted artist their magic sign-in link (admin-initiated). */
+/** Email an accepted artist their magic login link (admin-initiated). */
 export async function sendArtistLink(email: string) {
   await requireAdmin();
   const { resolveIdentity, createMagicToken } = await import("@/lib/magic");

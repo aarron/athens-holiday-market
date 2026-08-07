@@ -109,7 +109,7 @@ export function AvatarMenu({
               role="menuitem"
               className="w-full rounded-md px-3 py-2 text-left text-sm font-semibold transition-colors hover:bg-cream"
             >
-              Sign out
+              Log out
             </button>
           </form>
         </div>

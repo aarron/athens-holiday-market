@@ -16,7 +16,7 @@ export function MagicLinkForm() {
           Check your email
         </p>
         <p className="mt-1 text-sm text-ink-soft">
-          If that address has access, we just sent a sign-in link. It expires in 30 minutes.
+          If that address has access, we just sent a login link. It expires in 30 minutes.
         </p>
       </div>
     );
@@ -37,7 +37,7 @@ export function MagicLinkForm() {
         className="h-14 w-full rounded-md border-2 border-ink/20 bg-white px-4 text-base outline-none focus:border-fern-deep"
       />
       <Button type="submit" size="lg" variant="ink" className="w-full" disabled={pending}>
-        {pending ? "Sending…" : "Email me a sign-in link"}
+        {pending ? "Sending…" : "Email me a login link"}
       </Button>
       {state.error && <p className="text-sm font-medium text-poppy">{state.error}</p>}
     </form>

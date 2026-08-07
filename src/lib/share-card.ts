@@ -6,9 +6,22 @@ import { site } from "@/lib/site";
 
 const d0 = new Date(site.event.days[0].date + "T00:00");
 const d1 = new Date(site.event.days[1].date + "T00:00");
-const DATE_LABEL = `Dec ${d0.getDate()}–${d1.getDate()}, ${site.event.year}`;
 
 export type ShareCardKind = "square" | "story";
+
+// Bright, legible-on-dark accents; one is picked per artist so the weekly
+// spotlights feel like a set without being identical.
+const ACCENTS = ["#c6e34d", "#45bced", "#f472c0", "#f5a04a", "#4bd0c0", "#ffd24a"];
+function accentFor(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return ACCENTS[h % ACCENTS.length];
+}
+
+type SpacedCtx = CanvasRenderingContext2D & { letterSpacing?: string };
+function setSpacing(ctx: CanvasRenderingContext2D, value: string) {
+  (ctx as SpacedCtx).letterSpacing = value;
+}
 
 function loadImage(url: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -75,7 +88,7 @@ export async function makeShareCard(
   ctx.fillStyle = "#faf5ea";
   ctx.fillRect(0, 0, w, h);
 
-  const photoH = Math.round(h * (kind === "square" ? 0.7 : 0.62));
+  const photoH = Math.round(h * (kind === "square" ? 0.67 : 0.62));
   if (photoUrl) {
     try {
       const img = await loadImage(photoUrl);
@@ -109,38 +122,55 @@ export async function makeShareCard(
     /* logo optional — skip if it fails to load */
   }
 
-  // Bottom band
+  // Soft gradient so the photo dissolves into the band instead of a hard edge.
+  const scrimH = Math.round(h * 0.14);
+  const grad = ctx.createLinearGradient(0, photoH - scrimH, 0, photoH);
+  grad.addColorStop(0, "rgba(23,22,27,0)");
+  grad.addColorStop(1, "rgba(23,22,27,1)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, photoH - scrimH, w, scrimH);
+
+  // Bottom band + accent rule along its top edge.
+  const accent = accentFor(name);
   ctx.fillStyle = "#17161b";
   ctx.fillRect(0, photoH, w, h - photoH);
+  ctx.fillStyle = accent;
+  ctx.fillRect(0, photoH, w, 8);
 
+  const font = '"Helvetica Neue", Helvetica, Arial, sans-serif';
   const pad = 72;
   let y = photoH + 96;
-
   ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "#c6e34d"; // chartreuse
-  ctx.font = "700 30px Jost, Arial, sans-serif";
-  ctx.fillText("FIND ME AT THE", pad, y);
-  y += 78;
 
+  // Eyebrow — the artist's medium, uppercase in the accent color.
+  ctx.fillStyle = accent;
+  ctx.font = `700 27px ${font}`;
+  setSpacing(ctx, "3px");
+  ctx.fillText(ellipsize(ctx, (medium || site.name).toUpperCase(), w - pad * 2), pad, y);
+  setSpacing(ctx, "0px");
+  y += 76;
+
+  // Artist name — the hero.
   ctx.fillStyle = "#ffffff";
-  ctx.font = "800 76px Jost, Arial, sans-serif";
-  ctx.fillText("Athens Holiday Market", pad, y);
-  y += 66;
-
-  ctx.fillStyle = "rgba(255,255,255,0.72)";
-  ctx.font = "500 34px Jost, Arial, sans-serif";
-  ctx.fillText(`${DATE_LABEL} · ${site.location.name}`, pad, y);
-  y += 74;
-
-  ctx.fillStyle = "#f472c0"; // fuchsia-light
-  ctx.font = "800 54px Jost, Arial, sans-serif";
+  ctx.font = `800 70px ${font}`;
   ctx.fillText(ellipsize(ctx, name, w - pad * 2), pad, y);
-  if (medium) {
-    y += 46;
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.font = "500 30px Jost, Arial, sans-serif";
-    ctx.fillText(ellipsize(ctx, medium, w - pad * 2), pad, y);
-  }
+  y += 40;
+
+  // Short accent divider.
+  ctx.fillStyle = accent;
+  ctx.fillRect(pad, y, 84, 4);
+  y += 46;
+
+  // Event footer.
+  ctx.fillStyle = "rgba(255,255,255,0.66)";
+  ctx.font = `600 25px ${font}`;
+  setSpacing(ctx, "1.5px");
+  ctx.fillText(
+    `${site.name.toUpperCase()}  ·  DEC ${d0.getDate()}–${d1.getDate()}  ·  ${site.event.timeLabel.toUpperCase()}`,
+    pad,
+    y,
+  );
+  setSpacing(ctx, "0px");
 
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("export failed"))), "image/jpeg", 0.92),

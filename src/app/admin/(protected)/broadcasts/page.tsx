@@ -4,7 +4,9 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { listBroadcasts } from "@/lib/broadcast-data";
 import { getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
 import { getTextRecipients } from "@/lib/sms-actions";
+import { getScheduledSends } from "@/lib/scheduled-sends";
 import { TextArtists } from "@/components/admin/text-artists";
+import { ScheduledSends } from "@/components/admin/scheduled-sends";
 
 export const metadata: Metadata = { title: "Email", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -56,10 +58,11 @@ function DecisionCard({
 
 export default async function EmailHubPage() {
   await requireAdmin();
-  const [broadcasts, cycle, texts] = await Promise.all([
+  const [broadcasts, cycle, texts, scheduled] = await Promise.all([
     listBroadcasts(),
     getActiveCycle(),
     getTextRecipients(),
+    getScheduledSends(),
   ]);
 
   const groups = cycle ? await getDecisionGroups(cycle.id) : null;
@@ -75,6 +78,9 @@ export default async function EmailHubPage() {
         <h1 className="text-3xl font-extrabold">Email &amp; messaging</h1>
         <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
       </div>
+
+      {/* What will send on its own — surfaced first, for awareness */}
+      <ScheduledSends data={scheduled} />
 
       {/* Decisions — heading above; cards below, no wrapper box */}
       {hasDecisions && totalToNotify > 0 && groups && (

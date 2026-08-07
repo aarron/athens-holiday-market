@@ -86,6 +86,24 @@ function buildInner(kind: Kind, list: { name: string; slug: string; photoUrl: st
     ${photoGrid(list)}`;
 }
 
+/**
+ * The three date-driven reminder sends with their target date + subject.
+ * Shared by the cron runner and the admin "scheduled sends" view so the
+ * dates and subject lines shown to admins always match what actually fires.
+ */
+export function eventReminderPlan() {
+  const day1 = site.event.days[0].date;
+  const day2 = site.event.days[1].date;
+  const preD = new Date(day1 + "T12:00:00Z");
+  preD.setUTCDate(preD.getUTCDate() - 2);
+  const preDate = preD.toISOString().slice(0, 10);
+  return [
+    { kind: "pre" as Kind, sendDate: preDate, subject: COPY.pre.subject },
+    { kind: "day1" as Kind, sendDate: day1, subject: COPY.day1.subject },
+    { kind: "day2" as Kind, sendDate: day2, subject: COPY.day2.subject },
+  ];
+}
+
 /** Render the reminder email HTML for preview (no send). */
 export async function previewEventReminderHtml(kind: Kind = "pre") {
   const list = await featuredArtists(9);

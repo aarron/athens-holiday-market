@@ -2,17 +2,13 @@
 
 import { useRef, useState, useTransition } from "react";
 import { submitArtistDraft } from "@/lib/artist-actions";
-import { proofreadBio, type ProofreadMode } from "@/lib/proofread-actions";
+import { ProofreadField } from "@/components/proofread-field";
 import { ExternalIcon } from "@/components/icons";
-
-function wordCount(s: string) {
-  const t = s.trim();
-  return t ? t.split(/\s+/).length : 0;
-}
 
 type Initial = {
   name: string;
   medium: string;
+  statement: string;
   bio: string;
   website: string;
   socials: Record<string, string>;
@@ -51,6 +47,7 @@ export function ArtistEditor({
   slug: string;
   published: boolean;
 }) {
+  const [statement, setStatement] = useState(initial.statement);
   const [bio, setBio] = useState(initial.bio);
   const [website, setWebsite] = useState(initial.website);
   const [socials, setSocials] = useState<Record<string, string>>(initial.socials);
@@ -61,9 +58,6 @@ export function ArtistEditor({
   const [dragging, setDragging] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
-  const [proofing, setProofing] = useState<ProofreadMode | null>(null);
-  const [suggestion, setSuggestion] = useState<string | null>(null);
-  const [proofErr, setProofErr] = useState("");
   const photoInput = useRef<HTMLInputElement>(null);
   const logoInput = useRef<HTMLInputElement>(null);
 
@@ -99,30 +93,10 @@ export function ArtistEditor({
     }
   }
 
-  async function onProofread(mode: ProofreadMode) {
-    setProofErr("");
-    setSuggestion(null);
-    setProofing(mode);
-    try {
-      const res = await proofreadBio(bio, mode);
-      if ("suggestion" in res && res.suggestion) setSuggestion(res.suggestion);
-      else setProofErr(("error" in res && res.error) || "Couldn't help just now.");
-    } catch {
-      setProofErr("Couldn't help just now. Please try again.");
-    } finally {
-      setProofing(null);
-    }
-  }
-
-  function acceptSuggestion() {
-    if (suggestion) setBio(suggestion);
-    setSuggestion(null);
-  }
-
   function onSubmit() {
     setSaved(false);
     start(async () => {
-      const res = await submitArtistDraft({ bio, website, socials, logoUrl, photoUrls: photos });
+      const res = await submitArtistDraft({ statement, bio, website, socials, logoUrl, photoUrls: photos });
       if (res && "ok" in res && res.ok) setSaved(true);
       else setUploadErr((res && "error" in res && res.error) || "Couldn't save.");
     });
@@ -230,69 +204,32 @@ export function ArtistEditor({
 
       {uploadErr && <p className="text-sm font-medium text-poppy">{uploadErr}</p>}
 
-      {/* Statement */}
+      {/* Artist statement — about the work */}
       <Card
         title="Artist statement"
-        hint="Tell shoppers who you are and what you make. A short paragraph — 40–120 words — works best."
+        hint="About your work — what you make and what makes it special. This is the main text on your page. 40–120 words works well."
       >
-        <textarea
-          value={bio}
-          onChange={(e) => {
-            setBio(e.target.value);
-            if (suggestion) setSuggestion(null);
-          }}
+        <ProofreadField
+          value={statement}
+          onChange={setStatement}
           rows={6}
-          placeholder="Example: I'm a potter based in Athens, throwing functional stoneware in small batches. Each piece is wheel-thrown and glazed by hand, so no two are quite alike. I've sold at local markets for six years and love making pieces people reach for every day."
-          className="w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
+          placeholder="Example: I throw functional stoneware in small batches — mugs, bowls, and vases meant for everyday use. Each piece is wheel-thrown and glazed by hand, so no two are quite alike."
+          textareaClassName="w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
         />
+      </Card>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onProofread("grammar")}
-            disabled={proofing !== null || wordCount(bio) < 3}
-            className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
-          >
-            {proofing === "grammar" ? "Checking…" : "Check grammar & spelling"}
-          </button>
-          <button
-            type="button"
-            onClick={() => onProofread("polish")}
-            disabled={proofing !== null || wordCount(bio) < 3}
-            className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
-          >
-            {proofing === "polish" ? "Polishing…" : "Polish for clarity"}
-          </button>
-          <span className="ml-auto text-xs text-ink-soft/70">{wordCount(bio)} words</span>
-        </div>
-
-        {proofErr && <p className="text-sm font-medium text-poppy">{proofErr}</p>}
-
-        {suggestion && (
-          <div className="rounded-lg border-2 border-fern-deep/25 bg-fern-soft/40 p-4">
-            <p className="mb-1 text-sm font-bold text-fern-deep">Suggested version</p>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-ink">{suggestion}</p>
-            <p className="mt-2 text-xs text-ink-soft/80">
-              These are just suggestions — your words stay yours. Use them or keep your own.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={acceptSuggestion}
-                className="rounded-md bg-fern-deep px-4 py-1.5 text-sm font-bold text-white hover:opacity-90"
-              >
-                Use this
-              </button>
-              <button
-                type="button"
-                onClick={() => setSuggestion(null)}
-                className="rounded-md border-2 border-ink/15 px-4 py-1.5 text-sm font-semibold hover:bg-cream"
-              >
-                Keep mine
-              </button>
-            </div>
-          </div>
-        )}
+      {/* Artist bio — about the person */}
+      <Card
+        title="Artist bio"
+        hint="About you — where you're based, how you started, what you love about making. (Optional, but a nice touch.)"
+      >
+        <ProofreadField
+          value={bio}
+          onChange={setBio}
+          rows={4}
+          placeholder="Example: I'm a potter based in Athens. I fell for clay in a community studio ten years ago and haven't stopped since."
+          textareaClassName="w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
+        />
       </Card>
 
       {/* Links */}

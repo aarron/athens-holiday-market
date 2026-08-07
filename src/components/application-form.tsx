@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Flower } from "@/components/brand";
+import { ProofreadField } from "@/components/proofread-field";
 import { CelebrateIcon } from "@/components/icons";
 import { site } from "@/lib/site";
 import { MEDIUM_CATEGORIES } from "@/lib/mediums";
@@ -22,6 +23,7 @@ const schema = z.object({
   medium: z.string().min(1, "Tell us the medium of your work."),
   mediumCategory: z.string().min(1, "Please choose a category."),
   description: z.string().min(1, "Please describe your work."),
+  bio: z.string().optional(),
   shareBooth: z.enum(["yes", "no"]),
   shareBoothWith: z.string().optional(),
   smsConsent: z.boolean().optional(),
@@ -38,6 +40,7 @@ export function ApplicationForm() {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors },
   } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { shareBooth: "no" } });
 
@@ -226,15 +229,51 @@ export function ApplicationForm() {
 
       <div>
         <label className={label} htmlFor="description">
-          Describe your work <span className="text-poppy">*</span>
+          Artist statement <span className="text-poppy">*</span>
         </label>
-        <textarea
-          id="description"
-          rows={5}
-          className={`mt-1.5 ${field} resize-y`}
-          {...register("description")}
+        <p className="mt-0.5 text-sm text-ink-soft">
+          Describe your work and what makes it special. This becomes the main text on your artist
+          page if you&apos;re accepted, so it&apos;s worth a few thoughtful sentences.
+        </p>
+        <Controller
+          name="description"
+          control={control}
+          render={({ field: f }) => (
+            <ProofreadField
+              id="description"
+              value={f.value ?? ""}
+              onChange={f.onChange}
+              rows={5}
+              placeholder="I make…"
+              textareaClassName={`mt-1.5 ${field} resize-y`}
+            />
+          )}
         />
         {errors.description && <p className={errCls}>{errors.description.message}</p>}
+      </div>
+
+      <div>
+        <label className={label} htmlFor="bio">
+          Artist bio
+        </label>
+        <p className="mt-0.5 text-sm text-ink-soft">
+          A short introduction to you — where you&apos;re based, how you got started, what you love
+          about making. Also shown on your artist page. (Optional, but a nice touch.)
+        </p>
+        <Controller
+          name="bio"
+          control={control}
+          render={({ field: f }) => (
+            <ProofreadField
+              id="bio"
+              value={f.value ?? ""}
+              onChange={f.onChange}
+              rows={4}
+              placeholder="I'm a maker based in Athens…"
+              textareaClassName={`mt-1.5 ${field} resize-y`}
+            />
+          )}
+        />
       </div>
 
       <div>

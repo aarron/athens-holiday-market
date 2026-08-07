@@ -68,6 +68,8 @@ export const applications = pgTable(
     // Normalized canonical category (see lib/mediums.ts) for blend analysis.
     mediumCategory: text("medium_category"),
     description: text("description").notNull(),
+    // Artist bio (about the person) — captured up front to seed the artist page.
+    bio: text("bio"),
     // { instagram, facebook, tiktok, etsy, ... } — reference for judges.
     socials: jsonb("socials").$type<Record<string, string>>().default({}),
     shareBooth: boolean("share_booth").notNull().default(false),
@@ -143,6 +145,7 @@ export const comments = pgTable("comments", {
 
 /** An artist's self-submitted draft, held for admin review before going live. */
 export type PendingArtistContent = {
+  statement?: string;
   bio?: string;
   website?: string;
   socials?: Record<string, string>;
@@ -158,6 +161,8 @@ export const artists = pgTable("artists", {
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   bio: text("bio"),
+  // Artist statement (about the work) — separate from bio (about the person).
+  statement: text("statement"),
   medium: text("medium"),
   website: text("website"),
   // { instagram, facebook, tiktok, etsy, ... }

@@ -20,6 +20,7 @@ const schema = z.object({
   medium: z.string().trim().min(1).max(300),
   mediumCategory: z.string().trim().max(120).optional().default(""),
   description: z.string().trim().min(1).max(5000),
+  bio: z.string().trim().max(5000).optional().default(""),
   shareBooth: z.boolean(),
   shareBoothWith: z.string().trim().max(200).optional().default(""),
   smsConsent: z.boolean().optional().default(false),
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
       medium: d.medium,
       mediumCategory: d.mediumCategory || categorizeMedium(`${d.mediumCategory} ${d.medium}`),
       description: d.description,
+      bio: d.bio || null,
       shareBooth: d.shareBooth,
       shareBoothWith: d.shareBooth ? d.shareBoothWith || null : null,
     })

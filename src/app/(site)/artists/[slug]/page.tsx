@@ -22,7 +22,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const artist = await getArtistBySlug(slug);
   if (!artist || !artist.published) return { title: "Artist not found" };
-  const desc = artist.bio?.slice(0, 155) ?? `${artist.name} — ${artist.medium} at the ${site.name}.`;
+  const desc =
+    (artist.statement ?? artist.bio)?.slice(0, 155) ??
+    `${artist.name} — ${artist.medium} at the ${site.name}.`;
   return {
     title: artist.name,
     description: desc,
@@ -87,10 +89,19 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             <p className="mt-2 text-lg font-bold text-fern-deep">{artist.medium}</p>
           )}
 
-          {artist.bio && (
+          {artist.statement && (
             <p className="mt-5 whitespace-pre-line text-lg leading-relaxed text-ink-soft">
-              {artist.bio}
+              {artist.statement}
             </p>
+          )}
+
+          {artist.bio && (
+            <div className="mt-6 border-t border-ink/10 pt-5">
+              <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-teal">
+                About {artist.name.split(" ")[0]}
+              </h2>
+              <p className="mt-2 whitespace-pre-line leading-relaxed text-ink-soft">{artist.bio}</p>
+            </div>
           )}
 
           {(artist.website || socialEntries.length > 0) && (

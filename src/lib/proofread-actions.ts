@@ -1,30 +1,32 @@
 "use server";
 
 import Anthropic from "@anthropic-ai/sdk";
-import { requireArtist } from "@/lib/admin-auth";
 
 export type ProofreadMode = "grammar" | "polish";
 
 const MODE_PROMPT: Record<ProofreadMode, string> = {
   grammar:
-    "Fix only grammar, spelling, and punctuation. Do NOT rewrite, reorder, or reword beyond what a correction requires. Preserve the artist's voice, facts, and first-person perspective exactly. Keep the length essentially the same. Never invent details.",
+    "Fix only grammar, spelling, and punctuation. Do NOT rewrite, reorder, or reword beyond what a correction requires. Preserve the writer's voice, facts, and first-person perspective exactly. Keep the length essentially the same. Never invent details.",
   polish:
-    "Lightly tidy the writing for clarity and flow: tighten rambling sentences, fix awkward phrasing, and correct grammar and spelling. Stay firmly in the artist's own voice and keep it first-person. Do NOT invent facts, add claims, or change the meaning. Keep it roughly the same length — a little shorter is fine.",
+    "Lightly tidy the writing for clarity and flow: tighten rambling sentences, fix awkward phrasing, and correct grammar and spelling. Stay firmly in the writer's own voice and keep it first-person. Do NOT invent facts, add claims, or change the meaning. Keep it roughly the same length — a little shorter is fine.",
 };
 
 /**
- * Suggest a cleaned-up version of an artist's bio. Returns only the suggested
- * text — the artist decides whether to accept it, so we never mutate anything.
+ * Suggest a cleaned-up version of a short piece of artist-supplied copy (a bio
+ * or artist statement). Returns only the suggestion — the writer decides whether
+ * to accept it, so this never mutates anything. Public (used on the unauthed
+ * application form as well as the artist portal); kept cheap and tightly capped.
  */
-export async function proofreadBio(text: string, mode: ProofreadMode) {
-  await requireArtist();
-
+export async function proofreadText(text: string, mode: ProofreadMode) {
   const input = (text ?? "").trim();
   if (input.length < 10) {
     return { error: "Write a little more first, then we can help polish it." };
   }
   if (input.length > 4000) {
     return { error: "That's a bit long to proofread — please trim it a little first." };
+  }
+  if (mode !== "grammar" && mode !== "polish") {
+    return { error: "Unknown option." };
   }
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn("[proofread] ANTHROPIC_API_KEY not set");
@@ -37,9 +39,9 @@ export async function proofreadBio(text: string, mode: ProofreadMode) {
       model: "claude-haiku-4-5",
       max_tokens: 1500,
       system:
-        "You are a careful, light-touch copy editor helping an independent artist improve the bio on their maker-market profile. " +
+        "You are a careful, light-touch copy editor helping an independent artist improve the writing on their maker-market profile. " +
         MODE_PROMPT[mode] +
-        " Return ONLY the corrected bio text with no preamble, quotes, explanation, or markdown.",
+        " Return ONLY the corrected text with no preamble, quotes, explanation, or markdown.",
       messages: [{ role: "user", content: input }],
     });
 

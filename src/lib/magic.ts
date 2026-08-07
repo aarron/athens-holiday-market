@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "crypto";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { loginTokens, applications, users, artists } from "@/db/schema";
+import { loginTokens, applications, applicationPhotos, artistPhotos, users, artists } from "@/db/schema";
 import { bootstrapAdmins, bootstrapJudges } from "@/lib/env";
 import type { AppRole } from "@/lib/roles";
 
@@ -81,11 +81,25 @@ export async function ensureArtistForApplication(applicationId: number) {
       slug,
       name: app.name,
       medium: app.medium,
-      bio: app.description,
+      // The application captures both up front: statement (about the work),
+      // bio (about the artist). Seed both so the page is nearly done.
+      statement: app.description,
+      bio: app.bio ?? null,
       website: app.website || null,
       socials: (app.socials as Record<string, string>) ?? {},
       published: false,
     })
     .returning();
+
+  // Give the artist a head start: copy their application photos into the draft.
+  const photos = await db.query.applicationPhotos.findMany({
+    where: eq(applicationPhotos.applicationId, applicationId),
+    orderBy: (p, { asc }) => [asc(p.position)],
+  });
+  if (photos.length) {
+    await db.insert(artistPhotos).values(
+      photos.slice(0, 6).map((p, i) => ({ artistId: created.id, url: p.url, position: i })),
+    );
+  }
   return created;
 }

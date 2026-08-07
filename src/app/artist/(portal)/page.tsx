@@ -27,6 +27,7 @@ export default async function ArtistPortalPage() {
   const initial = {
     name: artist.name,
     medium: artist.medium ?? "",
+    statement: pc?.statement ?? artist.statement ?? "",
     bio: pc?.bio ?? artist.bio ?? "",
     website: pc?.website ?? artist.website ?? "",
     socials: pc?.socials ?? ((artist.socials as Record<string, string>) ?? {}),

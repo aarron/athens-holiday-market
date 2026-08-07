@@ -9,6 +9,7 @@ import { requireArtist } from "@/lib/admin-auth";
 import { sendArtistReviewAlert } from "@/lib/emails";
 
 const schema = z.object({
+  statement: z.string().max(4000).optional().default(""),
   bio: z.string().max(4000).optional().default(""),
   website: z.string().max(300).optional().default(""),
   socials: z.record(z.string(), z.string().max(300)).optional().default({}),
@@ -26,7 +27,7 @@ export async function submitArtistDraft(input: ArtistDraftInput) {
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: "Please double-check your entries." };
 
-  const { bio, website, socials, logoUrl, photoUrls } = parsed.data;
+  const { statement, bio, website, socials, logoUrl, photoUrls } = parsed.data;
   const cleanSocials = Object.fromEntries(
     Object.entries(socials).filter(([, v]) => v && v.trim()),
   );
@@ -34,7 +35,7 @@ export async function submitArtistDraft(input: ArtistDraftInput) {
   await db
     .update(artists)
     .set({
-      pendingContent: { bio, website, socials: cleanSocials, logoUrl: logoUrl ?? null, photoUrls },
+      pendingContent: { statement, bio, website, socials: cleanSocials, logoUrl: logoUrl ?? null, photoUrls },
       submittedAt: new Date(),
       updatedAt: new Date(),
     })

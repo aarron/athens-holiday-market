@@ -99,7 +99,8 @@ export async function publishArtist(applicationId: number) {
       applicationId,
       slug,
       name: app.name,
-      bio: app.description,
+      statement: app.description,
+      bio: app.bio ?? null,
       medium: app.medium,
       website: app.website || null,
       socials: (app.socials as Record<string, string>) ?? {},
@@ -136,6 +137,7 @@ export async function approveArtistSubmission(artistId: number) {
   await db
     .update(artists)
     .set({
+      statement: pc.statement ?? artist.statement,
       bio: pc.bio ?? artist.bio,
       website: pc.website ?? artist.website,
       socials: pc.socials ?? artist.socials,

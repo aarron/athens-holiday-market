@@ -8,6 +8,28 @@ function fileId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Fetch a Drive thumbnail with retry — Drive throttles bulk requests, so a
+ *  non-image response is usually transient rate-limiting, not a dead file. */
+async function fetchImage(id: string): Promise<Buffer | null> {
+  const backoff = [0, 1500, 4000, 9000];
+  for (const wait of backoff) {
+    if (wait) await sleep(wait);
+    try {
+      const res = await fetch(`https://drive.google.com/thumbnail?id=${id}&sz=w1200`);
+      const ct = res.headers.get("content-type") || "";
+      if (res.ok && ct.startsWith("image/")) {
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.length >= 3000) return buf;
+      }
+    } catch {
+      /* retry */
+    }
+  }
+  return null;
+}
+
 async function main() {
   const rows = await db
     .select({ id: applicationPhotos.id, url: applicationPhotos.url })
@@ -23,18 +45,12 @@ async function main() {
       skip++;
       continue;
     }
+    const buf = await fetchImage(id);
+    if (!buf) {
+      skip++;
+      continue;
+    }
     try {
-      const res = await fetch(`https://drive.google.com/thumbnail?id=${id}&sz=w1200`);
-      const ct = res.headers.get("content-type") || "";
-      if (!res.ok || !ct.startsWith("image/")) {
-        skip++;
-        continue;
-      }
-      const buf = Buffer.from(await res.arrayBuffer());
-      if (buf.length < 3000) {
-        skip++;
-        continue;
-      }
       const blob = await put(`archive/${id}.jpg`, buf, {
         access: "public",
         contentType: "image/jpeg",
@@ -43,10 +59,11 @@ async function main() {
       });
       await db.update(applicationPhotos).set({ url: blob.url }).where(eq(applicationPhotos.id, r.id));
       ok++;
-      if (ok % 50 === 0) console.log(`  migrated ${ok}…`);
+      if (ok % 50 === 0) console.log(`  migrated ${ok} (skipped ${skip})…`);
     } catch {
       skip++;
     }
+    await sleep(150); // gentle pacing to stay under Drive's rate limit
   }
   console.log(`Done: migrated ${ok}, skipped ${skip}.`);
   process.exit(0);

@@ -23,24 +23,38 @@ const scheduleSchema = composeSchema.extend({
   scheduledFor: z.string().min(1, "Pick a date and time."),
 });
 
-/** Send a preview of the broadcast to the signed-in admin only. */
-export async function sendTestEmail(input: { subject: string; body: string }) {
+const testSchema = z.object({
+  subject: z.string().trim().min(1, "Add a subject."),
+  body: z.string().trim().min(1, "Write a message."),
+  to: z.array(z.string().trim().email("That doesn't look like an email address.")).max(10).optional(),
+});
+
+/** Send a preview of the broadcast. Defaults to the signed-in admin; an explicit
+ *  list of addresses (e.g. yourself + a collaborator) overrides that. */
+export async function sendTestEmail(input: { subject: string; body: string; to?: string[] }) {
   const admin = await requireAdmin();
-  const parsed = composeSchema.pick({ subject: true, body: true }).safeParse(input);
+  const parsed = testSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
   if (!resend) return { error: "Email isn't configured." };
+
+  // De-duplicated recipient list; fall back to the admin's own address.
+  const recipients = [...new Set((parsed.data.to ?? []).map((e) => e.toLowerCase()))];
+  const to = recipients.length ? recipients : [admin.email];
 
   const html = emailShell(renderMarkdown(personalize(parsed.data.body, admin.name)), {
     unsubscribeUrl: unsubUrl("preview"),
   });
   try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: admin.email,
-      subject: `[Test] ${parsed.data.subject}`,
-      html,
-    });
-    return { ok: true, to: admin.email };
+    // Send individually so recipients don't see each other's addresses.
+    for (const addr of to) {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: addr,
+        subject: `[Test] ${parsed.data.subject}`,
+        html,
+      });
+    }
+    return { ok: true, to: to.join(", "), count: to.length };
   } catch {
     return { error: "Couldn't send the test email." };
   }

@@ -38,6 +38,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
   const [segment, setSegment] = useState<Segment>("all");
   const [mode, setMode] = useState<"now" | "schedule">("now");
   const [scheduledFor, setScheduledFor] = useState("");
+  const [testTo, setTestTo] = useState("");
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState("");
@@ -54,8 +55,9 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
 
   function onTest() {
     setMsg("");
+    const emails = testTo.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean);
     start(async () => {
-      const r = await sendTestEmail({ subject, body });
+      const r = await sendTestEmail({ subject, body, to: emails.length ? emails : undefined });
       setMsg(r && "ok" in r && r.ok ? `Test sent to ${r.to} ✓` : r?.error ?? "Couldn't send test.");
     });
   }
@@ -189,14 +191,29 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
         {msg && <p role="status" className="text-sm font-medium text-ink-soft">{msg}</p>}
 
         {!confirming ? (
-          <div className="flex flex-wrap gap-3">
-            <button
-              disabled={pending || !subject || !body}
-              onClick={onTest}
-              className="rounded-lg border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-50"
-            >
-              {pending ? "Working…" : "Send test to me"}
-            </button>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="min-w-[200px] flex-1">
+                <label htmlFor="bc-test" className="mb-1 block text-xs font-semibold text-ink-soft">
+                  Send a test to
+                </label>
+                <input
+                  id="bc-test"
+                  type="text"
+                  value={testTo}
+                  onChange={(e) => setTestTo(e.target.value)}
+                  placeholder="Blank sends to you · or you@…, jamie@…"
+                  className="h-10 w-full rounded-lg border-2 border-ink/15 bg-white px-3 text-sm outline-none focus:border-fern-deep"
+                />
+              </div>
+              <button
+                disabled={pending || !subject || !body}
+                onClick={onTest}
+                className="h-10 rounded-lg border-2 border-ink/15 px-4 text-sm font-display font-semibold hover:bg-cream disabled:opacity-50"
+              >
+                {pending ? "Working…" : "Send test"}
+              </button>
+            </div>
             <button
               disabled={pending || !subject || !body || recipientCount === 0 || !scheduleReady}
               onClick={() => setConfirming(true)}

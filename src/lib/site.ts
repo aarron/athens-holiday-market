@@ -11,12 +11,25 @@ export const site = {
     "The Athens Holiday Market returns to the Big City Bread courtyard — two festive evenings of handmade gifts from local artists. Shop locally for the holidays.",
   url: "https://athensholidaymarket.com",
   contactEmail: "hello@athensholidaymarket.com",
-  // NOTE: confirm the Instagram handle — assumed to match the Facebook page.
   social: {
     instagram: "@athensholidaymarket",
     instagramUrl: "https://www.instagram.com/athensholidaymarket",
     facebookUrl: "https://www.facebook.com/athensholidaymarket",
     hashtag: "#AthensHolidayMarket",
+  },
+  // Event-day essentials shown in the artist hub. Fill in the asset URLs
+  // (booth map image, Big City Bread event menu) when they're ready.
+  artistInfo: {
+    setup: [
+      "Load-in is the afternoon of Thursday, December 10, before doors at 5pm — exact window to be confirmed.",
+      "Bring your own table, tent weights, and lighting — it's an evening market, so plan to light your booth.",
+      "Pack extension cords and gaffer tape; power is limited, so battery/LED lighting is safest.",
+      "Break down after 9pm each night and leave your space clean.",
+    ],
+    boothMapUrl: null as string | null, // e.g. "/artist-info/booth-map.png"
+    menuUrl: null as string | null, // Big City Bread event-menu link or PDF
+    menuNote:
+      "During the market you can order food and drinks from Big City Bread straight to your booth.",
   },
   host: {
     name: "Big City Bread Cafe",
@@ -64,6 +77,7 @@ export const site = {
     { href: "/artists", label: "Artists" },
     { href: "/venue", label: "Venue" },
     { href: "/contact", label: "Contact" },
+    { href: "/artist", label: "Artist Login" },
   ],
 } as const;
 

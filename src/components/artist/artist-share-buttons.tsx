@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FacebookIcon, ExternalIcon } from "@/components/icons";
+import { FacebookIcon, XIcon, ShareIcon, LinkIcon } from "@/components/icons";
 
 /** Lightweight share row for a public artist page. */
 export function ArtistShareButtons({ url, name }: { url: string; name: string }) {
@@ -39,18 +39,19 @@ export function ArtistShareButtons({ url, name }: { url: string; name: string })
     <div className="mt-6 flex flex-wrap items-center gap-2">
       <span className="text-sm font-semibold text-ink-soft">Share:</span>
       <button type="button" onClick={nativeShare} className={btn} aria-label="Share this artist">
+        <ShareIcon size={15} aria-hidden />
         Share
-        <ExternalIcon size={14} aria-hidden />
       </button>
-      <a href={fb} target="_blank" rel="noreferrer" className={btn}>
+      <a href={fb} target="_blank" rel="noreferrer" className={btn} aria-label="Share on Facebook">
         <FacebookIcon size={15} aria-hidden />
         Facebook
       </a>
-      <a href={x} target="_blank" rel="noreferrer" className={btn}>
-        X
+      <a href={x} target="_blank" rel="noreferrer" className={btn} aria-label="Share on X">
+        <XIcon size={15} aria-hidden />X
       </a>
       <button type="button" onClick={copy} className={btn}>
-        {copied ? "Link copied ✓" : "Copy link"}
+        <LinkIcon size={15} aria-hidden />
+        {copied ? "Copied ✓" : "Copy link"}
       </button>
     </div>
   );

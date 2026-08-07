@@ -58,6 +58,33 @@ export async function sendArtistReviewAlert(to: string[], artistName: string) {
   }
 }
 
+/** Celebrate an artist whose page just went live; point them to share tools. */
+export async function sendArtistPageLive(to: string, name: string, slug: string) {
+  if (!resend) return { skipped: true as const };
+  const liveUrl = `${site.url}/artists/${slug}`;
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:24px">Your page is live! 🎉</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, your artist page is now published on the
+      ${site.event.year} ${site.name} site. Take a look:</p>
+    <p style="margin:0 0 18px"><a href="${liveUrl}" style="color:#17a898;text-decoration:none;font-weight:700">${liveUrl}</a></p>
+    <p style="margin:0 0 14px;line-height:1.6">Next, help shoppers find you: your <strong>artist hub</strong> has
+      ready-made graphics and captions to post on Instagram and Facebook, plus everything you'll need for
+      event day — booth layout, setup times, and the Big City Bread menu.</p>
+    <p style="margin:0 0 18px"><a href="${site.url}/artist" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open your artist hub →</a></p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Sign in with this email address — the link is one-time, no password needed. Tag ${site.social.instagram} in your posts and we'll reshare you.</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `🎉 Your ${site.name} page is live`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send page-live email:", e);
+    return { error: true as const };
+  }
+}
+
 /** Nudge an accepted artist who hasn't built their page yet. Best-effort. */
 export async function sendArtistPageReminder(to: string, name: string) {
   if (!resend) return { skipped: true as const };

@@ -5,7 +5,27 @@ import { getArtistBySlug, allPublishedSlugs } from "@/lib/artists-data";
 import { SafeImg } from "@/components/admin/safe-img";
 import { ArtistShareButtons } from "@/components/artist/artist-share-buttons";
 import { Flower } from "@/components/brand";
-import { BackIcon, ExternalIcon } from "@/components/icons";
+import {
+  BackIcon,
+  ExternalIcon,
+  InstagramIcon,
+  FacebookIcon,
+  TiktokIcon,
+  YoutubeIcon,
+  XIcon,
+  GlobeIcon,
+} from "@/components/icons";
+
+type IconType = typeof InstagramIcon;
+const SOCIALS: Record<string, { label: string; Icon: IconType }> = {
+  instagram: { label: "Instagram", Icon: InstagramIcon },
+  facebook: { label: "Facebook", Icon: FacebookIcon },
+  tiktok: { label: "TikTok", Icon: TiktokIcon },
+  youtube: { label: "YouTube", Icon: YoutubeIcon },
+  x: { label: "X", Icon: XIcon },
+  twitter: { label: "X", Icon: XIcon },
+  etsy: { label: "Etsy", Icon: GlobeIcon },
+};
 import { site } from "@/lib/site";
 
 export const revalidate = 300;
@@ -118,17 +138,23 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
                   <ExternalIcon size={15} aria-hidden />
                 </a>
               )}
-              {socialEntries.map(([key, url]) => (
-                <a
-                  key={key}
-                  href={url.startsWith("http") ? url : `https://${url}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold transition-colors hover:bg-cream"
-                >
-                  {SOCIAL_LABELS[key] ?? key}
-                </a>
-              ))}
+              {socialEntries.map(([key, url]) => {
+                const s = SOCIALS[key];
+                const Icon = s?.Icon ?? GlobeIcon;
+                return (
+                  <a
+                    key={key}
+                    href={url.startsWith("http") ? url : `https://${url}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={s?.label ?? key}
+                    className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold transition-colors hover:bg-cream"
+                  >
+                    <Icon size={16} aria-hidden />
+                    {s?.label ?? key}
+                  </a>
+                );
+              })}
             </div>
           )}
 

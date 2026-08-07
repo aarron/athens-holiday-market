@@ -5,7 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, votes, comments, artists, artistPhotos } from "@/db/schema";
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
-import { sendDecisionEmail } from "@/lib/emails";
+import { sendDecisionEmail, sendArtistPageLive } from "@/lib/emails";
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -115,6 +115,7 @@ export async function publishArtist(applicationId: number) {
   }
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/artists");
+  await sendArtistPageLive(app.email, app.name, slug);
   return { ok: true, slug };
 }
 
@@ -133,6 +134,7 @@ export async function approveArtistSubmission(artistId: number) {
   const artist = await db.query.artists.findFirst({ where: eq(artists.id, artistId) });
   if (!artist || !artist.pendingContent) return { error: "Nothing to approve." };
   const pc = artist.pendingContent;
+  const firstPublish = !artist.published;
 
   await db
     .update(artists)
@@ -160,6 +162,15 @@ export async function approveArtistSubmission(artistId: number) {
   revalidatePath("/admin/artists");
   revalidatePath("/artists");
   revalidatePath(`/artists/${artist.slug}`);
+
+  // First time going live → celebrate + point them to share tools.
+  if (firstPublish && artist.applicationId) {
+    const app = await db.query.applications.findFirst({
+      where: eq(applications.id, artist.applicationId),
+      columns: { email: true, name: true },
+    });
+    if (app?.email) await sendArtistPageLive(app.email, artist.name ?? app.name, artist.slug);
+  }
   return { ok: true };
 }
 

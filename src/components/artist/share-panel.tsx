@@ -85,21 +85,22 @@ async function makeCard(
     }
   }
 
-  // Logo on a white chip, top-left over the photo (mirrors the site header).
+  // Small logo badge, top-left over the photo — snug white surround so it
+  // brands the image without covering the art.
   try {
     const logo = await loadLogo();
-    const chipW = Math.round(w * 0.3);
-    const inset = Math.round(chipW * 0.12);
+    const chipW = Math.round(w * 0.2);
+    const inset = Math.round(chipW * 0.07);
     const logoW = chipW - inset * 2;
     const logoH = logoW * (logo.height / logo.width);
     const chipH = logoH + inset * 2;
-    const m = 44;
+    const m = 32;
     ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.25)";
-    ctx.shadowBlur = 24;
-    ctx.shadowOffsetY = 6;
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 4;
     ctx.fillStyle = "#ffffff";
-    roundRect(ctx, m, m, chipW, chipH, 20);
+    roundRect(ctx, m, m, chipW, chipH, 14);
     ctx.fill();
     ctx.restore();
     ctx.drawImage(logo, m + inset, m + inset, logoW, logoH);

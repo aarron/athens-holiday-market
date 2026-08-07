@@ -26,6 +26,11 @@ export { IconTree as TreeIcon } from "@central-icons-react/round-outlined-radius
 export { IconMailbox as MailboxIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconMailbox";
 export { IconInstagram as InstagramIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconInstagram";
 export { IconFacebook as FacebookIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconFacebook";
+export { IconX as XIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconX";
+export { IconTiktok as TiktokIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconTiktok";
+export { IconYoutube as YoutubeIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconYoutube";
+export { IconShareOs as ShareIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconShareOs";
+export { IconChainLink1 as LinkIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconChainLink1";
 export { IconGlobe as GlobeIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconGlobe";
 
 // Playful avatar icons — one gets assigned to each admin (see avatar-menu).

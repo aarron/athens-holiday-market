@@ -22,11 +22,20 @@ async function featuredArtists(limit = 6) {
     .map((a) => ({ name: a.name, slug: a.slug, photoUrl: a.photos[0]!.url }));
 }
 
+function ctaBlock() {
+  return `
+    <p style="margin:8px 0 4px">
+      <a href="${site.url}/artists" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Meet the artists →</a>
+      &nbsp;
+      <a href="${mapsHref()}" style="color:#17a898;text-decoration:none;font-weight:600">Get directions</a>
+    </p>`;
+}
+
 const COPY: Record<Kind, { subject: string; heading: string; lead: string }> = {
   pre: {
     subject: `This week: the ${site.name} 🎁`,
-    heading: "Two days to go",
-    lead: `Athens' handmade holiday market is almost here — two festive evenings of one-of-a-kind gifts from local makers.`,
+    heading: "This Thursday and Friday",
+    lead: `${site.name} at ${site.host.name} is almost here — two festive evenings of one-of-a-kind gifts from local artists.`,
   },
   day1: {
     subject: `Tonight: the ${site.name}, ${site.event.timeLabel}`,
@@ -42,18 +51,22 @@ const COPY: Record<Kind, { subject: string; heading: string; lead: string }> = {
 
 function photoGrid(list: { name: string; slug: string; photoUrl: string }[]) {
   if (!list.length) return "";
+  // Fixed square cells so the grid reads as a clean, uniform block.
   const cell = (a: { name: string; slug: string; photoUrl: string }) => `
-      <td style="padding:4px" width="33%">
-        <a href="${site.url}/artists/${a.slug}" style="text-decoration:none">
-          <img src="${a.photoUrl}" alt="${a.name}" width="150"
-               style="width:100%;max-width:150px;height:auto;border-radius:8px;display:block" />
+      <td width="33.33%" style="padding:3px">
+        <a href="${site.url}/artists/${a.slug}" style="text-decoration:none;display:block">
+          <img src="${a.photoUrl}" alt="${a.name}" width="150" height="150"
+               style="width:100%;height:150px;object-fit:cover;border-radius:8px;display:block" />
         </a>
       </td>`;
+  // Only render full rows of 3 so the grid never has a ragged last row.
   const rows: string[] = [];
-  for (let i = 0; i < list.length; i += 3) {
-    rows.push(`<tr>${list.slice(i, i + 3).map(cell).join("")}</tr>`);
+  const trimmed = list.slice(0, list.length - (list.length % 3));
+  for (let i = 0; i < trimmed.length; i += 3) {
+    rows.push(`<tr>${trimmed.slice(i, i + 3).map(cell).join("")}</tr>`);
   }
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:16px 0">${rows.join("")}</table>`;
+  if (!rows.length) return "";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:14px 0">${rows.join("")}</table>`;
 }
 
 function buildInner(kind: Kind, list: { name: string; slug: string; photoUrl: string }[]) {
@@ -66,17 +79,13 @@ function buildInner(kind: Kind, list: { name: string; slug: string; photoUrl: st
       <tr><td style="padding:2px 0;line-height:1.6"><strong>Where:</strong> ${site.location.name}, ${site.location.street}, ${site.location.city}</td></tr>
       <tr><td style="padding:2px 0;line-height:1.6"><strong>What:</strong> Local, handmade holiday gifts from Athens artists</td></tr>
     </table>
-    ${photoGrid(list)}
-    <p style="margin:6px 0 18px">
-      <a href="${site.url}/artists" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Meet the artists →</a>
-      &nbsp;
-      <a href="${mapsHref()}" style="color:#17a898;text-decoration:none;font-weight:600">Get directions</a>
-    </p>`;
+    ${ctaBlock()}
+    ${photoGrid(list)}`;
 }
 
 /** Render the reminder email HTML for preview (no send). */
 export async function previewEventReminderHtml(kind: Kind = "pre") {
-  const list = await featuredArtists(6);
+  const list = await featuredArtists(9);
   return emailShell(buildInner(kind, list), { unsubscribeUrl: `${site.url}/unsubscribe?token=preview` });
 }
 
@@ -103,7 +112,7 @@ export async function runEventReminders(now: Date = new Date()) {
 
   if (!resend) return { sent: 0, note: "resend not configured" };
 
-  const list = await featuredArtists(6);
+  const list = await featuredArtists(9);
   const inner = buildInner(kind, list);
   const recipients = await segmentRecipients("all");
 

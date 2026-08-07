@@ -61,6 +61,8 @@ export const applications = pgTable(
     name: text("name").notNull(),
     email: text("email").notNull(),
     phone: text("phone"),
+    // Explicit consent to receive event-day SMS (captured on the application form).
+    smsConsent: boolean("sms_consent").notNull().default(false),
     website: text("website"),
     medium: text("medium").notNull(),
     // Normalized canonical category (see lib/mediums.ts) for blend analysis.

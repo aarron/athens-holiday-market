@@ -19,10 +19,17 @@ export async function getTextRecipients(): Promise<{
   const cycle = await getActiveCycle();
   if (!cycle) return { recipients: [], noPhone: [], configured: twilioConfigured };
 
+  // Only text accepted artists who explicitly opted in — required for SMS compliance.
   const rows = await db
     .select({ id: applications.id, name: applications.name, phone: applications.phone })
     .from(applications)
-    .where(and(eq(applications.cycleId, cycle.id), eq(applications.status, "accepted")));
+    .where(
+      and(
+        eq(applications.cycleId, cycle.id),
+        eq(applications.status, "accepted"),
+        eq(applications.smsConsent, true),
+      ),
+    );
 
   const recipients: TextRecipient[] = [];
   const noPhone: { id: number; name: string }[] = [];

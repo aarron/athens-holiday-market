@@ -24,6 +24,7 @@ const schema = z.object({
   description: z.string().min(1, "Please describe your work."),
   shareBooth: z.enum(["yes", "no"]),
   shareBoothWith: z.string().optional(),
+  smsConsent: z.boolean().optional(),
 });
 type Values = z.infer<typeof schema>;
 
@@ -148,6 +149,19 @@ export function ApplicationForm() {
           {errors.phone && <p className={errCls}>{errors.phone.message}</p>}
         </div>
       </div>
+
+      <label className="flex items-start gap-3 rounded-lg bg-cream-soft p-4">
+        <input
+          type="checkbox"
+          {...register("smsConsent")}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-fern-deep"
+        />
+        <span className="text-sm text-ink-soft">
+          <span className="font-semibold text-ink">Text me event-day updates</span> about the market —
+          load-in times, schedule, and weather. Msg &amp; data rates may apply; reply STOP to opt out.{" "}
+          <span className="text-ink-soft/70">(Optional)</span>
+        </span>
+      </label>
 
       <div>
         <label className={label} htmlFor="website">

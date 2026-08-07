@@ -40,8 +40,8 @@ export function TextArtists({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-lg font-extrabold">Text artists</h2>
         <span className="text-sm text-ink-soft">
-          {recipientCount} accepted {recipientCount === 1 ? "artist has" : "artists have"} a mobile number
-          {noPhoneCount > 0 && ` · ${noPhoneCount} without`}
+          {recipientCount} accepted {recipientCount === 1 ? "artist" : "artists"} opted in to texts
+          {noPhoneCount > 0 && ` · ${noPhoneCount} without a number/opt-in`}
         </span>
       </div>
       <p className="mt-1 text-sm text-ink-soft">

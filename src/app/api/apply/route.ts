@@ -22,6 +22,7 @@ const schema = z.object({
   description: z.string().trim().min(1).max(5000),
   shareBooth: z.boolean(),
   shareBoothWith: z.string().trim().max(200).optional().default(""),
+  smsConsent: z.boolean().optional().default(false),
   photoUrls: z.array(z.string().url()).min(1).max(site.applications.maxPhotos),
 });
 
@@ -61,6 +62,7 @@ export async function POST(req: Request) {
       name: d.name,
       email: d.email.toLowerCase(),
       phone: d.phone,
+      smsConsent: d.smsConsent,
       website: d.website || null,
       socials: Object.fromEntries(Object.entries(d.socials).filter(([, v]) => v && v.trim())),
       medium: d.medium,

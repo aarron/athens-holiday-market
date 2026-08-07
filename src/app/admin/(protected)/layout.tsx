@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { requireStaff } from "@/lib/admin-auth";
 import { countPendingArtistReviews } from "@/lib/admin-data";
-import { AdminNav } from "@/components/admin/admin-nav";
+import { AdminNav, AdminMobileNav } from "@/components/admin/admin-nav";
 import { AvatarMenu } from "@/components/admin/avatar-menu";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -36,7 +36,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-5 pb-10 pt-24 sm:px-8">{children}</main>
+      <main className="mx-auto max-w-[1400px] px-5 pb-10 pt-24 sm:px-8">
+        <AdminMobileNav role={user.role} pendingReviews={pendingReviews} />
+        {children}
+      </main>
     </div>
   );
 }

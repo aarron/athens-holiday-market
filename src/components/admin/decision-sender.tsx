@@ -126,8 +126,8 @@ export function DecisionSender({
             Recipients ({withEmail.length})
           </h2>
         </div>
-        <div className="max-h-[420px] overflow-y-auto">
-          <table className="w-full text-left text-sm">
+        <div className="max-h-[420px] overflow-auto">
+          <table className="w-full min-w-[480px] text-left text-sm">
             <thead className="sticky top-0 bg-white">
               <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
                 <th className="px-5 py-2 font-semibold">Artist</th>

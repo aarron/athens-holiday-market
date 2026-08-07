@@ -184,7 +184,9 @@ export default function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {site.event.days.map((day, i) => {
               const d = new Date(day.date + "T00:00");
-              const colors = ["var(--color-teal)", "var(--color-berry)"];
+              // AA-safe accents: white text on the month band + the big number
+              // on white both need sufficient contrast (fern-deep/berry pass).
+              const colors = ["var(--color-fern-deep)", "var(--color-berry)"];
               return (
                 <div
                   key={day.date}

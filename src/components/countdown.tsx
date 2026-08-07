@@ -33,12 +33,12 @@ function compute(now: number): Parts | null {
   return { months, days, hours, minutes, seconds };
 }
 
-const UNITS: { key: keyof Parts; label: string; color: string }[] = [
-  { key: "months", label: "Months", color: "var(--color-fuchsia)" },
-  { key: "days", label: "Days", color: "var(--color-tangerine)" },
-  { key: "hours", label: "Hours", color: "var(--color-teal)" },
-  { key: "minutes", label: "Minutes", color: "var(--color-fern-deep)" },
-  { key: "seconds", label: "Seconds", color: "var(--color-berry)" },
+const UNITS: { key: keyof Parts; label: string }[] = [
+  { key: "months", label: "Months" },
+  { key: "days", label: "Days" },
+  { key: "hours", label: "Hours" },
+  { key: "minutes", label: "Minutes" },
+  { key: "seconds", label: "Seconds" },
 ];
 
 /** One split-flap digit that flips the old value away to reveal the new one. */
@@ -133,10 +133,7 @@ export function CountdownClock() {
             <span className="font-display text-3xl font-extrabold sm:text-6xl">
               <FlapPair value={parts[u.key]} />
             </span>
-            <span
-              className="text-[0.6rem] font-bold uppercase tracking-wide sm:text-xs"
-              style={{ color: u.color }}
-            >
+            <span className="text-[0.6rem] font-bold uppercase tracking-wide text-ink-soft sm:text-xs">
               {u.label}
             </span>
           </span>

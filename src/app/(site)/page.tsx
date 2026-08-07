@@ -150,6 +150,18 @@ export default function HomePage() {
           <div className="mt-8">
             <CountdownClock />
           </div>
+
+          {/* Capture emails high on the page */}
+          <div className="mx-auto mt-10 max-w-2xl rounded-2xl bg-white p-6 text-center shadow-[var(--shadow-card)] sm:p-8">
+            <h3 className="font-display text-2xl font-extrabold sm:text-3xl">Get on the list</h3>
+            <p className="mx-auto mt-1.5 max-w-md text-ink-soft">
+              We&apos;ll send the artist lineup and a reminder before the market — no spam, just
+              holiday cheer.
+            </p>
+            <div className="mt-5 flex justify-center">
+              <SubscribeForm />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -184,23 +196,34 @@ export default function HomePage() {
               return (
                 <div
                   key={day.date}
-                  className="rounded-lg bg-white p-6 shadow-[var(--shadow-card)]"
+                  className="overflow-hidden rounded-xl bg-white shadow-[var(--shadow-card)] ring-1 ring-ink/5"
                 >
+                  {/* Month header — the "page" band, with two binding holes */}
                   <div
-                    className="font-display text-6xl font-extrabold leading-none"
-                    style={{ color: colors[i] }}
+                    className="relative flex items-center justify-center py-3"
+                    style={{ backgroundColor: colors[i] }}
                   >
-                    {d.getDate()}
+                    <span className="absolute left-[30%] top-1.5 h-2.5 w-2.5 rounded-full bg-cream/90 shadow-inner" />
+                    <span className="absolute right-[30%] top-1.5 h-2.5 w-2.5 rounded-full bg-cream/90 shadow-inner" />
+                    <span className="font-display text-sm font-bold uppercase tracking-[0.2em] text-white">
+                      {d.toLocaleDateString("en-US", { month: "long" })} {site.event.year}
+                    </span>
                   </div>
-                  <div className="mt-2 font-display text-lg font-bold">
-                    {d.toLocaleDateString("en-US", { weekday: "long" })}
-                  </div>
-                  <div className="text-ink-soft">
-                    {d.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                  </div>
-                  <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-cream px-3 py-1 text-sm font-semibold">
-                    <ClockIcon size={15} style={{ color: colors[i] }} aria-hidden />
-                    {site.event.timeLabel}
+                  {/* Page body */}
+                  <div className="px-6 pb-6 pt-5 text-center">
+                    <div
+                      className="font-display text-7xl font-extrabold leading-none"
+                      style={{ color: colors[i] }}
+                    >
+                      {d.getDate()}
+                    </div>
+                    <div className="mt-2 font-display text-lg font-bold">
+                      {d.toLocaleDateString("en-US", { weekday: "long" })}
+                    </div>
+                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-cream px-3 py-1 text-sm font-semibold">
+                      <ClockIcon size={15} style={{ color: colors[i] }} aria-hidden />
+                      {site.event.timeLabel}
+                    </div>
                   </div>
                 </div>
               );

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArtistBySlug, allPublishedSlugs } from "@/lib/artists-data";
 import { SafeImg } from "@/components/admin/safe-img";
+import { ArtistShareButtons } from "@/components/artist/artist-share-buttons";
 import { Flower } from "@/components/brand";
 import { BackIcon, ExternalIcon } from "@/components/icons";
 import { site } from "@/lib/site";
@@ -130,6 +131,8 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
               ))}
             </div>
           )}
+
+          <ArtistShareButtons url={`${site.url}/artists/${artist.slug}`} name={artist.name} />
 
           <div className="mt-8 rounded-xl bg-cream-soft p-5">
             <p className="text-sm text-ink-soft">

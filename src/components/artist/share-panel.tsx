@@ -17,6 +17,23 @@ function loadImage(url: string) {
   });
 }
 
+// Load the wordmark once and reuse it across generated cards.
+let logoPromise: Promise<HTMLImageElement> | null = null;
+function loadLogo() {
+  if (!logoPromise) logoPromise = loadImage("/brand/logo-athens-holiday-market.svg");
+  return logoPromise;
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
 /** object-fit: cover math for drawing an image into a box. */
 function drawCover(
   ctx: CanvasRenderingContext2D,
@@ -66,6 +83,28 @@ async function makeCard(
       ctx.fillStyle = "#e9e2d0";
       ctx.fillRect(0, 0, w, photoH);
     }
+  }
+
+  // Logo on a white chip, top-left over the photo (mirrors the site header).
+  try {
+    const logo = await loadLogo();
+    const chipW = Math.round(w * 0.3);
+    const inset = Math.round(chipW * 0.12);
+    const logoW = chipW - inset * 2;
+    const logoH = logoW * (logo.height / logo.width);
+    const chipH = logoH + inset * 2;
+    const m = 44;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.25)";
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 6;
+    ctx.fillStyle = "#ffffff";
+    roundRect(ctx, m, m, chipW, chipH, 20);
+    ctx.fill();
+    ctx.restore();
+    ctx.drawImage(logo, m + inset, m + inset, logoW, logoH);
+  } catch {
+    /* logo optional — skip if it fails to load */
   }
 
   // Bottom band
@@ -168,7 +207,7 @@ export function SharePanel({
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-      <h2 className="font-display text-lg font-extrabold">Share your booth</h2>
+      <h2 className="font-display text-lg font-extrabold">Share your work</h2>
       <p className="mt-0.5 text-sm text-ink-soft">
         Tell your followers where to find you. Tap a size to save or share a ready-made graphic, then
         copy a caption to go with it. Tag {site.social.instagram} and we&apos;ll reshare you.

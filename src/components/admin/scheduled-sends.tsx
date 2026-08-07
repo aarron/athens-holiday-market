@@ -1,4 +1,5 @@
 import type { getScheduledSends, SendStatus } from "@/lib/scheduled-sends";
+import { CancelSendButton } from "@/components/admin/cancel-send-button";
 
 type Data = Awaited<ReturnType<typeof getScheduledSends>>;
 
@@ -8,6 +9,7 @@ const STATUS: Record<SendStatus, { cls: string; label: string }> = {
   window: { cls: "bg-[#fdf0e0] text-tangerine", label: "Send window open" },
   missed: { cls: "bg-[#fdeceb] text-poppy", label: "Not sent" },
   "pending-decision": { cls: "bg-cream text-ink-soft", label: "After acceptance" },
+  canceled: { cls: "bg-ink/10 text-ink-soft", label: "Canceled" },
 };
 
 function shortDate(iso: string) {
@@ -52,6 +54,7 @@ export function ScheduledSends({ data }: { data: Data }) {
                 <th className="px-5 py-4 font-semibold">To whom</th>
                 <th className="px-5 py-4 font-semibold">Subject / topic</th>
                 <th className="px-5 py-4 font-semibold">Status</th>
+                <th className="px-5 py-4 font-semibold sr-only">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -62,6 +65,7 @@ export function ScheduledSends({ data }: { data: Data }) {
                   <td className="px-5 py-4 text-ink-soft">{a.audience}</td>
                   <td className="px-5 py-4">{a.topic}</td>
                   <td className="px-5 py-4"><StatusPill status={a.status} sentAt={a.sentAt} /></td>
+                  <td className="px-5 py-4 text-right"><CancelSendButton id={a.id} status={a.status} /></td>
                 </tr>
               ))}
             </tbody>
@@ -92,6 +96,7 @@ export function ScheduledSends({ data }: { data: Data }) {
                     <th className="px-5 py-4 font-semibold">Artist</th>
                     <th className="px-5 py-4 font-semibold">Scheduled</th>
                     <th className="px-5 py-4 font-semibold">Status</th>
+                    <th className="px-5 py-4 font-semibold sr-only">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -103,6 +108,7 @@ export function ScheduledSends({ data }: { data: Data }) {
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-ink-soft">{r.when}</td>
                       <td className="px-5 py-4"><StatusPill status={r.status} sentAt={r.sentAt} /></td>
+                      <td className="px-5 py-4 text-right"><CancelSendButton id={r.id} status={r.status} /></td>
                     </tr>
                   ))}
                 </tbody>

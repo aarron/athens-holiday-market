@@ -17,6 +17,7 @@ import {
   DecisionControls,
   PublishControls,
   SendArtistLinkButton,
+  DeleteApplicationButton,
 } from "@/components/admin/controls";
 import { PhotoGallery } from "@/components/admin/photo-gallery";
 import { BackIcon, ExternalIcon } from "@/components/icons";
@@ -310,6 +311,15 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                 slug={artistProfile?.slug}
               />
             </>
+          )}
+
+          {isAdmin && (
+            <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+              <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-poppy">
+                Danger zone
+              </h2>
+              <DeleteApplicationButton applicationId={app.id} name={app.name} />
+            </div>
           )}
         </aside>
       </div>

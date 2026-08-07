@@ -1,12 +1,12 @@
 import "server-only";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, like } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, artists, cycles, settings } from "@/db/schema";
 import { segmentCounts } from "@/lib/broadcast-data";
 import { eventReminderPlan } from "@/lib/event-reminders";
 import { site } from "@/lib/site";
 
-export type SendStatus = "sent" | "scheduled" | "window" | "missed" | "pending-decision";
+export type SendStatus = "sent" | "scheduled" | "window" | "missed" | "pending-decision" | "canceled";
 
 export type ScheduledSend = {
   id: string;
@@ -20,6 +20,7 @@ export type ScheduledSend = {
 };
 
 export type ArtistReminderRow = {
+  id: string;
   name: string;
   email: string;
   when: string;
@@ -61,11 +62,19 @@ export async function getScheduledSends(now: Date = new Date()) {
   });
   const flags = new Map(flagRows.map((r) => [r.key, r]));
 
+  // Admin "skip" flags — a canceled send never fires (honored by the cron).
+  const skipRows = await db.query.settings.findMany({ where: like(settings.key, "send_skip:%") });
+  const skips = new Set(skipRows.filter((r) => r.value).map((r) => r.key));
+
   // ── Event reminders → mailing list ──
   const announcements: ScheduledSend[] = plan.map((p) => {
     const flag = flags.get(`event_reminder:${site.event.year}:${p.kind}`);
     const sent = !!flag?.value;
-    const status: SendStatus = sent ? "sent" : p.sendDate >= today ? "scheduled" : "missed";
+    const canceled = skips.has(`send_skip:event_reminder:${site.event.year}:${p.kind}`);
+    const status: SendStatus = sent
+      ? "sent"
+      : canceled ? "canceled"
+      : p.sendDate >= today ? "scheduled" : "missed";
     return {
       id: `event:${p.kind}`,
       topic: p.subject,
@@ -81,10 +90,12 @@ export async function getScheduledSends(now: Date = new Date()) {
   // ── NPR + Flagpole ad reminder → Jamie ──
   const nprFlag = flags.get(nprKey);
   const nprSent = !!nprFlag?.value;
+  const nprCanceled = skips.has(`send_skip:npr_flagpole_reminder:${site.event.year}`);
   const nprStart = `${site.event.year}-11-08`;
   const nprEnd = `${site.event.year}-11-14`;
   const nprStatus: SendStatus = nprSent
     ? "sent"
+    : nprCanceled ? "canceled"
     : today < nprStart ? "scheduled"
     : today <= nprEnd ? "window"
     : "missed";
@@ -107,6 +118,7 @@ export async function getScheduledSends(now: Date = new Date()) {
   if (cycle) {
     const rows = await db
       .select({
+        id: applications.id,
         email: applications.email,
         name: applications.name,
         decisionSentAt: applications.decisionSentAt,
@@ -120,9 +132,10 @@ export async function getScheduledSends(now: Date = new Date()) {
       .where(and(eq(applications.cycleId, cycle.id), eq(applications.status, "accepted")));
 
     for (const r of rows) {
+      const rid = `artist:${r.id}`;
       if (r.pageReminderSentAt) {
         artistReminders.push({
-          name: r.name, email: r.email, when: "7 days after acceptance",
+          id: rid, name: r.name, email: r.email, when: "7 days after acceptance",
           status: "sent", sentAt: r.pageReminderSentAt.toISOString(),
         });
         continue;
@@ -130,15 +143,18 @@ export async function getScheduledSends(now: Date = new Date()) {
       // Only artists without a live page (and not awaiting review) get nudged.
       const needs = !r.artistId || (r.published === false && r.pending == null);
       if (!needs) continue;
-      if (!r.decisionSentAt) {
+      const canceled = skips.has(`send_skip:artist_reminder:${r.id}`);
+      if (canceled) {
+        artistReminders.push({ id: rid, name: r.name, email: r.email, when: "—", status: "canceled", sentAt: null });
+      } else if (!r.decisionSentAt) {
         artistReminders.push({
-          name: r.name, email: r.email, when: "7 days after their acceptance email",
+          id: rid, name: r.name, email: r.email, when: "7 days after their acceptance email",
           status: "pending-decision", sentAt: null,
         });
       } else {
         const due = new Date(r.decisionSentAt.getTime() + 7 * DAY);
         artistReminders.push({
-          name: r.name, email: r.email, when: fmtDate(due.toISOString().slice(0, 10)),
+          id: rid, name: r.name, email: r.email, when: fmtDate(due.toISOString().slice(0, 10)),
           status: "scheduled", sentAt: null,
         });
       }

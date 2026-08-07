@@ -10,6 +10,7 @@ import {
   publishArtist,
   unpublishArtist,
   sendArtistLink,
+  deleteApplication,
 } from "@/lib/admin-actions";
 
 type Vote = "yes" | "maybe" | "no";
@@ -236,6 +237,51 @@ export function SendArtistLinkButton({ email }: { email: string }) {
         {pending ? "Sending…" : "Email artist their edit link"}
       </button>
       {msg && <p className="mt-2 text-sm text-ink-soft">{msg}</p>}
+    </div>
+  );
+}
+
+/** Admin-only, irreversible delete of an application + everything derived from it. */
+export function DeleteApplicationButton({ applicationId, name }: { applicationId: number; name: string }) {
+  const [armed, setArmed] = useState(false);
+  const [pending, start] = useTransition();
+
+  if (!armed) {
+    return (
+      <button
+        onClick={() => setArmed(true)}
+        className="rounded-lg border-2 border-poppy/40 px-4 py-2.5 text-sm font-display font-bold text-poppy transition-colors hover:bg-poppy hover:text-white"
+      >
+        Delete this artist…
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border-2 border-poppy/40 bg-poppy/5 p-4">
+      <p className="text-sm font-semibold text-ink">
+        Permanently delete <span className="font-extrabold">{name}</span>?
+      </p>
+      <p className="mt-1 text-sm text-ink-soft">
+        This removes the application, its photos, all votes and comments, and its published artist
+        page (if any). This can&apos;t be undone.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          disabled={pending}
+          onClick={() => start(() => deleteApplication(applicationId))}
+          className="rounded-lg bg-poppy px-5 py-2.5 text-sm font-display font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {pending ? "Deleting…" : "Yes, delete permanently"}
+        </button>
+        <button
+          disabled={pending}
+          onClick={() => setArmed(false)}
+          className="rounded-lg border-2 border-ink/15 px-5 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }

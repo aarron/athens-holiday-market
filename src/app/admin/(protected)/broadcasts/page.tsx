@@ -7,6 +7,7 @@ import { getTextRecipients } from "@/lib/sms-actions";
 import { getScheduledSends } from "@/lib/scheduled-sends";
 import { TextArtists } from "@/components/admin/text-artists";
 import { ScheduledSends } from "@/components/admin/scheduled-sends";
+import { SectionTabs } from "@/components/admin/section-tabs";
 
 export const metadata: Metadata = { title: "Email", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -72,18 +73,9 @@ export default async function EmailHubPage() {
   const hasDecisions = !!groups && groups.accepted.total + groups.waitlist.total > 0;
   const yq = cycle ? `?year=${cycle.year}` : "";
 
-  return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="text-3xl font-extrabold">Email &amp; messaging</h1>
-        <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
-      </div>
-
-      {/* What will send on its own — surfaced first, for awareness */}
-      <ScheduledSends data={scheduled} />
-
-      {/* Decisions — heading above; cards below, no wrapper box */}
-      {hasDecisions && totalToNotify > 0 && groups && (
+  const decisionsPanel = hasDecisions && groups && (
+    <>
+      {totalToNotify > 0 ? (
         <section>
           <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
             <div>
@@ -102,8 +94,7 @@ export default async function EmailHubPage() {
             <DecisionCard href={`/admin/decisions/waitlist${yq}`} title="Waitlist" total={groups.waitlist.total} notified={groups.waitlist.notified} accent="var(--color-tangerine)" />
           </div>
         </section>
-      )}
-      {hasDecisions && totalToNotify === 0 && groups && (
+      ) : (
         <section className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-fern-soft px-5 py-3 text-sm">
           <span className="font-semibold text-fern-deep">
             ✓ All decisions sent — {groups.accepted.total} accepted, {groups.waitlist.total} waitlisted notified.
@@ -113,78 +104,100 @@ export default async function EmailHubPage() {
           </Link>
         </section>
       )}
+    </>
+  );
 
-      {/* Email */}
-      <section>
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="font-display text-xl font-extrabold">Email</h2>
-            <p className="mt-1 text-sm text-ink-soft">Email announcements to your list.</p>
-          </div>
-          <Link
-            href="/admin/broadcasts/new"
-            className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white transition-opacity hover:opacity-90"
-          >
-            + New email
-          </Link>
+  const emailPanel = (
+    <section>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-extrabold">Email</h2>
+          <p className="mt-1 text-sm text-ink-soft">Email announcements to your list.</p>
         </div>
+        <Link
+          href="/admin/broadcasts/new"
+          className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white transition-opacity hover:opacity-90"
+        >
+          + New email
+        </Link>
+      </div>
 
-        {broadcasts.length === 0 ? (
-          <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
-            <p className="text-ink-soft">No emails yet. Compose your first announcement.</p>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {broadcasts.map((b) => (
-              <li key={b.id}>
-                <Link
-                  href={`/admin/broadcasts/${b.id}`}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
+      {broadcasts.length === 0 ? (
+        <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
+          <p className="text-ink-soft">No emails yet. Compose your first announcement.</p>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {broadcasts.map((b) => (
+            <li key={b.id}>
+              <Link
+                href={`/admin/broadcasts/${b.id}`}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
+              >
+                <div>
+                  <p className="font-display text-lg font-bold">{b.subject}</p>
+                  <p className="text-sm text-ink-soft">
+                    {SEGMENT_LABEL[b.segment] ?? b.segment} · {b.recipientCount} recipients
+                    {b.sentAt && ` · ${new Date(b.sentAt).toLocaleDateString()}`}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                    b.status === "sent" ? "bg-fern-soft text-fern-deep" : "bg-cream text-ink-soft"
+                  }`}
                 >
-                  <div>
-                    <p className="font-display text-lg font-bold">{b.subject}</p>
-                    <p className="text-sm text-ink-soft">
-                      {SEGMENT_LABEL[b.segment] ?? b.segment} · {b.recipientCount} recipients
-                      {b.sentAt && ` · ${new Date(b.sentAt).toLocaleDateString()}`}
-                    </p>
-                  </div>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                      b.status === "sent" ? "bg-fern-soft text-fern-deep" : "bg-cream text-ink-soft"
-                    }`}
-                  >
-                    {b.status}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  {b.status}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
 
-      {/* Text artists (SMS) */}
-      <section>
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="font-display text-xl font-extrabold">Text artists</h2>
-            <p className="mt-1 text-sm text-ink-soft">
-              Event-day heads-ups (load-in time, weather, reminders) sent straight to phones via SMS.
-            </p>
-          </div>
-          {texts.configured && (
-            <span className="text-sm text-ink-soft">
-              {texts.recipients.length} accepted {texts.recipients.length === 1 ? "artist" : "artists"}{" "}
-              opted in to texts
-              {texts.noPhone.length > 0 && ` · ${texts.noPhone.length} without a number/opt-in`}
-            </span>
-          )}
+  const textPanel = (
+    <section>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="font-display text-xl font-extrabold">Text artists</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Event-day heads-ups (load-in time, weather, reminders) sent straight to phones via SMS.
+          </p>
         </div>
-        <TextArtists
-          recipientCount={texts.recipients.length}
-          noPhoneCount={texts.noPhone.length}
-          configured={texts.configured}
-        />
-      </section>
+        {texts.configured && (
+          <span className="text-sm text-ink-soft">
+            {texts.recipients.length} accepted {texts.recipients.length === 1 ? "artist" : "artists"}{" "}
+            opted in to texts
+            {texts.noPhone.length > 0 && ` · ${texts.noPhone.length} without a number/opt-in`}
+          </span>
+        )}
+      </div>
+      <TextArtists
+        recipientCount={texts.recipients.length}
+        noPhoneCount={texts.noPhone.length}
+        configured={texts.configured}
+      />
+    </section>
+  );
+
+  const tabs = [
+    ...(hasDecisions
+      ? [{ id: "decisions", label: "Decisions", badge: totalToNotify || undefined, content: decisionsPanel }]
+      : []),
+    { id: "email", label: "Email", content: emailPanel },
+    { id: "text", label: "Text", content: textPanel },
+    { id: "scheduled", label: "Scheduled", content: <ScheduledSends data={scheduled} /> },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-extrabold">Email &amp; messaging</h1>
+        <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
+      </div>
+
+      <SectionTabs tabs={tabs} initial={hasDecisions && totalToNotify > 0 ? "decisions" : "email"} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, isNull, lte } from "drizzle-orm";
+import { and, eq, isNull, like, lte } from "drizzle-orm";
 import { db } from "@/db";
-import { applications, artists, cycles } from "@/db/schema";
+import { applications, artists, cycles, settings } from "@/db/schema";
 import { sendArtistPageReminder } from "@/lib/emails";
 
 /**
@@ -36,10 +36,18 @@ export async function runArtistPageReminders(now: Date = new Date()) {
       ),
     );
 
+  // Admin-canceled reminders (send_skip:artist_reminder:<applicationId>).
+  const skipRows = await db.query.settings.findMany({
+    where: like(settings.key, "send_skip:artist_reminder:%"),
+  });
+  const skipped = new Set(
+    skipRows.filter((r) => r.value).map((r) => Number(r.key.split(":").pop())),
+  );
+
   // Needs a nudge if they have no artist page yet, or it's an unsubmitted,
-  // unpublished draft. Skip anyone published or awaiting review (pending).
+  // unpublished draft. Skip anyone published, awaiting review, or canceled.
   const needing = rows.filter(
-    (r) => !r.artistId || (r.published === false && r.pending == null),
+    (r) => !skipped.has(r.id) && (!r.artistId || (r.published === false && r.pending == null)),
   );
 
   let sent = 0;

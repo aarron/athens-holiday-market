@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, votes, comments, artists, artistPhotos, cycles } from "@/db/schema";
@@ -158,6 +159,20 @@ export async function unpublishArtist(applicationId: number) {
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/artists");
   return { ok: true };
+}
+
+/**
+ * Permanently delete an application and everything derived from it — photos,
+ * votes, comments, login tokens, and its published artist page (all via
+ * ON DELETE CASCADE). Admin-only, irreversible. Redirects to the dashboard.
+ */
+export async function deleteApplication(applicationId: number) {
+  await requireAdmin();
+  await db.delete(applications).where(eq(applications.id, applicationId));
+  revalidatePath("/admin");
+  revalidatePath("/admin/artists");
+  revalidatePath("/artists");
+  redirect("/admin");
 }
 
 /** Approve an artist's pending submission → copy it live and publish. */

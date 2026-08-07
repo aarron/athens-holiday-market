@@ -15,10 +15,10 @@ function buildItems(role: string, pendingReviews: number): Item[] {
   const items: Item[] = [
     { href: "/admin", label: "Dashboard", match: (p) => p === "/admin" || p.startsWith("/admin/applications") },
     { href: "/admin/artists", label: "Artist pages", match: (p) => p.startsWith("/admin/artists"), badge: pendingReviews },
-    { href: "/admin/social-kit", label: "Social kit", match: (p) => p.startsWith("/admin/social-kit") },
     // Decisions live inside the Email hub, so both paths light up "Email & Text".
     { href: "/admin/broadcasts", label: "Email & Text", adminOnly: true, match: (p) => p.startsWith("/admin/broadcasts") || p.startsWith("/admin/decisions") },
     { href: "/admin/subscribers", label: "Subscribers", adminOnly: true, match: (p) => p.startsWith("/admin/subscribers") },
+    { href: "/admin/social-kit", label: "Social kit", match: (p) => p.startsWith("/admin/social-kit") },
   ];
   return items.filter((i) => !i.adminOnly || role === "admin");
 }

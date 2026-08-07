@@ -31,6 +31,10 @@ export async function runNprFlagpoleReminder(now: Date = new Date()) {
   const existing = await db.query.settings.findFirst({ where: eq(settings.key, flagKey) });
   if (existing?.value) return { sent: false, note: "already sent this year" };
 
+  // Admin canceled this reminder from the Email & Text page.
+  const skip = await db.query.settings.findFirst({ where: eq(settings.key, `send_skip:${flagKey}`) });
+  if (skip?.value) return { sent: false, note: "canceled by admin" };
+
   const emailRes = await sendNprFlagpoleReminder(JAMIE_EMAIL);
   const emailOk = !(emailRes && "skipped" in emailRes) && !(emailRes && "error" in emailRes);
 

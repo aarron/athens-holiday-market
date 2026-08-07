@@ -51,12 +51,19 @@ export function renderMarkdown(src: string): string {
       const btn = trimmed.match(BUTTON_RE);
       if (btn) return buttonHtml(btn[1], btn[2]);
 
+      // Horizontal rule: a line of --- / *** / ___ on its own.
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+        return `<hr style="border:none;border-top:1px solid #ece5d6;margin:22px 0" />`;
+      }
+
       const lines = block.split("\n");
       if (lines.every((l) => /^\s*[-*]\s+/.test(l))) {
         const items = lines
-          .map((l) => `<li style="margin:4px 0">${inline(l.replace(/^\s*[-*]\s+/, ""))}</li>`)
+          .map((l) => `<li style="margin:4px 0;list-style:disc outside">${inline(l.replace(/^\s*[-*]\s+/, ""))}</li>`)
           .join("");
-        return `<ul style="margin:0 0 14px;padding-left:20px;line-height:1.6">${items}</ul>`;
+        // Explicit list-style + display so bullets survive mail-client and
+        // Tailwind resets that zero out `list-style` (inline styles win).
+        return `<ul style="margin:0 0 14px;padding-left:24px;line-height:1.6;list-style:disc outside">${items}</ul>`;
       }
       // A block may mix headings and text lines; render line by line when any
       // heading is present, otherwise keep the fast paragraph path.

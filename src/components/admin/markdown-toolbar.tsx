@@ -41,6 +41,16 @@ function heading(v: string, s: number, level: number): Edit {
   return { value, selStart: caret, selEnd: caret };
 }
 
+/** Insert a horizontal-rule block (`---`) on its own line at the cursor. */
+function rule(v: string, s: number, e: number): Edit {
+  const before = v.slice(0, s).replace(/\s+$/, "");
+  const after = v.slice(e).replace(/^\s+/, "");
+  const insert = `${before ? "\n\n" : ""}---\n\n`;
+  const value = before + insert + after;
+  const caret = before.length + insert.length;
+  return { value, selStart: caret, selEnd: caret };
+}
+
 /** Prefix every line touched by the selection with `- ` (toggles off if present). */
 function bulletList(v: string, s: number, e: number): Edit {
   const lineStart = v.lastIndexOf("\n", s - 1) + 1;
@@ -94,6 +104,7 @@ export function MarkdownToolbar({
     { label: "Link", title: "Insert link", run: () => apply((v, s, e) => link(v, s, e, false, "link text")) },
     { label: "Button", title: "Insert call-to-action button", run: () => apply((v, s, e) => link(v, s, e, true, "Button label")) },
     { label: "• List", title: "Bulleted list", run: () => apply((v, s, e) => bulletList(v, s, e)) },
+    { label: "―", title: "Divider", run: () => apply((v, s, e) => rule(v, s, e)) },
   ];
 
   return (

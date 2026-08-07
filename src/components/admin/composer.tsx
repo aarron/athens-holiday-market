@@ -171,7 +171,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
           <label className="mb-1 block text-sm font-semibold text-ink-soft" htmlFor="bc-body">
             Message
             <span className="ml-2 font-normal text-ink-soft/70">
-              # heading, **bold**, *italic*, [links](https://…), [[Button]](https://…), - lists
+              # heading, **bold**, *italic*, [links](https://…), [[Button]](https://…), - lists, --- divider
             </span>
           </label>
           <MarkdownToolbar textareaRef={bodyRef} value={body} onChange={setBody} />

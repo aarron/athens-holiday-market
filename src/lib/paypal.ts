@@ -1,4 +1,5 @@
 import "server-only";
+import { site } from "@/lib/site";
 
 /**
  * Minimal PayPal Invoicing (v2) client for booth-fee billing. Credentials come
@@ -70,6 +71,13 @@ export async function createBoothFeeInvoice(input: {
           currency_code: "USD",
           note: input.memo,
           payment_term: { term_type: "DUE_ON_RECEIPT" },
+        },
+        // Brand the invoice explicitly so it reads as the market (name + logo),
+        // not just the underlying PayPal account. Email is left to the account.
+        invoicer: {
+          business_name: site.name,
+          website: site.url,
+          logo_url: `${site.url}/brand/logo.png`,
         },
         primary_recipients: [
           { billing_info: { name: splitName(input.name), email_address: input.email } },

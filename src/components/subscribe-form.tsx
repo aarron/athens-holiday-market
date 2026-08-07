@@ -74,7 +74,12 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
               : "border-ink/20 bg-white text-ink placeholder:text-ink-soft/60 focus:border-fern-deep"
           }`}
         />
-        <Button type="submit" size="lg" disabled={status === "loading"}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={status === "loading"}
+          className="shadow-none hover:translate-y-0 hover:shadow-none active:shadow-none"
+        >
           {status === "loading" ? "Adding…" : "Notify me"}
         </Button>
       </div>

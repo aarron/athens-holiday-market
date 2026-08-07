@@ -31,41 +31,21 @@ export default function VenuePage() {
         </div>
       </div>
 
-      {/* Intro */}
-      <div className="mt-10 max-w-2xl">
-        <div className="flex items-center gap-2">
-          <Flower size={22} color="var(--color-fuchsia)" />
-          <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
-            The venue
-          </p>
-        </div>
-        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Big City Bread Cafe</h1>
-        <p className="mt-5 text-lg text-ink-soft">
-          Our market sets up in the courtyard at Big City Bread — a family-run bakery and cafe that
-          has been an Athens favorite since {host.since}. Come for the handmade gifts and make an
-          evening of it: dinner, drinks, and holiday baked goods are all just steps from the stalls.
-        </p>
-      </div>
-
-      <div className="mt-12 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
-        {/* Left: about the cafe — plain text, no box */}
+      {/* Intro + logo */}
+      <div className="mt-10 grid items-center gap-10 lg:mt-14 lg:grid-cols-[1.25fr_1fr] lg:gap-20">
         <div>
-          <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-fern-deep">
-            About the cafe
-          </h2>
-          <div className="mt-3 space-y-4 text-lg text-ink-soft">
-            <p>
-              A locally owned, family-run bakery and cafe, Big City Bread has been baking bread and
-              feeding Athens for more than 25 years. Everything is made in house — breads, pastries,
-              and cakes — with meals built around locally sourced produce, meats, and cheeses.
-            </p>
-            <p>
-              Stop in for breakfast, brunch, or lunch, or a weeknight dinner with beer and wine.
-              Coffee lovers are in good hands too, with espresso drinks pulled from locally roasted
-              beans. Dine indoors or out on the patio — the same courtyard that fills with makers
-              during the market.
+          <div className="flex items-center gap-2">
+            <Flower size={22} color="var(--color-fuchsia)" />
+            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+              The venue
             </p>
           </div>
+          <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Big City Bread Cafe</h1>
+          <p className="mt-5 text-lg text-ink-soft">
+            Our market sets up in the courtyard at Big City Bread — a family-run bakery and cafe that
+            has been an Athens favorite since {host.since}. Come for the handmade gifts and make an
+            evening of it: dinner, drinks, and holiday baked goods are all just steps from the stalls.
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <ButtonLink
               href={host.orderUrl}
@@ -91,19 +71,46 @@ export default function VenuePage() {
             </ButtonLink>
           </div>
         </div>
-
-        {/* Right: logo + visit info — no box; nudged down to align with the first paragraph */}
-        <div className="lg:mt-9">
+        <div className="flex justify-center lg:justify-start">
           <Image
             src="/venue/big-city-bread-logo.webp"
             alt="Big City Bread Cafe"
             width={2500}
             height={1000}
-            className="h-auto w-full max-w-[220px] mix-blend-multiply"
+            className="h-auto w-full max-w-[360px] mix-blend-multiply"
             priority
           />
+        </div>
+      </div>
 
-          <h2 className="mt-8 border-t border-ink/10 pt-6 font-display text-sm font-bold uppercase tracking-[0.16em] text-fern-deep">
+      {/* Divider */}
+      <div className="my-10 border-t border-ink/10 lg:my-12" />
+
+      {/* About + Visit — headings top-aligned */}
+      <div className="grid gap-10 lg:grid-cols-[1.25fr_1fr] lg:gap-20 lg:items-start">
+        {/* Left: about the cafe — plain text, no box */}
+        <div>
+          <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-fern-deep">
+            About the cafe
+          </h2>
+          <div className="mt-3 space-y-4 text-lg text-ink-soft">
+            <p>
+              A locally owned, family-run bakery and cafe, Big City Bread has been baking bread and
+              feeding Athens for more than 25 years. Everything is made in house — breads, pastries,
+              and cakes — with meals built around locally sourced produce, meats, and cheeses.
+            </p>
+            <p>
+              Stop in for breakfast, brunch, or lunch, or a weeknight dinner with beer and wine.
+              Coffee lovers are in good hands too, with espresso drinks pulled from locally roasted
+              beans. Dine indoors or out on the patio — the same courtyard that fills with makers
+              during the market.
+            </p>
+          </div>
+        </div>
+
+        {/* Right: visit info */}
+        <div>
+          <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-fern-deep">
             Visit
           </h2>
 

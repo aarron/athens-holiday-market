@@ -38,7 +38,8 @@ export const site = {
     closesAt: "2026-10-26T23:59:59-04:00",
     closesLabel: "October 26, 2026",
     decisionLabel: "a date to be announced",
-    maxPhotos: 3,
+    minPhotos: 3,
+    maxPhotos: 6,
     maxPhotoMb: 10,
   },
   nav: [

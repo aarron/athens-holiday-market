@@ -32,6 +32,32 @@ export async function sendApplicationReceived(to: string, name: string) {
   }
 }
 
+/** Alert admins that an artist submitted page changes to review. Best-effort. */
+export async function sendArtistReviewAlert(to: string[], artistName: string) {
+  if (!resend || to.length === 0) return { skipped: true };
+  const url = `${site.url}/admin/artists`;
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:22px">A page is ready to review</h1>
+    <p style="margin:0 0 14px;line-height:1.6">
+      <strong>${escapeHtml(artistName)}</strong> just submitted changes to their public artist page.
+      Review and approve before it goes live.
+    </p>
+    <p style="margin:0;line-height:1.6">
+      <a href="${url}" style="color:#17a898;text-decoration:none;font-weight:700">Review in the admin →</a>
+    </p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Review needed: ${artistName} updated their artist page`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send artist-review alert:", e);
+    return { error: true };
+  }
+}
+
 export const CONTACT_TO = "redacted@example.com";
 
 /** Forward a contact-form message to the organizer inbox. */

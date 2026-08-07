@@ -23,7 +23,7 @@ const schema = z.object({
   shareBooth: z.boolean(),
   shareBoothWith: z.string().trim().max(200).optional().default(""),
   smsConsent: z.boolean().optional().default(false),
-  photoUrls: z.array(z.string().url()).min(1).max(site.applications.maxPhotos),
+  photoUrls: z.array(z.string().url()).min(site.applications.minPhotos).max(site.applications.maxPhotos),
 });
 
 export async function POST(req: Request) {

@@ -82,14 +82,11 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
         {/* Info */}
         <div className="lg:sticky lg:top-24">
-          <div className="flex items-center gap-2">
-            <Flower size={22} color="var(--color-fuchsia)" />
-            {artist.medium && (
-              <p className="font-display text-sm font-bold uppercase tracking-[0.16em] text-fern-deep">
-                {artist.medium}
-              </p>
-            )}
-          </div>
+          {artist.medium && (
+            <p className="font-display text-sm font-bold uppercase tracking-[0.16em] text-fern-deep">
+              {artist.medium}
+            </p>
+          )}
           <h1 className="mt-3 text-4xl font-extrabold sm:text-5xl">{artist.name}</h1>
 
           {artist.bio && (

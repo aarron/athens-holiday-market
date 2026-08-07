@@ -292,11 +292,6 @@ export default function HomePage() {
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-                <Flower
-                  size={22}
-                  color="rgba(255,255,255,0.95)"
-                  className="absolute right-3 top-3 drop-shadow"
-                />
                 <div className="relative flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-sm"

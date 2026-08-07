@@ -14,7 +14,7 @@ import { MEDIUM_CATEGORIES } from "@/lib/mediums";
 const schema = z.object({
   name: z.string().min(1, "Your name is required."),
   email: z.string().min(1, "Email is required.").email("Enter a valid email."),
-  phone: z.string().min(3, "A cell number is required."),
+  phone: z.string().min(3, "A mobile number is required."),
   website: z.string().optional(),
   instagram: z.string().optional(),
   facebook: z.string().optional(),
@@ -47,6 +47,7 @@ export function ApplicationForm() {
   const [serverError, setServerError] = useState("");
 
   const shareBooth = watch("shareBooth");
+  const min = site.applications.minPhotos;
   const max = site.applications.maxPhotos;
   const maxBytes = site.applications.maxPhotoMb * 1024 * 1024;
 
@@ -67,8 +68,8 @@ export function ApplicationForm() {
 
   async function onSubmit(values: Values) {
     setServerError("");
-    if (photos.length < 1) {
-      setPhotoError(`Please add ${max} photos of your work.`);
+    if (photos.length < min) {
+      setPhotoError(`Please add at least ${min} photos of your work (up to ${max}).`);
       return;
     }
     setStatus("submitting");
@@ -143,7 +144,7 @@ export function ApplicationForm() {
         </div>
         <div>
           <label className={label} htmlFor="phone">
-            Cell number <span className="text-poppy">*</span>
+            Mobile number <span className="text-poppy">*</span>
           </label>
           <input id="phone" type="tel" className={`mt-1.5 ${field}`} {...register("phone")} />
           {errors.phone && <p className={errCls}>{errors.phone.message}</p>}
@@ -238,10 +239,10 @@ export function ApplicationForm() {
 
       <div>
         <span className={label}>
-          {max} photos of your work <span className="text-poppy">*</span>
+          {min}–{max} photos of your work <span className="text-poppy">*</span>
         </span>
         <p className="mt-0.5 text-sm text-ink-soft">
-          Up to {max} images, each under {site.applications.maxPhotoMb}MB (JPG, PNG, or WEBP).
+          {min} to {max} images, each under {site.applications.maxPhotoMb}MB (JPG, PNG, or WEBP).
         </p>
         <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-ink/25 bg-white px-4 py-8 text-center transition-colors hover:border-fern-deep">
           <Flower size={28} color="var(--color-fern-deep)" />

@@ -15,10 +15,10 @@ export function AdminNav({ role, pendingReviews }: { role: string; pendingReview
   const path = usePathname();
 
   const items: Item[] = [
-    { href: "/admin", label: "Applications", match: (p) => p === "/admin" || p.startsWith("/admin/applications") },
+    { href: "/admin", label: "Dashboard", match: (p) => p === "/admin" || p.startsWith("/admin/applications") },
     { href: "/admin/artists", label: "Artist pages", match: (p) => p.startsWith("/admin/artists"), badge: pendingReviews },
-    // Decisions live inside the Email hub, so both paths light up "Email".
-    { href: "/admin/broadcasts", label: "Email", adminOnly: true, match: (p) => p.startsWith("/admin/broadcasts") || p.startsWith("/admin/decisions") },
+    // Decisions live inside the Email hub, so both paths light up "Email & Text".
+    { href: "/admin/broadcasts", label: "Email & Text", adminOnly: true, match: (p) => p.startsWith("/admin/broadcasts") || p.startsWith("/admin/decisions") },
     { href: "/admin/subscribers", label: "Subscribers", adminOnly: true, match: (p) => p.startsWith("/admin/subscribers") },
   ];
 

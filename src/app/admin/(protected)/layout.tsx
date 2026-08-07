@@ -2,8 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { requireStaff } from "@/lib/admin-auth";
 import { countPendingArtistReviews } from "@/lib/admin-data";
-import { signOutAction } from "@/lib/auth-actions";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { AvatarMenu } from "@/components/admin/avatar-menu";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaff();
@@ -25,26 +25,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 width={1000}
                 height={920}
                 priority
-                className="h-14 w-auto sm:h-16"
+                className="h-20 w-auto sm:h-24"
               />
             </span>
           </Link>
 
           <AdminNav role={user.role} pendingReviews={pendingReviews} />
 
-          <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-ink-soft sm:inline">
-              {user.name ?? user.email}
-              <span className="ml-2 rounded-full bg-fern-soft px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-fern-deep">
-                {user.role}
-              </span>
-            </span>
-            <form action={signOutAction}>
-              <button className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-cream">
-                Sign out
-              </button>
-            </form>
-          </div>
+          <AvatarMenu name={user.name ?? null} email={user.email} role={user.role} />
         </div>
       </header>
 

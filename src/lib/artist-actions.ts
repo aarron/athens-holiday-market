@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { artists } from "@/db/schema";
+import { artists, users } from "@/db/schema";
 import { requireArtist } from "@/lib/admin-auth";
+import { sendArtistReviewAlert } from "@/lib/emails";
 
 const schema = z.object({
   bio: z.string().max(4000).optional().default(""),
@@ -38,6 +39,17 @@ export async function submitArtistDraft(input: ArtistDraftInput) {
       updatedAt: new Date(),
     })
     .where(eq(artists.id, user.artistId));
+
+  // Alert admins so a pending review doesn't slip by.
+  const [artist] = await db
+    .select({ name: artists.name })
+    .from(artists)
+    .where(eq(artists.id, user.artistId));
+  const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, "admin"));
+  await sendArtistReviewAlert(
+    admins.map((a) => a.email),
+    artist?.name ?? user.name ?? "An artist",
+  );
 
   revalidatePath("/artist");
   revalidatePath("/admin/artists");

@@ -145,7 +145,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                   {app.email}
                 </a>
               </DetailRow>
-              <DetailRow label="Cell">{app.phone ?? "—"}</DetailRow>
+              <DetailRow label="Mobile">{app.phone ?? "—"}</DetailRow>
               <DetailRow label="Website">
                 {app.website ? (
                   <a

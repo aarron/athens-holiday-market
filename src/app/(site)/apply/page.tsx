@@ -20,7 +20,7 @@ const CHECKLIST = [
   "A website or social link (optional)",
   "The medium of your work",
   "A short description of your work",
-  `${site.applications.maxPhotos} photos of your work (under ${site.applications.maxPhotoMb}MB each)`,
+  `${site.applications.minPhotos}–${site.applications.maxPhotos} photos of your work (under ${site.applications.maxPhotoMb}MB each)`,
   "Whether you'd like to share a booth",
 ];
 

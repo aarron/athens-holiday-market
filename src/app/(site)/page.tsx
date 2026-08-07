@@ -13,14 +13,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const CATEGORIES = [
+const CATEGORIES: { label: string; color: string; img: string; pos?: string }[] = [
   { label: "Pottery", color: "var(--color-teal)", img: "/photos/categories/ceramics.jpg" },
   { label: "Textiles & Fiber", color: "var(--color-fern)", img: "/photos/categories/textiles.jpg" },
   { label: "Jewelry", color: "var(--color-fuchsia)", img: "/photos/categories/jewelry.jpg" },
   { label: "Candles & Apothecary", color: "var(--color-tangerine)", img: "/photos/categories/candles.jpg" },
   { label: "Prints & Paper", color: "var(--color-sky)", img: "/photos/categories/prints.jpg" },
   { label: "Woodwork", color: "var(--color-berry)", img: "/photos/categories/woodwork.jpg" },
-  { label: "Leather & Bags", color: "var(--color-chartreuse)", img: "/photos/categories/leather.jpg" },
+  // Portrait photo of hanging bags — bias the crop lower so the bags show, not the straps.
+  { label: "Leather & Bags", color: "var(--color-chartreuse)", img: "/photos/categories/leather.jpg", pos: "center 72%" },
   { label: "Tea & Treats", color: "var(--color-poppy)", img: "/photos/categories/treats.jpg" },
 ];
 
@@ -308,6 +309,7 @@ export default function HomePage() {
                   alt={`${cat.label} — handmade at the Athens Holiday Market`}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  style={cat.pos ? { objectPosition: cat.pos } : undefined}
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />

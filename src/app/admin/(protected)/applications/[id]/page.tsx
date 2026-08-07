@@ -7,6 +7,7 @@ import {
   getArtistForApplication,
   getParticipationHistory,
   getEmailComms,
+  getAdjacentApplications,
   tally,
 } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
@@ -20,7 +21,7 @@ import {
   DeleteApplicationButton,
 } from "@/components/admin/controls";
 import { PhotoGallery } from "@/components/admin/photo-gallery";
-import { BackIcon, ExternalIcon } from "@/components/icons";
+import { BackIcon, ExternalIcon, ArrowRightIcon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -64,10 +65,11 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
   const [app, jurors, me] = await Promise.all([getApplication(appId), getJurors(), getSessionUser()]);
   if (!app) notFound();
 
-  const [artistProfile, history, comms] = await Promise.all([
+  const [artistProfile, history, comms, nav] = await Promise.all([
     getArtistForApplication(appId),
     getParticipationHistory(app.email, app.name, appId),
     getEmailComms(app.email, app),
+    getAdjacentApplications(appId),
   ]);
 
   const myVote = app.votes.find((v) => v.user.email === me?.email)?.value;
@@ -81,10 +83,38 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
   return (
     <div>
-      <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
-        <BackIcon size={16} aria-hidden />
-        All applications
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
+          <BackIcon size={16} aria-hidden />
+          All applications
+        </Link>
+
+        {nav && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="tabular-nums text-ink-soft">
+              {nav.position} of {nav.total}
+            </span>
+            {nav.prevId ? (
+              <Link href={`/admin/applications/${nav.prevId}`} className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/15 px-3 py-1.5 font-semibold transition-colors hover:bg-cream">
+                <BackIcon size={15} aria-hidden /> Prev
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/10 px-3 py-1.5 font-semibold text-ink-soft/40">
+                <BackIcon size={15} aria-hidden /> Prev
+              </span>
+            )}
+            {nav.nextId ? (
+              <Link href={`/admin/applications/${nav.nextId}`} className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/15 px-3 py-1.5 font-semibold transition-colors hover:bg-cream">
+                Next <ArrowRightIcon size={15} aria-hidden />
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/10 px-3 py-1.5 font-semibold text-ink-soft/40">
+                Next <ArrowRightIcon size={15} aria-hidden />
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div>

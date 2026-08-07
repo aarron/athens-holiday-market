@@ -4,6 +4,8 @@ import { listPublishedArtists } from "@/lib/artists-data";
 import { SafeImg } from "@/components/admin/safe-img";
 import { Flower } from "@/components/brand";
 import { site } from "@/lib/site";
+import { categorizeMedium } from "@/lib/mediums";
+import { cleanName } from "@/lib/clean";
 
 export const metadata: Metadata = {
   title: "Artists",
@@ -56,9 +58,12 @@ export default async function ArtistsPage() {
                   />
                 </div>
                 <h2 className="mt-3 font-display text-lg font-bold leading-tight group-hover:text-fern-deep">
-                  {a.name}
+                  {cleanName(a.name)}
                 </h2>
-                {a.medium && <p className="text-sm text-ink-soft">{a.medium}</p>}
+                {(() => {
+                  const cat = categorizeMedium(a.medium);
+                  return cat !== "Other" ? <p className="text-sm text-ink-soft">{cat}</p> : null;
+                })()}
               </Link>
             </li>
           ))}

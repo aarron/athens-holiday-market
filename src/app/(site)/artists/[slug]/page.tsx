@@ -15,6 +15,8 @@ import {
   XIcon,
   GlobeIcon,
 } from "@/components/icons";
+import { categorizeMedium } from "@/lib/mediums";
+import { cleanName, cleanUrl } from "@/lib/clean";
 
 type IconType = typeof InstagramIcon;
 const SOCIALS: Record<string, { label: string; Icon: IconType }> = {
@@ -45,13 +47,13 @@ export async function generateMetadata({
   if (!artist || !artist.published) return { title: "Artist not found" };
   const desc =
     (artist.statement ?? artist.bio)?.slice(0, 155) ??
-    `${artist.name} — ${artist.medium} at the ${site.name}.`;
+    `${cleanName(artist.name)} — ${categorizeMedium(artist.medium)} at the ${site.name}.`;
   return {
-    title: artist.name,
+    title: cleanName(artist.name),
     description: desc,
     alternates: { canonical: `/artists/${artist.slug}` },
     openGraph: {
-      title: `${artist.name} · ${site.name}`,
+      title: `${cleanName(artist.name)} · ${site.name}`,
       description: desc,
       images: artist.photos[0]?.url ? [{ url: artist.photos[0].url }] : undefined,
     },
@@ -105,9 +107,9 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
         {/* Info */}
         <div className="lg:sticky lg:top-24">
-          <h1 className="text-4xl font-extrabold sm:text-5xl">{artist.name}</h1>
-          {artist.medium && (
-            <p className="mt-2 text-lg font-bold text-fern-deep">{artist.medium}</p>
+          <h1 className="text-4xl font-extrabold sm:text-5xl">{cleanName(artist.name)}</h1>
+          {categorizeMedium(artist.medium) !== "Other" && (
+            <p className="mt-2 text-lg font-bold text-fern-deep">{categorizeMedium(artist.medium)}</p>
           )}
 
           {artist.statement && (
@@ -125,11 +127,11 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             </div>
           )}
 
-          {(artist.website || socialEntries.length > 0) && (
+          {(cleanUrl(artist.website) || socialEntries.length > 0) && (
             <div className="mt-7 flex flex-wrap gap-2.5">
-              {artist.website && (
+              {cleanUrl(artist.website) && (
                 <a
-                  href={artist.website.startsWith("http") ? artist.website : `https://${artist.website}`}
+                  href={cleanUrl(artist.website)!}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-display font-semibold text-paper transition-colors hover:bg-ink-soft"
@@ -158,7 +160,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             </div>
           )}
 
-          <ArtistShareButtons url={`${site.url}/artists/${artist.slug}`} name={artist.name} />
+          <ArtistShareButtons url={`${site.url}/artists/${artist.slug}`} name={cleanName(artist.name)} />
 
           <div className="mt-8 border-t border-ink/10 pt-5">
             <p className="text-sm text-ink-soft">

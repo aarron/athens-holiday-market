@@ -159,6 +159,31 @@ export async function getApplication(id: number) {
   });
 }
 
+/**
+ * Prev/next application within the same cycle, in the review-list order
+ * (newest first, matching listApplications), so judges can cycle through them.
+ */
+export async function getAdjacentApplications(appId: number) {
+  const cur = await db.query.applications.findFirst({
+    where: eq(applications.id, appId),
+    columns: { cycleId: true },
+  });
+  if (!cur) return null;
+  const rows = await db
+    .select({ id: applications.id })
+    .from(applications)
+    .where(eq(applications.cycleId, cur.cycleId))
+    .orderBy(desc(applications.createdAt), desc(applications.id));
+  const idx = rows.findIndex((r) => r.id === appId);
+  if (idx === -1) return null;
+  return {
+    prevId: idx > 0 ? rows[idx - 1].id : null,
+    nextId: idx < rows.length - 1 ? rows[idx + 1].id : null,
+    position: idx + 1,
+    total: rows.length,
+  };
+}
+
 /** The public artist profile linked to an application, if any. */
 export async function getArtistForApplication(applicationId: number) {
   return db.query.artists.findFirst({

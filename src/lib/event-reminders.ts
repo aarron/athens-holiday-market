@@ -23,12 +23,15 @@ async function featuredArtists(limit = 6) {
 }
 
 function ctaBlock() {
+  const hr = `<hr style="border:none;border-top:1px solid #ece5d6;margin:0" />`;
   return `
-    <p style="margin:8px 0 4px">
+    ${hr}
+    <p style="margin:28px 0;text-align:center">
       <a href="${site.url}/artists" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Meet the artists →</a>
-      &nbsp;
+      &nbsp;&nbsp;
       <a href="${mapsHref()}" style="color:#17a898;text-decoration:none;font-weight:600">Get directions</a>
-    </p>`;
+    </p>
+    ${hr}`;
 }
 
 const COPY: Record<Kind, { subject: string; heading: string; lead: string }> = {

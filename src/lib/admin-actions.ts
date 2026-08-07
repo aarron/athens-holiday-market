@@ -5,7 +5,12 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, votes, comments, artists, artistPhotos } from "@/db/schema";
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
-import { sendDecisionEmail, sendArtistPageLive } from "@/lib/emails";
+import {
+  sendDecisionEmail,
+  sendArtistPageLive,
+  sendJudgeSocialKit,
+  SOCIAL_POSTING_TEAM,
+} from "@/lib/emails";
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -117,6 +122,14 @@ export async function publishArtist(applicationId: number) {
   revalidatePath("/artists");
   await sendArtistPageLive(app.email, app.name, slug);
   return { ok: true, slug };
+}
+
+/** Email the posting team a prompt to download + share artist spotlights. */
+export async function emailPostingTeam() {
+  await requireAdmin();
+  const res = await sendJudgeSocialKit(SOCIAL_POSTING_TEAM);
+  if (res && "error" in res) return { error: "Couldn't send. Please try again." };
+  return { ok: true, count: SOCIAL_POSTING_TEAM.length };
 }
 
 /** Hide an artist from the public directory (keeps the record). */

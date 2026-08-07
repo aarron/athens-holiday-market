@@ -112,6 +112,41 @@ export async function sendArtistPageReminder(to: string, name: string) {
 
 export const CONTACT_TO = "redacted@example.com";
 
+// The judges/organizer who post to social in the run-up to the event.
+// (Brent & Ryan focus on event-day logistics and are intentionally excluded.)
+export const SOCIAL_POSTING_TEAM = [
+  "redacted@example.com", // Jim
+  "redacted@example.com", // Ansley (runs Instagram)
+  "redacted@example.com", // Jamie
+];
+
+/** Prompt the posting team to download + post artist spotlights weekly. */
+export async function sendJudgeSocialKit(to: string[]) {
+  if (!resend || to.length === 0) return { skipped: true as const };
+  const url = `${site.url}/admin/social-kit`;
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:22px">Time to spotlight our artists ✨</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Our ${site.event.year} lineup is set — let's build buzz for the
+      ${site.name}! We've made ready-to-post spotlight images for every artist, so there's nothing to chase down.</p>
+    <p style="margin:0 0 14px;line-height:1.6">The plan: post <strong>one artist spotlight each week</strong> leading up to
+      the market (${site.event.days[0].label} &amp; ${site.event.days[1].label}) on Instagram and Facebook. Each image is
+      sized for both feed and stories.</p>
+    <p style="margin:0 0 18px"><a href="${url}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open the social kit →</a></p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Sign in with this email address (one-time link, no
+      password). Tag ${site.social.instagram} so posts are easy to reshare.</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Post an artist spotlight each week — your ${site.name} social kit`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send judge social kit:", e);
+    return { error: true as const };
+  }
+}
+
 /** Forward a contact-form message to the organizer inbox. */
 export async function sendContactEmail(name: string, email: string, message: string) {
   if (!resend) {

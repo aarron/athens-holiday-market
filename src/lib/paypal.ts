@@ -79,7 +79,7 @@ export async function createBoothFeeInvoice(input: {
         invoicer: {
           business_name: site.name,
           website: site.url,
-          logo_url: `https://www.${site.url.replace(/^https?:\/\/(www\.)?/, "")}/brand/logo-invoice.png`,
+          logo_url: `https://www.${site.url.replace(/^https?:\/\/(www\.)?/, "")}/brand/logo-pp.png`,
         },
         primary_recipients: [
           { billing_info: { name: splitName(input.name), email_address: input.email } },

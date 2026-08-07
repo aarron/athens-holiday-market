@@ -47,21 +47,21 @@ export function ScheduledSends({ data }: { data: Data }) {
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
-                <th className="px-4 py-3 font-semibold">When</th>
-                <th className="px-4 py-3 font-semibold">Channel</th>
-                <th className="px-4 py-3 font-semibold">To whom</th>
-                <th className="px-4 py-3 font-semibold">Subject / topic</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-5 py-4 font-semibold">When</th>
+                <th className="px-5 py-4 font-semibold">Channel</th>
+                <th className="px-5 py-4 font-semibold">To whom</th>
+                <th className="px-5 py-4 font-semibold">Subject / topic</th>
+                <th className="px-5 py-4 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
               {announcements.map((a) => (
                 <tr key={a.id} className="border-b border-ink/5 last:border-0 align-top">
-                  <td className="whitespace-nowrap px-4 py-3 font-semibold">{a.when}</td>
-                  <td className="px-4 py-3"><ChannelPill channel={a.channel} /></td>
-                  <td className="px-4 py-3 text-ink-soft">{a.audience}</td>
-                  <td className="px-4 py-3">{a.topic}</td>
-                  <td className="px-4 py-3"><StatusPill status={a.status} sentAt={a.sentAt} /></td>
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold">{a.when}</td>
+                  <td className="px-5 py-4"><ChannelPill channel={a.channel} /></td>
+                  <td className="px-5 py-4 text-ink-soft">{a.audience}</td>
+                  <td className="px-5 py-4">{a.topic}</td>
+                  <td className="px-5 py-4"><StatusPill status={a.status} sentAt={a.sentAt} /></td>
                 </tr>
               ))}
             </tbody>
@@ -89,20 +89,20 @@ export function ScheduledSends({ data }: { data: Data }) {
               <table className="w-full min-w-[520px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
-                    <th className="px-4 py-3 font-semibold">Artist</th>
-                    <th className="px-4 py-3 font-semibold">Scheduled</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-5 py-4 font-semibold">Artist</th>
+                    <th className="px-5 py-4 font-semibold">Scheduled</th>
+                    <th className="px-5 py-4 font-semibold">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {artistReminders.map((r) => (
                     <tr key={r.email} className="border-b border-ink/5 last:border-0">
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         <span className="font-display font-bold">{r.name}</span>
                         <span className="block text-xs text-ink-soft">{r.email}</span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-ink-soft">{r.when}</td>
-                      <td className="px-4 py-3"><StatusPill status={r.status} sentAt={r.sentAt} /></td>
+                      <td className="whitespace-nowrap px-5 py-4 text-ink-soft">{r.when}</td>
+                      <td className="px-5 py-4"><StatusPill status={r.status} sentAt={r.sentAt} /></td>
                     </tr>
                   ))}
                 </tbody>

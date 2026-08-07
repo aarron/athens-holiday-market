@@ -147,15 +147,15 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
-                <th className="px-4 py-3 font-semibold">Subscriber</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                <th className="px-5 py-4 font-semibold">Subscriber</th>
+                <th className="px-5 py-4 font-semibold">Status</th>
+                <th className="px-5 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {shown.map((r) => (
                 <tr key={r.id} className="border-b border-ink/5 last:border-0 hover:bg-cream-soft">
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <div className="font-display font-bold">{r.name || r.email}</div>
                     {r.name && <div className="text-xs text-ink-soft">{r.email}</div>}
                     {r.isArtist && (
@@ -164,12 +164,12 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${STATUS_STYLES[r.status] ?? "bg-cream text-ink-soft"}`}>
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <div className="flex justify-end gap-2">
                       {r.status === "unsubscribed" ? (
                         <button
@@ -204,7 +204,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
             </tbody>
           </table>
         </div>
-        <div className="border-t border-ink/10 px-4 py-3 text-sm text-ink-soft">
+        <div className="border-t border-ink/10 px-5 py-4 text-sm text-ink-soft">
           Showing {shown.length} of {filtered.length}
           {filtered.length > shown.length && " — refine your search to see more"}
         </div>

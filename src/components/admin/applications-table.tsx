@@ -103,7 +103,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
   const hasFilters = q || statusFilter !== "all" || paymentFilter !== "all";
 
   const Th = ({ col, label }: { col: SortCol; label: string }) => (
-    <th className="px-4 py-3 font-semibold">
+    <th className="px-5 py-4 font-semibold">
       <button
         onClick={() => sortBy(col)}
         className={`inline-flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-ink ${
@@ -186,7 +186,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
           <tbody>
             {filtered.map((r) => (
               <tr key={r.id} className="group border-b border-ink/5 last:border-0 hover:bg-cream-soft">
-                <td className="px-4 py-3">
+                <td className="px-5 py-4">
                   <Link href={`/admin/applications/${r.id}`} className="flex items-center gap-3">
                     <SafeImg
                       src={r.photo}
@@ -197,16 +197,16 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
                     <span className="font-display font-bold group-hover:text-fern-deep">{r.name}</span>
                   </Link>
                 </td>
-                <td className="max-w-[260px] px-4 py-3 text-ink-soft">
+                <td className="max-w-[260px] px-5 py-4 text-ink-soft">
                   <span className="line-clamp-1">{r.medium}</span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-4">
                   <VoteTally tally={r.tally} />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-4">
                   <StatusBadge status={r.status} />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-4">
                   <BoothFeeBadge paid={r.boothFeePaid} status={r.status} />
                 </td>
               </tr>
@@ -222,7 +222,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
         </table>
       </div>
 
-      <div className="border-t border-ink/10 px-4 py-3 text-sm text-ink-soft">
+      <div className="border-t border-ink/10 px-5 py-4 text-sm text-ink-soft">
         {filtered.length} of {rows.length} applications
       </div>
     </div>

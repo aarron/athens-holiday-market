@@ -476,7 +476,7 @@ export default function StyleGuidePage() {
           <Section id="nav" title="Navigation" kicker="Components">
             <div className="space-y-4">
               <div className="overflow-hidden rounded-xl border border-ink/10 bg-white shadow-[var(--shadow-card)]">
-                <div className="flex items-center gap-1 px-4 py-3">
+                <div className="flex items-center gap-1 px-5 py-4">
                   <span className="rounded-lg bg-fern-soft px-3 py-2 text-sm font-semibold text-fern-deep">Active</span>
                   <span className="rounded-lg px-3 py-2 text-sm font-semibold text-ink hover:bg-cream">Hover me</span>
                   <span className="rounded-lg px-3 py-2 text-sm font-semibold text-ink">Default</span>
@@ -499,9 +499,9 @@ export default function StyleGuidePage() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
-                    <th className="px-4 py-3 font-semibold">Artist</th>
-                    <th className="px-4 py-3 font-semibold">Medium</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-5 py-4 font-semibold">Artist</th>
+                    <th className="px-5 py-4 font-semibold">Medium</th>
+                    <th className="px-5 py-4 font-semibold">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -511,16 +511,16 @@ export default function StyleGuidePage() {
                     ["Jamie Rowe", "Textiles", "Draft", "bg-cream text-ink-soft"],
                   ].map(([n, m, s, cls]) => (
                     <tr key={n} className="border-b border-ink/5 last:border-0 hover:bg-cream-soft">
-                      <td className="px-4 py-3 font-display font-bold">{n}</td>
-                      <td className="px-4 py-3 text-ink-soft">{m}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4 font-display font-bold">{n}</td>
+                      <td className="px-5 py-4 text-ink-soft">{m}</td>
+                      <td className="px-5 py-4">
                         <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${cls}`}>{s}</span>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="border-t border-ink/10 px-4 py-3 text-sm text-ink-soft">3 artists</div>
+              <div className="border-t border-ink/10 px-5 py-4 text-sm text-ink-soft">3 artists</div>
             </div>
             <p className="mt-3 text-sm text-ink-soft">
               Container <CopyToken value="rounded-xl bg-white shadow-[var(--shadow-card)]" />; header row{" "}

@@ -45,10 +45,10 @@ const HISTORY_LABEL: Record<string, string> = {
 };
 const HISTORY_COLOR: Record<string, string> = {
   accepted: "var(--color-fern-deep)",
-  waitlisted: "var(--color-tangerine)",
-  rejected: "var(--color-poppy)",
+  waitlisted: "var(--color-tangerine-deep)",
+  rejected: "var(--color-poppy-deep)",
   submitted: "var(--color-ink)",
-  under_review: "var(--color-sky)",
+  under_review: "var(--color-sky-deep)",
 };
 
 const VOTE_LABEL: Record<string, { label: string; color: string }> = {
@@ -124,7 +124,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {app.mediumCategory && (
-              <span className="rounded-full bg-sky-soft px-2.5 py-0.5 text-xs font-bold text-sky">
+              <span className="rounded-full bg-sky-soft px-2.5 py-0.5 text-xs font-bold text-sky-deep">
                 {app.mediumCategory}
               </span>
             )}
@@ -345,7 +345,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
           {isAdmin && (
             <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-              <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-poppy">
+              <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-poppy-deep">
                 Danger zone
               </h2>
               <DeleteApplicationButton applicationId={app.id} name={app.name} />

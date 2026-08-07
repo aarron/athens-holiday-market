@@ -69,7 +69,7 @@ export default async function BroadcastDetail({ params }: { params: Promise<{ id
       <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
         <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Message</h2>
         <div
-          className="prose-broadcast mt-3 leading-relaxed [&_a]:text-teal [&_a]:underline [&_ul]:ml-5 [&_ul]:list-disc"
+          className="prose-broadcast mt-3 leading-relaxed [&_a]:text-teal-deep [&_a]:underline [&_ul]:ml-5 [&_ul]:list-disc"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(broadcast.body) }}
         />
       </div>

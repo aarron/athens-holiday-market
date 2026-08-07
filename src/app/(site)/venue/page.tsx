@@ -36,7 +36,7 @@ export default function VenuePage() {
         <div>
           <div className="flex items-center gap-2">
             <Flower size={22} color="var(--color-fuchsia)" />
-            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep">
               The venue
             </p>
           </div>

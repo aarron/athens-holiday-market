@@ -33,7 +33,7 @@ export default async function AdminLogin({
         </p>
 
         {error && ERRORS[error] && (
-          <p className="mt-4 rounded-lg bg-[#fde7e6] px-4 py-2 text-sm font-medium text-poppy">
+          <p className="mt-4 rounded-lg bg-[#fde7e6] px-4 py-2 text-sm font-medium text-poppy-deep">
             {ERRORS[error]}
           </p>
         )}

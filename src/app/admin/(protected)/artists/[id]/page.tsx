@@ -47,7 +47,7 @@ export default async function AdminArtistReview({ params }: { params: Promise<{ 
       {pc ? (
         <div className="mt-6 space-y-6">
           <div className="rounded-xl border-2 border-tangerine/40 bg-[#fdf0e0]/40 p-5">
-            <p className="font-display font-bold text-tangerine">Submitted for review</p>
+            <p className="font-display font-bold text-tangerine-deep">Submitted for review</p>
             <p className="mt-1 text-sm text-ink-soft">
               Review the artist&apos;s submission below. Approving replaces their live page.
             </p>

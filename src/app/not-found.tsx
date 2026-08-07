@@ -11,7 +11,7 @@ export default function NotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-paper px-5 text-center">
       <NotFoundLogger />
       <Flower size={72} color="var(--color-fuchsia)" spin />
-      <p className="mt-8 font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+      <p className="mt-8 font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep">
         Page not found
       </p>
       <h1 className="mt-3 text-4xl font-extrabold sm:text-5xl">This one wandered off</h1>

@@ -44,7 +44,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
         role="status"
       >
         <p className="flex items-center gap-2 font-display text-xl font-bold">
-          <CelebrateIcon size={22} className={dark ? "text-chartreuse" : "text-fuchsia"} aria-hidden />
+          <CelebrateIcon size={22} className={dark ? "text-chartreuse" : "text-fuchsia-deep"} aria-hidden />
           You&apos;re on the list!
         </p>
         <p className={`mt-1 ${dark ? "text-paper/70" : "text-ink-soft"}`}>
@@ -99,7 +99,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
       </label>
 
       {status === "error" && (
-        <p className="mt-2 text-sm font-medium text-poppy">{message}</p>
+        <p className="mt-2 text-sm font-medium text-poppy-deep">{message}</p>
       )}
     </form>
   );

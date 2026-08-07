@@ -47,7 +47,7 @@ export default async function ArtistPortalPage() {
   const first = artist.name.split(" ")[0];
   const info = site.artistInfo;
   const pill = "inline-flex items-center gap-1.5 rounded-full border-2 border-ink/15 px-3.5 py-1.5 text-sm font-semibold transition-colors hover:bg-cream";
-  const sectionTitle = "flex items-center gap-1.5 font-display text-sm font-bold uppercase tracking-[0.14em] text-teal";
+  const sectionTitle = "flex items-center gap-1.5 font-display text-sm font-bold uppercase tracking-[0.14em] text-teal-deep";
 
   return (
     <div className="space-y-6">
@@ -137,7 +137,7 @@ export default async function ArtistPortalPage() {
               href={info.menuUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-teal underline underline-offset-4"
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-teal-deep underline underline-offset-4"
             >
               View the event menu
               <ExternalIcon size={14} aria-hidden />

@@ -33,7 +33,7 @@ type Values = z.infer<typeof schema>;
 const field =
   "w-full rounded-lg border-2 border-ink/15 bg-white px-4 py-3 text-base text-ink outline-none transition-colors focus:border-fern-deep placeholder:text-ink-soft/50";
 const label = "block font-display text-sm font-bold text-ink";
-const errCls = "mt-1 text-sm font-medium text-poppy";
+const errCls = "mt-1 text-sm font-medium text-poppy-deep";
 
 export function ApplicationForm() {
   const {
@@ -113,10 +113,10 @@ export function ApplicationForm() {
 
   if (status === "done") {
     return (
-      <div className="rounded-xl bg-fern-soft p-8 text-center shadow-[var(--shadow-card)]">
+      <div role="status" className="rounded-xl bg-fern-soft p-8 text-center shadow-[var(--shadow-card)]">
         <Flower size={56} color="var(--color-fuchsia)" spin className="mx-auto" />
         <h2 className="mt-5 flex items-center justify-center gap-2.5 text-3xl font-extrabold">
-          <CelebrateIcon size={30} className="text-fuchsia" aria-hidden />
+          <CelebrateIcon size={30} className="text-fuchsia-deep" aria-hidden />
           Application received!
         </h2>
         <p className="mx-auto mt-3 max-w-md text-lg text-ink-soft">
@@ -131,26 +131,26 @@ export function ApplicationForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-7" noValidate>
       <div>
         <label className={label} htmlFor="name">
-          Your name <span className="text-poppy">*</span>
+          Your name <span className="text-poppy-deep">*</span>
         </label>
-        <input id="name" autoComplete="name" className={`mt-1.5 ${field}`} {...register("name")} />
-        {errors.name && <p className={errCls}>{errors.name.message}</p>}
+        <input id="name" autoComplete="name" aria-required="true" aria-invalid={!!errors.name} aria-describedby={errors.name ? "name-error" : undefined} className={`mt-1.5 ${field}`} {...register("name")} />
+        {errors.name && <p id="name-error" role="alert" className={errCls}>{errors.name.message}</p>}
       </div>
 
       <div className="grid gap-7 sm:grid-cols-2">
         <div>
           <label className={label} htmlFor="email">
-            Email address <span className="text-poppy">*</span>
+            Email address <span className="text-poppy-deep">*</span>
           </label>
-          <input id="email" type="email" autoComplete="email" inputMode="email" className={`mt-1.5 ${field}`} {...register("email")} />
-          {errors.email && <p className={errCls}>{errors.email.message}</p>}
+          <input id="email" type="email" autoComplete="email" inputMode="email" aria-required="true" aria-invalid={!!errors.email} aria-describedby={errors.email ? "email-error" : undefined} className={`mt-1.5 ${field}`} {...register("email")} />
+          {errors.email && <p id="email-error" role="alert" className={errCls}>{errors.email.message}</p>}
         </div>
         <div>
           <label className={label} htmlFor="phone">
-            Mobile number <span className="text-poppy">*</span>
+            Mobile number <span className="text-poppy-deep">*</span>
           </label>
-          <input id="phone" type="tel" autoComplete="tel" inputMode="tel" className={`mt-1.5 ${field}`} {...register("phone")} />
-          {errors.phone && <p className={errCls}>{errors.phone.message}</p>}
+          <input id="phone" type="tel" autoComplete="tel" inputMode="tel" aria-required="true" aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "phone-error" : undefined} className={`mt-1.5 ${field}`} {...register("phone")} />
+          {errors.phone && <p id="phone-error" role="alert" className={errCls}>{errors.phone.message}</p>}
         </div>
       </div>
 
@@ -185,20 +185,23 @@ export function ApplicationForm() {
           Optional, but they help the jury get to know your work.
         </p>
         <div className="mt-2 grid gap-4 sm:grid-cols-3">
-          <input placeholder="Instagram" className={field} {...register("instagram")} />
-          <input placeholder="Facebook" className={field} {...register("facebook")} />
-          <input placeholder="TikTok" className={field} {...register("tiktok")} />
+          <input aria-label="Instagram" placeholder="Instagram" className={field} {...register("instagram")} />
+          <input aria-label="Facebook" placeholder="Facebook" className={field} {...register("facebook")} />
+          <input aria-label="TikTok" placeholder="TikTok" className={field} {...register("tiktok")} />
         </div>
       </fieldset>
 
       <div className="grid gap-7 sm:grid-cols-2">
         <div>
           <label className={label} htmlFor="mediumCategory">
-            Category <span className="text-poppy">*</span>
+            Category <span className="text-poppy-deep">*</span>
           </label>
           <select
             id="mediumCategory"
             defaultValue=""
+            aria-required="true"
+            aria-invalid={!!errors.mediumCategory}
+            aria-describedby={errors.mediumCategory ? "mediumCategory-error" : undefined}
             className={`mt-1.5 ${field}`}
             {...register("mediumCategory")}
           >
@@ -211,25 +214,28 @@ export function ApplicationForm() {
               </option>
             ))}
           </select>
-          {errors.mediumCategory && <p className={errCls}>{errors.mediumCategory.message}</p>}
+          {errors.mediumCategory && <p id="mediumCategory-error" role="alert" className={errCls}>{errors.mediumCategory.message}</p>}
         </div>
         <div>
           <label className={label} htmlFor="medium">
-            Medium of your work <span className="text-poppy">*</span>
+            Medium of your work <span className="text-poppy-deep">*</span>
           </label>
           <input
             id="medium"
             placeholder="e.g. hand-thrown stoneware"
+            aria-required="true"
+            aria-invalid={!!errors.medium}
+            aria-describedby={errors.medium ? "medium-error" : undefined}
             className={`mt-1.5 ${field}`}
             {...register("medium")}
           />
-          {errors.medium && <p className={errCls}>{errors.medium.message}</p>}
+          {errors.medium && <p id="medium-error" role="alert" className={errCls}>{errors.medium.message}</p>}
         </div>
       </div>
 
       <div>
         <label className={label} htmlFor="description">
-          Artist statement <span className="text-poppy">*</span>
+          Artist statement <span className="text-poppy-deep">*</span>
         </label>
         <p className="mt-0.5 text-sm text-ink-soft">
           Describe your work and what makes it special. This becomes the main text on your artist
@@ -245,11 +251,14 @@ export function ApplicationForm() {
               onChange={f.onChange}
               rows={5}
               placeholder="I make…"
+              required
+              invalid={!!errors.description}
+              describedBy={errors.description ? "description-error" : undefined}
               textareaClassName={`mt-1.5 ${field} resize-y`}
             />
           )}
         />
-        {errors.description && <p className={errCls}>{errors.description.message}</p>}
+        {errors.description && <p id="description-error" role="alert" className={errCls}>{errors.description.message}</p>}
       </div>
 
       <div>
@@ -278,22 +287,26 @@ export function ApplicationForm() {
 
       <div>
         <span className={label}>
-          {min}–{max} photos of your work <span className="text-poppy">*</span>
+          {min}–{max} photos of your work <span className="text-poppy-deep">*</span>
         </span>
-        <p className="mt-0.5 text-sm text-ink-soft">
+        <p id="photos-help" className="mt-0.5 text-sm text-ink-soft">
           {min} to {max} images, each under {site.applications.maxPhotoMb}MB (JPG, PNG, or WEBP).
         </p>
-        <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-ink/25 bg-white px-4 py-8 text-center transition-colors hover:border-fern-deep">
+        {/* The <input> is visually hidden but stays keyboard-focusable (sr-only,
+            not display:none), and the dropzone shows a focus ring via focus-within. */}
+        <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-ink/25 bg-white px-4 py-8 text-center transition-colors hover:border-fern-deep focus-within:border-fern-deep focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-berry">
           <Flower size={28} color="var(--color-fern-deep)" />
           <span className="mt-2 font-display font-semibold">
             {photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} selected` : "Choose photos"}
           </span>
-          <span className="text-sm text-ink-soft">or drag & drop</span>
+          <span className="text-sm text-ink-soft">or drag &amp; drop</span>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/heic"
             multiple
-            className="hidden"
+            className="sr-only"
+            aria-label={`Upload ${min} to ${max} photos of your work`}
+            aria-describedby={`photos-help${photoError ? " photos-error" : ""}`}
             onChange={onPickPhotos}
           />
         </label>
@@ -306,12 +319,12 @@ export function ApplicationForm() {
             ))}
           </ul>
         )}
-        {photoError && <p className={errCls}>{photoError}</p>}
+        {photoError && <p id="photos-error" role="alert" className={errCls}>{photoError}</p>}
       </div>
 
       <fieldset>
         <legend className={label}>
-          Do you want to share a booth with another artist? <span className="text-poppy">*</span>
+          Do you want to share a booth with another artist? <span className="text-poppy-deep">*</span>
         </legend>
         <div className="mt-2 flex gap-6">
           {(["no", "yes"] as const).map((v) => (
@@ -333,7 +346,7 @@ export function ApplicationForm() {
       )}
 
       {serverError && (
-        <p className="rounded-lg bg-poppy/10 px-4 py-3 text-sm font-medium text-poppy">{serverError}</p>
+        <p role="alert" className="rounded-lg bg-poppy/10 px-4 py-3 text-sm font-medium text-poppy-deep">{serverError}</p>
       )}
 
       <Button type="submit" size="lg" disabled={status === "submitting"} className="w-full sm:w-auto">

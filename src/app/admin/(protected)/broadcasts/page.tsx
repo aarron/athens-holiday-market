@@ -44,9 +44,9 @@ function DecisionCard({
       </div>
       <p className="mt-3 text-sm font-semibold">
         {notified === 0 ? (
-          <span className="text-tangerine">None notified yet →</span>
+          <span className="text-tangerine-deep">None notified yet →</span>
         ) : notified < total ? (
-          <span className="text-tangerine">
+          <span className="text-tangerine-deep">
             {total - notified} still to notify →
           </span>
         ) : (

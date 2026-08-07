@@ -7,8 +7,8 @@ type Data = Awaited<ReturnType<typeof getScheduledSends>>;
 const STATUS: Record<SendStatus, { cls: string; label: string }> = {
   sent: { cls: "bg-fern-soft text-fern-deep", label: "Sent" },
   scheduled: { cls: "bg-cream text-ink-soft", label: "Scheduled" },
-  window: { cls: "bg-[#fdf0e0] text-tangerine", label: "Send window open" },
-  missed: { cls: "bg-[#fdeceb] text-poppy", label: "Not sent" },
+  window: { cls: "bg-[#fdf0e0] text-tangerine-deep", label: "Send window open" },
+  missed: { cls: "bg-[#fdeceb] text-poppy-deep", label: "Not sent" },
   "pending-decision": { cls: "bg-cream text-ink-soft", label: "After acceptance" },
   canceled: { cls: "bg-ink/10 text-ink-soft", label: "Canceled" },
 };

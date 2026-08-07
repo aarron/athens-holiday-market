@@ -185,7 +185,7 @@ export function ArtistEditor({
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={logoUrl} alt="Your logo" className="h-20 w-20 rounded-lg object-contain" />
-              <button onClick={() => setLogoUrl(null)} className="text-sm font-semibold text-poppy">
+              <button onClick={() => setLogoUrl(null)} className="text-sm font-semibold text-poppy-deep">
                 Remove
               </button>
             </>
@@ -202,7 +202,7 @@ export function ArtistEditor({
         <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => onSetLogo(e.target.files)} />
       </Card>
 
-      {uploadErr && <p className="text-sm font-medium text-poppy">{uploadErr}</p>}
+      {uploadErr && <p className="text-sm font-medium text-poppy-deep">{uploadErr}</p>}
 
       {/* Artist statement — about the work */}
       <Card
@@ -278,8 +278,8 @@ export function ArtistEditor({
 
 function StatusBanner({ status, slug, published }: { status: string; slug: string; published: boolean }) {
   const map: Record<string, { cls: string; text: string }> = {
-    draft: { cls: "bg-sky-soft text-sky", text: "Draft — not yet submitted. Fill this in and submit for review." },
-    pending: { cls: "bg-[#fdf0e0] text-tangerine", text: "In review — our team is reviewing your submission. We'll email you when it's live." },
+    draft: { cls: "bg-sky-soft text-sky-deep", text: "Draft — not yet submitted. Fill this in and submit for review." },
+    pending: { cls: "bg-[#fdf0e0] text-tangerine-deep", text: "In review — our team is reviewing your submission. We'll email you when it's live." },
     published: { cls: "bg-fern-soft text-fern-deep", text: "Live on the site." },
   };
   const s = map[status] ?? map.draft;

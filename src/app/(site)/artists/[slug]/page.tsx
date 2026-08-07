@@ -120,7 +120,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
           {artist.bio && (
             <div className="mt-6 border-t border-ink/10 pt-5">
-              <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-teal">
+              <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-teal-deep">
                 About {artist.name.split(" ")[0]}
               </h2>
               <p className="mt-2 whitespace-pre-line leading-relaxed text-ink-soft">{artist.bio}</p>

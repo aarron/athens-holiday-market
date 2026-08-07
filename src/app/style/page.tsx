@@ -103,7 +103,7 @@ function Section({ id, title, kicker, children }: { id: string; title: string; k
     <section id={id} className="scroll-mt-24 border-t border-ink/10 pt-12">
       <div className="mb-6">
         {kicker && (
-          <p className="font-display text-xs font-bold uppercase tracking-[0.18em] text-fuchsia">{kicker}</p>
+          <p className="font-display text-xs font-bold uppercase tracking-[0.18em] text-fuchsia-deep">{kicker}</p>
         )}
         <h2 className="mt-1 font-display text-3xl font-extrabold sm:text-4xl">{title}</h2>
       </div>
@@ -168,7 +168,7 @@ export default function StyleGuidePage() {
       <main className="mx-auto max-w-7xl px-5 pb-24 pt-10 sm:px-8">
         {/* Hero */}
         <div className="max-w-3xl">
-          <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+          <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep">
             Athens <ColorWord /> Market
           </p>
           <h1 className="mt-3 font-display text-5xl font-extrabold leading-[0.95] sm:text-6xl">
@@ -294,7 +294,7 @@ export default function StyleGuidePage() {
                   <CopyToken value="text-2xl font-extrabold" />
                 </div>
                 <div className="flex items-baseline justify-between gap-3 border-b border-ink/5 pb-3">
-                  <p className="font-display text-xs font-bold uppercase tracking-[0.18em] text-fuchsia">Eyebrow</p>
+                  <p className="font-display text-xs font-bold uppercase tracking-[0.18em] text-fuchsia-deep">Eyebrow</p>
                   <CopyToken value="uppercase tracking-[0.18em]" />
                 </div>
                 <div className="flex items-baseline justify-between gap-3 border-b border-ink/5 pb-3">
@@ -432,9 +432,9 @@ export default function StyleGuidePage() {
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-fern-soft px-2.5 py-0.5 text-xs font-bold text-fern-deep">Live</span>
-                <span className="rounded-full bg-[#fdf0e0] px-2.5 py-0.5 text-xs font-bold text-tangerine">Needs review</span>
+                <span className="rounded-full bg-[#fdf0e0] px-2.5 py-0.5 text-xs font-bold text-tangerine-deep">Needs review</span>
                 <span className="rounded-full bg-cream px-2.5 py-0.5 text-xs font-bold text-ink-soft">Draft</span>
-                <span className="rounded-full bg-fuchsia/10 px-2.5 py-0.5 text-xs font-bold text-fuchsia">Artist</span>
+                <span className="rounded-full bg-fuchsia/10 px-2.5 py-0.5 text-xs font-bold text-fuchsia-deep">Artist</span>
                 <span className="rounded-full bg-tangerine px-3 py-1 text-sm font-bold text-white">2 to notify</span>
                 <span className="ml-1 inline-flex rounded-full border-2 border-ink/15 px-3 py-1 text-sm font-semibold text-ink-soft">Filter pill</span>
               </div>
@@ -463,7 +463,7 @@ export default function StyleGuidePage() {
             <div className="flex flex-wrap gap-3">
               {AVATARS.map(({ Icon, name }) => (
                 <div key={name} className="flex flex-col items-center gap-1.5">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-fuchsia-soft text-fuchsia">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-fuchsia-soft text-fuchsia-deep">
                     <Icon size={24} />
                   </div>
                   <span className="text-[11px] text-ink-soft">{name}</span>
@@ -507,7 +507,7 @@ export default function StyleGuidePage() {
                 <tbody>
                   {[
                     ["Barbara Odil", "Wood Sculpture", "Live", "bg-fern-soft text-fern-deep"],
-                    ["Tex McCallister", "Ceramics", "Needs review", "bg-[#fdf0e0] text-tangerine"],
+                    ["Tex McCallister", "Ceramics", "Needs review", "bg-[#fdf0e0] text-tangerine-deep"],
                     ["Jamie Rowe", "Textiles", "Draft", "bg-cream text-ink-soft"],
                   ].map(([n, m, s, cls]) => (
                     <tr key={n} className="border-b border-ink/5 last:border-0 hover:bg-cream-soft">

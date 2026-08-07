@@ -27,6 +27,15 @@
   --color-sky: #45bced; /* d */
   --color-berry: #9c1c50; /* a */
 
+  /* AA-on-white text-only siblings of the decorative brights (all ≥4.5:1 on
+     white/paper). Use these for TEXT/icons on light surfaces; keep the base
+     hues above for fills, large display type, and decoration. */
+  --color-poppy-deep: #c01a12; /* errors, alerts — 6.2:1 */
+  --color-sky-deep: #0b628a; /* "under review" — 6.7:1 */
+  --color-teal-deep: #0f766e; /* cool accent text — 5.5:1 */
+  --color-tangerine-deep: #a15616; /* "needs review" / warnings — 5.4:1 */
+  --color-fuchsia-deep: #a4147a; /* eyebrows, brand text — 7.1:1 */
+
   /* tints for soft surfaces (secondary text on these stays from the hue) */
   --color-fuchsia-soft: #fbe6f4;
   --color-fern-soft: #eaf3e1;

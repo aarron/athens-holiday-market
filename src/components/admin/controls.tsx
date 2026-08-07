@@ -250,7 +250,7 @@ export function DeleteApplicationButton({ applicationId, name }: { applicationId
     return (
       <button
         onClick={() => setArmed(true)}
-        className="rounded-lg border-2 border-poppy/40 px-4 py-2.5 text-sm font-display font-bold text-poppy transition-colors hover:bg-poppy hover:text-white"
+        className="rounded-lg border-2 border-poppy/40 px-4 py-2.5 text-sm font-display font-bold text-poppy-deep transition-colors hover:bg-poppy hover:text-white"
       >
         Delete this artist…
       </button>

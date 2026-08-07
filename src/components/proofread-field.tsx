@@ -22,6 +22,9 @@ export function ProofreadField({
   placeholder,
   textareaClassName,
   minWords = 3,
+  required,
+  invalid,
+  describedBy,
 }: {
   id?: string;
   value: string;
@@ -30,6 +33,9 @@ export function ProofreadField({
   placeholder?: string;
   textareaClassName?: string;
   minWords?: number;
+  required?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
 }) {
   const [proofing, setProofing] = useState<ProofreadMode | null>(null);
   const [suggestion, setSuggestion] = useState<string | null>(null);
@@ -63,6 +69,9 @@ export function ProofreadField({
         }}
         rows={rows}
         placeholder={placeholder}
+        aria-required={required || undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         className={textareaClassName}
       />
 
@@ -86,7 +95,7 @@ export function ProofreadField({
         <span className="ml-auto text-xs text-ink-soft/70">{wordCount(value)} words</span>
       </div>
 
-      {proofErr && <p className="text-sm font-medium text-poppy">{proofErr}</p>}
+      {proofErr && <p className="text-sm font-medium text-poppy-deep">{proofErr}</p>}
 
       {suggestion && (
         <div className="rounded-lg border-2 border-fern-deep/25 bg-fern-soft/40 p-4">

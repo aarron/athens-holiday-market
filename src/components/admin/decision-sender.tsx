@@ -140,7 +140,7 @@ export function DecisionSender({
                 <tr key={r.id} className="border-b border-ink/5 last:border-0">
                   <td className="px-5 py-2.5">
                     <div className="font-display font-bold">{r.name}</div>
-                    <div className={`text-xs ${r.hasEmail ? "text-ink-soft" : "font-semibold text-poppy"}`}>
+                    <div className={`text-xs ${r.hasEmail ? "text-ink-soft" : "font-semibold text-poppy-deep"}`}>
                       {r.hasEmail ? r.email : "no email on file — will skip"}
                     </div>
                   </td>
@@ -191,7 +191,7 @@ export function DecisionSender({
             {pending ? "Sending…" : `Send ${withEmail.length} ${group === "accepted" ? "acceptance" : "waitlist"} emails`}
           </button>
         </div>
-        {error && <p className="mt-2 text-sm font-medium text-poppy">{error}</p>}
+        {error && <p className="mt-2 text-sm font-medium text-poppy-deep">{error}</p>}
       </div>
     </div>
   );

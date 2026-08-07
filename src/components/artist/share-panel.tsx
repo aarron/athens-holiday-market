@@ -91,7 +91,7 @@ export function SharePanel({
         </button>
       </div>
 
-      {err && <p className="mt-2 text-sm font-medium text-poppy">{err}</p>}
+      {err && <p className="mt-2 text-sm font-medium text-poppy-deep">{err}</p>}
 
       <div className="mt-5 space-y-3">
         <p className="text-sm font-bold text-ink">Captions</p>

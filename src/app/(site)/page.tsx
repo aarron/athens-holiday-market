@@ -133,8 +133,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl px-5 py-12 text-center sm:px-8 sm:py-14">
           <div>
             <div className="flex items-center justify-center gap-2">
-              <ClockIcon size={18} className="text-fuchsia" aria-hidden />
-              <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+              <ClockIcon size={18} className="text-fuchsia-deep" aria-hidden />
+              <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep">
                 The countdown is on
               </p>
             </div>
@@ -226,7 +226,7 @@ export default function HomePage() {
             })}
             <div className="rounded-lg bg-white p-6 shadow-[var(--shadow-card)] sm:col-span-2">
               <div className="flex items-start gap-3">
-                <MapPinIcon size={26} className="mt-0.5 shrink-0 text-tangerine" aria-hidden />
+                <MapPinIcon size={26} className="mt-0.5 shrink-0 text-tangerine-deep" aria-hidden />
                 <div>
                   <div className="font-display text-lg font-bold">{site.location.name}</div>
                   <div className="text-ink-soft">
@@ -262,7 +262,7 @@ export default function HomePage() {
           </div>
 
           <div>
-            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-teal">
+            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-teal-deep">
               A courtyard full of artists
             </p>
             <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">

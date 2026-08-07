@@ -63,7 +63,7 @@ function SpotlightCard({ artist }: { artist: SpotlightArtist }) {
             {busy === "story" ? "…" : "Story"}
           </button>
         </div>
-        {err && <p className="mt-1 text-xs font-medium text-poppy">Couldn&apos;t generate — retry.</p>}
+        {err && <p className="mt-1 text-xs font-medium text-poppy-deep">Couldn&apos;t generate — retry.</p>}
       </div>
     </div>
   );

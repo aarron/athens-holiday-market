@@ -38,7 +38,7 @@ export default async function ApplyPage({
   return (
     <div className="mx-auto max-w-3xl px-5 pb-16 pt-24 sm:px-8 sm:pb-24 sm:pt-28">
       {staffPreview && (
-        <div className="mb-6 rounded-lg border-2 border-dashed border-tangerine/60 bg-tangerine/10 px-4 py-2.5 text-center text-sm font-semibold text-tangerine">
+        <div className="mb-6 rounded-lg border-2 border-dashed border-tangerine/60 bg-tangerine/10 px-4 py-2.5 text-center text-sm font-semibold text-tangerine-deep">
           Staff preview — the public sees the “opens {site.applications.opensLabel}” screen until then.
         </div>
       )}

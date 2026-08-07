@@ -20,7 +20,7 @@ export default function ContactPage() {
       <div className="max-w-2xl">
         <div className="flex items-center gap-2">
           <Flower size={22} color="var(--color-fuchsia)" />
-          <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+          <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep">
             Say hello
           </p>
         </div>
@@ -87,8 +87,8 @@ export default function ContactPage() {
           </div>
 
           <p className="flex flex-wrap items-center gap-1.5 text-sm text-ink-soft">
-            <MailIcon size={16} className="text-fuchsia" aria-hidden />
-            Prefer email? <a href={`mailto:${site.contactEmail}`} className="font-semibold text-fuchsia underline underline-offset-4">{site.contactEmail}</a>
+            <MailIcon size={16} className="text-fuchsia-deep" aria-hidden />
+            Prefer email? <a href={`mailto:${site.contactEmail}`} className="font-semibold text-fuchsia-deep underline underline-offset-4">{site.contactEmail}</a>
           </p>
         </div>
       </div>

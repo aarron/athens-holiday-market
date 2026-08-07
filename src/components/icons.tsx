@@ -27,3 +27,17 @@ export { IconMailbox as MailboxIcon } from "@central-icons-react/round-outlined-
 export { IconInstagram as InstagramIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconInstagram";
 export { IconFacebook as FacebookIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconFacebook";
 export { IconGlobe as GlobeIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconGlobe";
+
+// Playful avatar icons — one gets assigned to each admin (see avatar-menu).
+export { IconGhost as GhostIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconGhost";
+export { IconCat as CatIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconCat";
+export { IconRobot as RobotIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconRobot";
+export { IconAlien as AlienIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconAlien";
+export { IconOwlFace as OwlIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconOwlFace";
+export { IconRocket as RocketIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconRocket";
+export { IconCrown as CrownIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconCrown";
+export { IconBalloon as BalloonIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconBalloon";
+export { IconCookies as CookiesIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconCookies";
+export { IconPizza as PizzaIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconPizza";
+export { IconHatBunny as BunnyHatIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconHatBunny";
+export { IconBugFace as BugFaceIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconBugFace";

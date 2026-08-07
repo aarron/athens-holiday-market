@@ -2,21 +2,51 @@
 
 import { useEffect, useRef, useState } from "react";
 import { signOutAction } from "@/lib/auth-actions";
+import {
+  GhostIcon,
+  CatIcon,
+  RobotIcon,
+  AlienIcon,
+  OwlIcon,
+  RocketIcon,
+  CrownIcon,
+  BalloonIcon,
+  CookiesIcon,
+  PizzaIcon,
+  BunnyHatIcon,
+  BugFaceIcon,
+} from "@/components/icons";
 
 const COLORS = ["#3f7d22", "#d21c96", "#17a898", "#f07f22", "#9c1c50", "#45bced"];
 
-function initialsOf(name: string | null, email: string) {
-  if (name && name.trim()) {
-    const parts = name.trim().split(/\s+/);
-    return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
-  }
-  return email.slice(0, 2).toUpperCase();
+const AVATAR_ICONS = [
+  GhostIcon,
+  CatIcon,
+  RobotIcon,
+  AlienIcon,
+  OwlIcon,
+  RocketIcon,
+  CrownIcon,
+  BalloonIcon,
+  CookiesIcon,
+  PizzaIcon,
+  BunnyHatIcon,
+  BugFaceIcon,
+];
+
+function hash(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h;
 }
 
 function colorFor(seed: string) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  return COLORS[h % COLORS.length];
+  return COLORS[hash(seed) % COLORS.length];
+}
+
+function iconFor(seed: string) {
+  // Offset the seed so the icon and color aren't picked in lockstep.
+  return AVATAR_ICONS[hash(seed + "🎨") % AVATAR_ICONS.length];
 }
 
 export function AvatarMenu({
@@ -30,6 +60,7 @@ export function AvatarMenu({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const Icon = iconFor(email);
 
   useEffect(() => {
     if (!open) return;
@@ -54,10 +85,10 @@ export function AvatarMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white ring-1 ring-black/10 transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fern-deep"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-white ring-1 ring-black/10 transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fern-deep"
         style={{ backgroundColor: colorFor(email) }}
       >
-        {initialsOf(name, email)}
+        <Icon size={20} aria-hidden />
       </button>
 
       {open && (

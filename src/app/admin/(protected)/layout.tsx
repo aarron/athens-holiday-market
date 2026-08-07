@@ -20,10 +20,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             <span className="block rounded-xl bg-white p-2.5 shadow-[var(--shadow-lift)] ring-1 ring-black/5">
               <Image
-                src="/brand/logo.png"
+                src="/brand/logo-athens-holiday-market.svg"
                 alt="Athens Holiday Market"
-                width={1000}
-                height={920}
+                width={1024}
+                height={942}
                 priority
                 className="h-20 w-auto sm:h-24"
               />

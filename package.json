@@ -15,6 +15,7 @@
     "db:seed": "dotenv -e .env.local -- tsx src/db/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@auth/drizzle-adapter": "^1.11.3",
     "@central-icons-react/round-outlined-radius-1-stroke-2": "^1.1.305",
     "@hookform/resolvers": "^5.7.1",

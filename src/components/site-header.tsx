@@ -12,7 +12,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-ink/10 bg-paper/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b-2 border-ink/10 bg-white">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
         <Link
           href="/"
@@ -21,10 +21,10 @@ export function SiteHeader() {
         >
           <span className="block rounded-xl bg-white p-2.5 shadow-[var(--shadow-lift)] ring-1 ring-black/5">
             <Image
-              src="/brand/logo.png"
+              src="/brand/logo-athens-holiday-market.svg"
               alt={site.name}
-              width={1000}
-              height={920}
+              width={1024}
+              height={942}
               priority
               className="h-[88px] w-auto sm:h-[108px]"
             />

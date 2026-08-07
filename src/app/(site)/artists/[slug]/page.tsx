@@ -84,7 +84,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         <div className="lg:sticky lg:top-24">
           <h1 className="text-4xl font-extrabold sm:text-5xl">{artist.name}</h1>
           {artist.medium && (
-            <p className="mt-2 text-lg text-ink-soft">{artist.medium}</p>
+            <p className="mt-2 text-lg font-bold text-fern-deep">{artist.medium}</p>
           )}
 
           {artist.bio && (

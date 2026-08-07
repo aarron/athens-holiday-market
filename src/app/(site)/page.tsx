@@ -109,7 +109,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────────────── Marquee band ─────────────────────── */}
-      <div className="ahm-marquee-group overflow-hidden bg-fern py-3.5">
+      <div aria-hidden="true" className="ahm-marquee-group overflow-hidden bg-fern py-3.5">
         {/* Two identical groups, each wide enough to exceed any viewport, so
             translateX(-50%) loops seamlessly with no blank gap. */}
         <div className="ahm-marquee flex w-max whitespace-nowrap">

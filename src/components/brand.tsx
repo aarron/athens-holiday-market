@@ -12,19 +12,24 @@ export function Flower({
   className = "",
   color = "var(--color-fuchsia)",
   spin = false,
+  label,
 }: {
   size?: number;
   className?: string;
   color?: string;
   spin?: boolean;
+  /** Give the mark an accessible name only where it carries meaning; by
+   *  default it's decorative and hidden from assistive tech. */
+  label?: string;
 }) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 690 696"
-      role="img"
-      aria-label="Athens Holiday Market flower mark"
+      role={label ? "img" : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
       className={`${spin ? "ahm-spin" : ""} ${className}`}
     >
       <path d={PINWHEEL_D} fill={color} fillRule="evenodd" clipRule="evenodd" />

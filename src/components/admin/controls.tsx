@@ -157,6 +157,7 @@ export function PublishControls({
   const [published, setPublished] = useState(initialPublished);
   const [slug, setSlug] = useState(initialSlug);
   const [msg, setMsg] = useState("");
+  const [armed, setArmed] = useState(false);
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
@@ -188,27 +189,50 @@ export function PublishControls({
             Unpublish
           </button>
         </div>
-      ) : (
+      ) : !armed ? (
         <button
-          disabled={pending}
-          onClick={() =>
-            start(async () => {
-              const r = await publishArtist(applicationId);
-              if (r && "ok" in r && r.ok) {
-                setPublished(true);
-                setSlug(r.slug);
-                setMsg("Published to the directory ✓");
-              } else {
-                setMsg((r && "error" in r && r.error) || "Couldn't publish.");
-              }
-            })
-          }
-          className="mt-3 w-full rounded-lg bg-fern-deep px-4 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
+          onClick={() => setArmed(true)}
+          className="mt-3 w-full rounded-lg bg-fern-deep px-4 py-2.5 text-sm font-display font-bold text-white transition-opacity hover:opacity-90"
         >
-          {pending ? "Publishing…" : "Publish to directory"}
+          Publish to directory
         </button>
+      ) : (
+        <div className="mt-3 rounded-lg border-2 border-fern-deep/30 bg-fern-soft/50 p-3">
+          <p className="text-sm text-ink-soft">
+            This makes the page public <strong className="text-ink">and emails the artist</strong>{" "}
+            that it&apos;s live.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  const r = await publishArtist(applicationId);
+                  if (r && "ok" in r && r.ok) {
+                    setPublished(true);
+                    setSlug(r.slug);
+                    setArmed(false);
+                    setMsg(r.updatedExisting ? "Updated their existing page ✓" : "Published & artist notified ✓");
+                  } else {
+                    setMsg((r && "error" in r && r.error) || "Couldn't publish.");
+                  }
+                })
+              }
+              className="rounded-lg bg-fern-deep px-4 py-2 text-sm font-display font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {pending ? "Publishing…" : "Publish & notify"}
+            </button>
+            <button
+              disabled={pending}
+              onClick={() => setArmed(false)}
+              className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
-      {msg && <p className="mt-2 text-sm text-ink-soft">{msg}</p>}
+      {msg && <p role="status" className="mt-2 text-sm text-ink-soft">{msg}</p>}
     </div>
   );
 }

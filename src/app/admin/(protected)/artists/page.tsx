@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listArtistsForAdmin } from "@/lib/admin-data";
+import { listArtistsForAdmin, getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
 import { SafeImg } from "@/components/admin/safe-img";
 import { EmailLogisticsButton } from "@/components/admin/email-logistics-button";
 
@@ -9,13 +9,15 @@ export const dynamic = "force-dynamic";
 
 function stateOf(a: { submittedAt: Date | null; published: boolean }) {
   if (a.submittedAt) return { label: "Needs review", cls: "bg-[#fdf0e0] text-tangerine-deep" };
-  if (a.published) return { label: "Live", cls: "bg-fern-soft text-fern-deep" };
+  if (a.published) return { label: "Live", cls: "bg-fern-soft text-fern-deeper" };
   return { label: "Draft", cls: "bg-cream text-ink-soft" };
 }
 
 export default async function AdminArtists() {
   const artists = await listArtistsForAdmin();
   const pending = artists.filter((a) => a.submittedAt);
+  const cycle = await getActiveCycle();
+  const acceptedCount = cycle ? (await getDecisionGroups(cycle.id)).accepted.total : 0;
 
   return (
     <div className="space-y-6">
@@ -28,7 +30,7 @@ export default async function AdminArtists() {
         </p>
       </div>
 
-      <EmailLogisticsButton />
+      <EmailLogisticsButton count={acceptedCount} />
 
       {artists.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">

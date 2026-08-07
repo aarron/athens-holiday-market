@@ -49,7 +49,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
         </p>
         <p className={`mt-1 ${dark ? "text-paper/70" : "text-ink-soft"}`}>
           We&apos;ll email you as soon as this year&apos;s dates and artist lineup are set.
-          {isArtist && " We&apos;ve noted you're an artist interested in showing your work."}
+          {isArtist && " We’ve noted you’re an artist interested in showing your work."}
         </p>
       </div>
     );

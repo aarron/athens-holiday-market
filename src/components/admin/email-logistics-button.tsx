@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { emailAcceptedArtistsLogistics } from "@/lib/admin-actions";
 
-export function EmailLogisticsButton() {
+export function EmailLogisticsButton({ count = 0 }: { count?: number }) {
   const [pending, start] = useTransition();
   const [armed, setArmed] = useState(false);
   const [msg, setMsg] = useState("");
@@ -11,7 +11,8 @@ export function EmailLogisticsButton() {
   return (
     <div className="rounded-xl bg-cream-soft p-4">
       <p className="mb-2 text-sm text-ink-soft">
-        Email event-day logistics (setup times, booth info, ordering) to every accepted artist.
+        Email event-day logistics (setup times, booth info, ordering) to every accepted artist
+        {count > 0 ? ` (${count})` : ""}.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -37,7 +38,11 @@ export function EmailLogisticsButton() {
             armed ? "bg-poppy hover:opacity-90" : "bg-fern-deep hover:opacity-90"
           }`}
         >
-          {pending ? "Sending…" : armed ? "Confirm — send to all accepted artists" : "Email logistics to artists"}
+          {pending
+            ? "Sending…"
+            : armed
+              ? `Confirm — email ${count > 0 ? count : "all"} accepted artist${count === 1 ? "" : "s"}`
+              : "Email logistics to artists"}
         </button>
         {armed && !pending && (
           <button

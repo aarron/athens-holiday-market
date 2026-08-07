@@ -126,7 +126,16 @@ export function CountdownClock() {
   }
 
   return (
-    <div className="mx-auto flex w-fit max-w-full items-start justify-center gap-2 overflow-x-auto px-2 py-2 sm:gap-3">
+    <>
+      {/* Readable summary for screen readers; the flap board itself is decorative. */}
+      <p className="sr-only">
+        {parts.months} months, {parts.days} days, {parts.hours} hours, and {parts.minutes} minutes
+        until the market opens.
+      </p>
+      <div
+        aria-hidden="true"
+        className="mx-auto flex w-fit max-w-full items-start justify-center gap-2 overflow-x-auto px-2 py-2 sm:gap-3"
+      >
       {UNITS.map((u, i) => (
         <Fragment key={u.key}>
           <span className="flex flex-col items-center gap-2.5">
@@ -140,6 +149,7 @@ export function CountdownClock() {
           {i < UNITS.length - 1 && <Separator />}
         </Fragment>
       ))}
-    </div>
+      </div>
+    </>
   );
 }

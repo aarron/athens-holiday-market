@@ -14,6 +14,16 @@ export const site = {
   host: {
     name: "Big City Bread Cafe",
     url: "https://www.bigcitybreadcafe.com/",
+    orderUrl: "https://www.toasttab.com/bigcitybreadcafe",
+    menuUrl: "https://www.bigcitybreadcafe.com/menus",
+    phone: "(706) 353-0029",
+    phoneHref: "tel:+17063530029",
+    address: "393 North Finley Street, Athens, GA 30601",
+    since: 1998,
+    hours: [
+      { days: "Monday–Friday", time: "8am–8pm" },
+      { days: "Saturday–Sunday", time: "8am–2pm (brunch)" },
+    ],
   },
   location: {
     name: "Big City Bread Courtyard",
@@ -45,6 +55,7 @@ export const site = {
   nav: [
     { href: "/", label: "Home" },
     { href: "/artists", label: "Artists" },
+    { href: "/venue", label: "Venue" },
     { href: "/contact", label: "Contact" },
   ],
 } as const;

@@ -1,5 +1,6 @@
 import type { getScheduledSends, SendStatus } from "@/lib/scheduled-sends";
 import { CancelSendButton } from "@/components/admin/cancel-send-button";
+import { ClockIcon } from "@/components/icons";
 
 type Data = Awaited<ReturnType<typeof getScheduledSends>>;
 
@@ -19,7 +20,12 @@ function shortDate(iso: string) {
 function StatusPill({ status, sentAt }: { status: SendStatus; sentAt: string | null }) {
   const s = STATUS[status];
   const label = status === "sent" && sentAt ? `Sent ${shortDate(sentAt)}` : s.label;
-  return <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold ${s.cls}`}>{label}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold ${s.cls}`}>
+      {status === "scheduled" && <ClockIcon size={12} aria-hidden />}
+      {label}
+    </span>
+  );
 }
 
 function ChannelPill({ channel }: { channel: string }) {

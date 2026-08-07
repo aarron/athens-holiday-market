@@ -18,7 +18,7 @@ export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: strin
       <div
         role="tablist"
         aria-label="Sections"
-        className="flex gap-1 overflow-x-auto rounded-xl bg-white p-1.5 shadow-[var(--shadow-card)] [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="flex gap-6 overflow-x-auto border-b border-ink/12 [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {tabs.map((t) => {
           const on = t.id === active;
@@ -28,8 +28,8 @@ export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: strin
               role="tab"
               aria-selected={on}
               onClick={() => setActive(t.id)}
-              className={`shrink-0 rounded-lg px-4 py-2 text-sm font-display font-bold transition-colors ${
-                on ? "bg-fern-soft text-fern-deep" : "text-ink-soft hover:bg-cream"
+              className={`relative -mb-px shrink-0 border-b-2 px-1 pb-3 text-sm font-display font-bold transition-colors ${
+                on ? "border-fern-deep text-fern-deep" : "border-transparent text-ink-soft hover:text-ink"
               }`}
             >
               {t.label}

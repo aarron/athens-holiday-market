@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const CHECKLIST = [
-  "Your name, email, and cell number",
+  "Your name, email, and mobile number",
   "A website or social link (optional)",
   "The medium of your work",
   "A short description of your work",
@@ -66,7 +66,7 @@ export default async function ApplyPage({
           </div>
 
           <p className="mt-8 text-lg text-ink-soft">
-            The {site.event.year} {site.name} is juried, and booths fill fast. Applications open on{" "}
+            The {site.event.year} {site.name} is curated by a 5-person jury. Applications open on{" "}
             <strong className="text-ink">{site.applications.opensLabel}</strong> and close{" "}
             {site.applications.closesLabel}. Get everything ready now so you can apply the moment it
             opens.
@@ -114,8 +114,8 @@ export default async function ApplyPage({
       {window === "open" && (
         <div className="mt-10">
           <p className="mb-8 text-center text-lg text-ink-soft">
-            Applications are open through {site.applications.closesLabel}. We can&apos;t wait to see
-            your work.
+            The deadline to apply is {site.applications.closesLabel}. We can&apos;t wait to see what
+            you&apos;ve been making.
           </p>
           <ApplicationForm />
         </div>

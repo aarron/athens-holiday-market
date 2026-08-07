@@ -42,9 +42,9 @@ export default function VenuePage() {
           </div>
           <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Big City Bread Cafe</h1>
           <p className="mt-5 text-lg text-ink-soft">
-            Our market sets up in the courtyard at Big City Bread — a family-run bakery and cafe that
-            has been an Athens favorite since {host.since}. Come for the handmade gifts and make an
-            evening of it: dinner, drinks, and holiday baked goods are all just steps from the stalls.
+            Our market sets up in the courtyard at the {host.name} — a family-run bakery and cafe
+            that has been an Athens favorite since {host.since}. Come for the handmade art and gifts
+            and make an evening of it: dinner, drinks, and holiday baked goods are all just steps away.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <ButtonLink
@@ -102,8 +102,8 @@ export default function VenuePage() {
             <p>
               Stop in for breakfast, brunch, or lunch, or a weeknight dinner with beer and wine.
               Coffee lovers are in good hands too, with espresso drinks pulled from locally roasted
-              beans. Dine indoors or out on the patio — the same courtyard that fills with makers
-              during the market.
+              beans. Dine indoors or out on the patio — the same courtyard that fills with art and
+              artists during the market.
             </p>
           </div>
         </div>

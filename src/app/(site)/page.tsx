@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 const CATEGORIES = [
-  { label: "Ceramics", color: "var(--color-teal)", img: "/photos/categories/ceramics.jpg" },
+  { label: "Pottery", color: "var(--color-teal)", img: "/photos/categories/ceramics.jpg" },
   { label: "Textiles & Fiber", color: "var(--color-fern)", img: "/photos/categories/textiles.jpg" },
   { label: "Jewelry", color: "var(--color-fuchsia)", img: "/photos/categories/jewelry.jpg" },
   { label: "Candles & Apothecary", color: "var(--color-tangerine)", img: "/photos/categories/candles.jpg" },
@@ -49,8 +49,8 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-5 max-w-xl text-lg text-white/85 sm:text-xl">
-              Two festive evenings of handmade gifts from local artists, in the
-              twinkling courtyard at {site.host.name}. {site.tagline}
+              Two festive evenings of handmade art and gifts from local and regional artists under
+              the twinkling courtyard lights at the {site.host.name}.
             </p>
 
             {/* Event quick-facts */}
@@ -137,7 +137,7 @@ export default function HomePage() {
                 The countdown is on
               </p>
             </div>
-            <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">Until the market opens</h2>
+            <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">Athens Holiday Market opens in…</h2>
             <div className="mt-8">
               <CountdownClock />
             </div>
@@ -164,11 +164,13 @@ export default function HomePage() {
               Save the date
             </p>
             <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
-              Two evenings under the courtyard lights
+              Two evenings of holiday cheer.
             </h2>
             <p className="mt-5 max-w-md text-lg text-ink-soft">
-              Bring your list and your friends. Sip something warm from {site.host.name}, wander
-              the stalls, and find something made by hand and made with heart.
+              Bring your gift-giving shopping list and meet your friends for some holiday cheer. Have
+              a nice dinner, then sip something warm from {site.host.name} while you wander through
+              all the handmade wonders. Find the perfect something special, made by hand and made
+              with heart.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <ButtonLink href={mapsHref()} variant="ink" size="lg">
@@ -263,16 +265,17 @@ export default function HomePage() {
               A courtyard full of artists
             </p>
             <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
-              A little market with a lot of heart
+              A little market with a lot of heart.
             </h2>
             <p className="mt-5 text-lg text-ink-soft">
-              For years, the Athens Holiday Market has turned the {site.host.name} courtyard into a
-              glowing pop-up of local craft — ceramics and candles, textiles and prints, jewelry and
-              jam. Every booth is a neighbor, and every gift has a story.
+              For over 20 years, the Athens Holiday Market has turned the {site.host.name} courtyard
+              into a glowing pop-up of local art — pottery and candles, textiles and prints, jewelry
+              and jam, cutting boards and wreaths.
             </p>
             <p className="mt-4 text-lg text-ink-soft">
-              It&apos;s the best kind of holiday shopping: no big-box, no shipping delays — just
-              good artists, warm bread, and the whole thing lit up for the season.
+              It&apos;s the best kind of holiday shopping: no big-box bustle, no shipping delays —
+              just quality work made by local folks you know and trust, a warm meal, a glass of
+              holiday cheer, live music, and the whole thing lit up for the season.
             </p>
           </div>
         </div>
@@ -285,11 +288,11 @@ export default function HomePage() {
             What you&apos;ll find
           </p>
           <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
-            Handmade, across every aisle
+            Handmade, across every aisle.
           </h2>
           <p className="mt-5 text-lg text-ink-soft">
-            A juried mix of local artists. Here&apos;s a taste of what fills the stalls —
-            the full lineup drops closer to the event.
+            A carefully curated mix of local artists. Here&apos;s a taste of what fills our little
+            market — the full artist lineup will be updated closer to the event.
           </p>
         </div>
 
@@ -340,11 +343,11 @@ export default function HomePage() {
               </p>
             </div>
             <h2 className="mt-4 text-4xl font-extrabold text-white sm:text-5xl">
-              Be the first to know
+              Be the first to know.
             </h2>
             <p className="mt-4 max-w-md text-lg text-paper/70">
-              Dates, the artist lineup, and market news — straight to your inbox. Artists can opt in
-              to hear when applications open.
+              Dates, our artists, and market news — straight to your inbox. Artists can opt in to
+              hear when applications open.
             </p>
           </div>
           <div className="lg:justify-self-end">
@@ -358,10 +361,11 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-5 py-16 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-              Make something wonderful? Come sell it with us
+              Do you make something wonderful? Come sell it with us.
             </h2>
             <p className="mt-2 text-lg text-white/85">
-              Applications for {site.event.year} open on Labor Day. Booths are juried and fill fast.
+              Applications for {site.event.year} open on Labor Day. Applicants are curated by a
+              5-person jury.
             </p>
           </div>
           <ButtonLink href="/apply" size="lg" variant="ink" className="shrink-0">

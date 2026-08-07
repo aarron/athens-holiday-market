@@ -24,7 +24,7 @@ export default function ContactPage() {
             Say hello
           </p>
         </div>
-        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Get in touch</h1>
+        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Get in touch.</h1>
         <p className="mt-5 text-lg text-ink-soft">
           Questions about the market, applying, or visiting? Send us a note and we&apos;ll get back
           to you.

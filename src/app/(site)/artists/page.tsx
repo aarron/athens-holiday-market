@@ -23,10 +23,10 @@ export default async function ArtistsPage() {
         <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fern-deep">
           The lineup
         </p>
-        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Meet the artists</h1>
+        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Meet the artists.</h1>
         <p className="mt-5 text-lg text-ink-soft">
-          Every booth at the {site.event.year} {site.name} is a local artist or maker. Here&apos;s
-          who you&apos;ll meet in the courtyard.
+          Every booth at the {site.event.year} {site.name} is a local or regional artist or maker.
+          Here&apos;s who you&apos;ll meet at our market.
         </p>
       </div>
 

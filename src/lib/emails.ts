@@ -110,7 +110,7 @@ export async function sendArtistPageReminder(to: string, name: string) {
   }
 }
 
-export const CONTACT_TO = "redacted@example.com";
+export const CONTACT_TO = process.env.CONTACT_FORM_TO || "";
 
 /** Event-day logistics for an accepted artist (setup, booth, what to bring). */
 export async function sendArtistLogistics(to: string, name: string) {
@@ -170,11 +170,11 @@ export async function sendNprFlagpoleReminder(to: string) {
 
 // The judges/organizer who post to social in the run-up to the event.
 // (Brent & Ryan focus on event-day logistics and are intentionally excluded.)
-export const SOCIAL_POSTING_TEAM = [
-  "redacted@example.com", // Jim
-  "redacted@example.com", // Ansley (runs Instagram)
-  "redacted@example.com", // Jamie
-];
+// Emails kept in env, not source (comma-separated in SOCIAL_POSTING_TEAM).
+export const SOCIAL_POSTING_TEAM = (process.env.SOCIAL_POSTING_TEAM || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 /** Prompt the posting team to download + post artist spotlights weekly. */
 export async function sendJudgeSocialKit(to: string[]) {

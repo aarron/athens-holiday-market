@@ -6,9 +6,10 @@ import { sendNprFlagpoleReminder } from "@/lib/emails";
 import { normalizePhone, sendSms, twilioConfigured } from "@/lib/twilio";
 import { site } from "@/lib/site";
 
-// Human task that has slipped in past years — remind Jamie (a person does it).
-const JAMIE_EMAIL = "redacted@example.com";
-const JAMIE_PHONE = "706-555-0000";
+// Human task that has slipped in past years — remind the organizer who handles
+// it (a person does it). Contact kept in env, not source (see .env / Vercel).
+const REMINDER_EMAIL = process.env.NPR_REMINDER_EMAIL || "";
+const REMINDER_PHONE = process.env.NPR_REMINDER_PHONE || "";
 
 /**
  * Fire once during the second week of November (8th–14th, America/New_York):
@@ -35,12 +36,14 @@ export async function runNprFlagpoleReminder(now: Date = new Date()) {
   const skip = await db.query.settings.findFirst({ where: eq(settings.key, `send_skip:${flagKey}`) });
   if (skip?.value) return { sent: false, note: "canceled by admin" };
 
-  const emailRes = await sendNprFlagpoleReminder(JAMIE_EMAIL);
+  if (!REMINDER_EMAIL && !REMINDER_PHONE) return { sent: false, note: "no reminder contact configured" };
+
+  const emailRes = REMINDER_EMAIL ? await sendNprFlagpoleReminder(REMINDER_EMAIL) : { skipped: true as const };
   const emailOk = !(emailRes && "skipped" in emailRes) && !(emailRes && "error" in emailRes);
 
   let smsOk = false;
-  if (twilioConfigured) {
-    const phone = normalizePhone(JAMIE_PHONE);
+  if (twilioConfigured && REMINDER_PHONE) {
+    const phone = normalizePhone(REMINDER_PHONE);
     if (phone) {
       try {
         await sendSms(

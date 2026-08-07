@@ -16,7 +16,7 @@ function getClient() {
 
 /**
  * Normalize a loose US phone string to E.164 (+1XXXXXXXXXX), or null if it
- * can't be used. Handles "706-555-0100", "(706) 765 4707", "17067654707", etc.
+ * can't be used. Handles "706-555-0100", "(706) 555 0100", "17065550100", etc.
  */
 export function normalizePhone(raw: string | null | undefined): string | null {
   if (!raw) return null;

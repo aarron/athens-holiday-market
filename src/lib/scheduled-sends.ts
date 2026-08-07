@@ -103,7 +103,11 @@ export async function getScheduledSends(now: Date = new Date()) {
     id: "npr-flagpole",
     topic: "Reminder to submit NPR + Flagpole ads (a person still does this)",
     channel: "Email + SMS",
-    audience: "Jamie · redacted@example.com · 706-555-0000",
+    audience: [
+      "NPR/Flagpole ad contact",
+      process.env.NPR_REMINDER_EMAIL,
+      process.env.NPR_REMINDER_PHONE,
+    ].filter(Boolean).join(" · "),
     when: `Nov 8–14, ${site.event.year}`,
     whenSort: nprStart,
     status: nprStatus,

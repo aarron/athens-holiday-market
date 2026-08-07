@@ -17,7 +17,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   // Local-only bypass for previewing the admin without email. Hard-gated to
   // non-production so it can never activate on Vercel.
   if (process.env.NODE_ENV !== "production" && process.env.ADMIN_DEV_BYPASS === "1") {
-    return { email: "admin@example.com", name: "Aarron (dev)", role: "admin" };
+    return { email: process.env.ADMIN_DEV_EMAIL || "dev@example.com", name: "Dev admin", role: "admin" };
   }
   const s = await getSession();
   if (!s) return null;

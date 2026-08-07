@@ -37,6 +37,12 @@ export function renderMarkdown(src: string): string {
         '<a href="$2" style="color:#17a898;text-decoration:underline">$1</a>',
       );
 
+  const HEADING_STYLE: Record<number, string> = {
+    1: "margin:0 0 12px;font-size:23px;line-height:1.25;font-weight:800;color:#17161b",
+    2: "margin:18px 0 10px;font-size:19px;line-height:1.3;font-weight:800;color:#17161b",
+    3: "margin:16px 0 8px;font-size:16px;line-height:1.35;font-weight:700;color:#17161b",
+  };
+
   return src
     .trim()
     .split(/\n{2,}/)
@@ -51,6 +57,20 @@ export function renderMarkdown(src: string): string {
           .map((l) => `<li style="margin:4px 0">${inline(l.replace(/^\s*[-*]\s+/, ""))}</li>`)
           .join("");
         return `<ul style="margin:0 0 14px;padding-left:20px;line-height:1.6">${items}</ul>`;
+      }
+      // A block may mix headings and text lines; render line by line when any
+      // heading is present, otherwise keep the fast paragraph path.
+      if (lines.some((l) => /^#{1,3}\s+/.test(l))) {
+        return lines
+          .map((l) => {
+            const h = l.match(/^(#{1,3})\s+(.*)$/);
+            if (h) {
+              const lvl = h[1].length;
+              return `<h${lvl} style="${HEADING_STYLE[lvl]}">${inline(h[2])}</h${lvl}>`;
+            }
+            return `<p style="margin:0 0 14px;line-height:1.65">${inline(l)}</p>`;
+          })
+          .join("");
       }
       return `<p style="margin:0 0 14px;line-height:1.65">${lines.map(inline).join("<br/>")}</p>`;
     })

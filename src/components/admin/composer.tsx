@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
 import { getBroadcastTemplates } from "@/lib/email-templates";
 import { sendTestEmail, sendBroadcast, scheduleBroadcast } from "@/lib/broadcast-actions";
+import { MarkdownToolbar } from "@/components/admin/markdown-toolbar";
 import { ArrowRightIcon, ClockIcon } from "@/components/icons";
 
 type Segment = "all" | "artists" | "non_artists" | "accepted" | "waitlisted" | "applicants";
@@ -37,6 +38,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
   const [segment, setSegment] = useState<Segment>("all");
   const [mode, setMode] = useState<"now" | "schedule">("now");
   const [scheduledFor, setScheduledFor] = useState("");
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -169,11 +171,13 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
           <label className="mb-1 block text-sm font-semibold text-ink-soft" htmlFor="bc-body">
             Message
             <span className="ml-2 font-normal text-ink-soft/70">
-              **bold**, *italic*, [links](https://…), [[Button]](https://…), - lists
+              # heading, **bold**, *italic*, [links](https://…), [[Button]](https://…), - lists
             </span>
           </label>
+          <MarkdownToolbar textareaRef={bodyRef} value={body} onChange={setBody} />
           <textarea
             id="bc-body"
+            ref={bodyRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={12}

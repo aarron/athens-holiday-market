@@ -92,16 +92,81 @@ export async function getBroadcast(id: number) {
   return db.query.broadcasts.findFirst({ where: eq(broadcasts.id, id) });
 }
 
+/** At-a-glance open/click rates per broadcast for the Email list (one query). */
+export async function broadcastReceiptSummaries(): Promise<
+  Record<number, { openRate: number | null; clickRate: number | null }>
+> {
+  const rows = await db
+    .select({
+      broadcastId: broadcastRecipients.broadcastId,
+      status: broadcastRecipients.status,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(broadcastRecipients)
+    .groupBy(broadcastRecipients.broadcastId, broadcastRecipients.status);
+
+  const byId: Record<number, Record<string, number>> = {};
+  for (const r of rows) (byId[r.broadcastId] ??= {})[r.status] = r.n;
+
+  const out: Record<number, { openRate: number | null; clickRate: number | null }> = {};
+  for (const [id, c] of Object.entries(byId)) {
+    const clicked = c.clicked ?? 0;
+    const opened = (c.opened ?? 0) + clicked;
+    const delivered = (c.delivered ?? 0) + opened;
+    out[Number(id)] = {
+      openRate: delivered > 0 ? Math.round((opened / delivered) * 100) : null,
+      clickRate: delivered > 0 ? Math.round((clicked / delivered) * 100) : null,
+    };
+  }
+  return out;
+}
+
 /** Delivery receipt breakdown for a broadcast (sent/delivered/opened/bounced…). */
-export async function broadcastReceipts(id: number) {
+export type BroadcastReceipts = {
+  total: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  complained: number;
+  /** Opens ÷ delivered and clicks ÷ delivered, 0–100 (null when nothing delivered). */
+  openRate: number | null;
+  clickRate: number | null;
+};
+
+/**
+ * Cumulative engagement funnel for one broadcast. `status` advances per
+ * recipient (sent→delivered→opened→clicked), so a plain group-by would count
+ * each person once and make opens look like they *reduce* deliveries. Here each
+ * later stage rolls up into the earlier ones: an opened email is also delivered.
+ */
+export async function broadcastReceipts(id: number): Promise<BroadcastReceipts> {
   const rows = await db
     .select({ status: broadcastRecipients.status, n: sql<number>`count(*)::int` })
     .from(broadcastRecipients)
     .where(eq(broadcastRecipients.broadcastId, id))
     .groupBy(broadcastRecipients.status);
-  const map: Record<string, number> = {};
-  for (const r of rows) map[r.status] = r.n;
-  return map;
+  const c: Record<string, number> = {};
+  for (const r of rows) c[r.status] = r.n;
+
+  const clicked = c.clicked ?? 0;
+  const opened = (c.opened ?? 0) + clicked;
+  const delivered = (c.delivered ?? 0) + opened;
+  const bounced = c.bounced ?? 0;
+  const complained = c.complained ?? 0;
+  const total = Object.values(c).reduce((a, b) => a + b, 0);
+  const pct = (n: number) => (delivered > 0 ? Math.round((n / delivered) * 100) : null);
+
+  return {
+    total,
+    delivered,
+    opened,
+    clicked,
+    bounced,
+    complained,
+    openRate: pct(opened),
+    clickRate: pct(clicked),
+  };
 }
 
 export async function subscriberStats() {

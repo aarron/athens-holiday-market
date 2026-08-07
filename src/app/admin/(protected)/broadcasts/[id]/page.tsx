@@ -13,16 +13,10 @@ const SEGMENT_LABEL: Record<string, string> = {
   all: "Everyone",
   artists: "Artists",
   non_artists: "Non-artists",
+  accepted: "Accepted artists",
+  waitlisted: "Waitlisted",
+  applicants: "All applicants",
 };
-
-const RECEIPTS: { key: string; label: string; accent: string }[] = [
-  { key: "sent", label: "Sent", accent: "var(--color-ink)" },
-  { key: "delivered", label: "Delivered", accent: "var(--color-sky)" },
-  { key: "opened", label: "Opened", accent: "var(--color-fern-deep)" },
-  { key: "clicked", label: "Clicked", accent: "var(--color-teal)" },
-  { key: "bounced", label: "Bounced", accent: "var(--color-tangerine)" },
-  { key: "complained", label: "Complaints", accent: "var(--color-poppy)" },
-];
 
 export default async function BroadcastDetail({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -31,8 +25,32 @@ export default async function BroadcastDetail({ params }: { params: Promise<{ id
   if (!broadcast) notFound();
 
   const receipts = await broadcastReceipts(broadcast.id);
-  // "Sent" tile = total recipients (all delivered/opened are also sent).
-  const totalSent = Object.values(receipts).reduce((a, b) => a + b, 0) || broadcast.recipientCount;
+  const sent = receipts.total || broadcast.recipientCount;
+
+  // Cumulative funnel — each stage rolls up into the earlier ones.
+  const tiles: { label: string; value: number; sub?: string; accent: string }[] = [
+    { label: "Sent", value: sent, accent: "var(--color-ink)" },
+    {
+      label: "Delivered",
+      value: receipts.delivered,
+      sub: sent > 0 ? `${Math.round((receipts.delivered / sent) * 100)}% of sent` : undefined,
+      accent: "var(--color-sky-deep)",
+    },
+    {
+      label: "Opened",
+      value: receipts.opened,
+      sub: receipts.openRate != null ? `${receipts.openRate}% open rate` : undefined,
+      accent: "var(--color-fern-deep)",
+    },
+    {
+      label: "Clicked",
+      value: receipts.clicked,
+      sub: receipts.clickRate != null ? `${receipts.clickRate}% click rate` : undefined,
+      accent: "var(--color-teal-deep)",
+    },
+    { label: "Bounced", value: receipts.bounced, accent: "var(--color-tangerine-deep)" },
+    { label: "Complaints", value: receipts.complained, accent: "var(--color-poppy-deep)" },
+  ];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -49,20 +67,22 @@ export default async function BroadcastDetail({ params }: { params: Promise<{ id
         </p>
       </div>
 
-      {/* Receipts */}
+      {/* Engagement funnel */}
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {RECEIPTS.map((r) => (
-          <div key={r.key} className="rounded-xl bg-white p-4 text-center shadow-[var(--shadow-card)]">
-            <div className="font-display text-2xl font-extrabold tabular-nums" style={{ color: r.accent }}>
-              {r.key === "sent" ? totalSent : receipts[r.key] ?? 0}
+        {tiles.map((t) => (
+          <div key={t.label} className="rounded-xl bg-white p-4 text-center shadow-[var(--shadow-card)]">
+            <div className="font-display text-2xl font-extrabold tabular-nums" style={{ color: t.accent }}>
+              {t.value}
             </div>
-            <div className="mt-0.5 text-xs font-medium text-ink-soft">{r.label}</div>
+            <div className="mt-0.5 text-xs font-medium text-ink-soft">{t.label}</div>
+            {t.sub && <div className="mt-0.5 text-[0.65rem] leading-tight text-ink-soft/70">{t.sub}</div>}
           </div>
         ))}
       </div>
       <p className="-mt-2 text-xs text-ink-soft">
-        Delivered/opened update as recipients&apos; mail clients report back (requires the Resend
-        webhook).
+        Delivered, opens, and clicks roll up cumulatively and update as recipients&apos; mail clients
+        report back (requires the Resend webhook). Open tracking misses clients that block remote
+        images, so real opens run a little higher.
       </p>
 
       {/* Content */}

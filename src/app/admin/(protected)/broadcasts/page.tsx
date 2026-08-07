@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
-import { listBroadcasts } from "@/lib/broadcast-data";
+import { listBroadcasts, broadcastReceiptSummaries } from "@/lib/broadcast-data";
 import { getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
 import { getTextRecipients } from "@/lib/sms-actions";
 import { getScheduledSends } from "@/lib/scheduled-sends";
@@ -63,11 +63,12 @@ function DecisionCard({
 
 export default async function EmailHubPage() {
   await requireAdmin();
-  const [broadcasts, cycle, texts, scheduled] = await Promise.all([
+  const [broadcasts, cycle, texts, scheduled, receipts] = await Promise.all([
     listBroadcasts(),
     getActiveCycle(),
     getTextRecipients(),
     getScheduledSends(),
+    broadcastReceiptSummaries(),
   ]);
 
   const groups = cycle ? await getDecisionGroups(cycle.id) : null;
@@ -145,6 +146,20 @@ export default async function EmailHubPage() {
                     {b.status === "scheduled" && b.scheduledFor
                       ? ` · sends ${new Date(b.scheduledFor).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`
                       : b.sentAt && ` · ${new Date(b.sentAt).toLocaleDateString()}`}
+                    {b.status === "sent" && receipts[b.id]?.openRate != null && (
+                      <>
+                        {" · "}
+                        <span className="font-semibold text-fern-deep">
+                          {receipts[b.id].openRate}% opened
+                        </span>
+                        {receipts[b.id].clickRate != null && (
+                          <span className="font-semibold text-teal-deep">
+                            {" · "}
+                            {receipts[b.id].clickRate}% clicked
+                          </span>
+                        )}
+                      </>
+                    )}
                   </p>
                 </div>
                 <span

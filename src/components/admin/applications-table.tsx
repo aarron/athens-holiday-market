@@ -103,9 +103,13 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
   const hasFilters = q || statusFilter !== "all" || paymentFilter !== "all";
 
   const Th = ({ col, label }: { col: SortCol; label: string }) => (
-    <th className="px-5 py-4 font-semibold">
+    <th
+      className="px-5 py-4 font-semibold"
+      aria-sort={sortCol === col ? (dir === "asc" ? "ascending" : "descending") : "none"}
+    >
       <button
         onClick={() => sortBy(col)}
+        aria-label={`Sort by ${label}${sortCol === col ? (dir === "asc" ? ", ascending" : ", descending") : ""}`}
         className={`inline-flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-ink ${
           sortCol === col ? "text-ink" : ""
         }`}

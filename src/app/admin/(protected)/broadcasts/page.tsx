@@ -76,20 +76,22 @@ export default async function EmailHubPage() {
         <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
       </div>
 
-      {/* Decisions — prominent when there are people left to notify, muted once done */}
+      {/* Decisions — heading above; cards below, no wrapper box */}
       {hasDecisions && totalToNotify > 0 && groups && (
-        <section className="rounded-xl border-2 border-tangerine/40 bg-tangerine/5 p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-display text-xl font-extrabold">Send decisions</h2>
+        <section>
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 className="font-display text-xl font-extrabold">Send decisions</h2>
+              <p className="mt-1 text-sm text-ink-soft">
+                {cycle?.name} — applicants are waiting to hear back. You&apos;ll review the full list
+                and votes before anything sends.
+              </p>
+            </div>
             <span className="rounded-full bg-tangerine px-3 py-1 text-sm font-bold text-white">
               {totalToNotify} to notify
             </span>
           </div>
-          <p className="mt-1 text-sm text-ink-soft">
-            {cycle?.name} — applicants are waiting to hear back. You&apos;ll review the full list and
-            votes before anything sends.
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <DecisionCard href={`/admin/decisions/accepted${yq}`} title="Accepted" total={groups.accepted.total} notified={groups.accepted.notified} accent="var(--color-fern-deep)" />
             <DecisionCard href={`/admin/decisions/waitlist${yq}`} title="Waitlist" total={groups.waitlist.total} notified={groups.waitlist.notified} accent="var(--color-tangerine)" />
           </div>
@@ -106,27 +108,27 @@ export default async function EmailHubPage() {
         </section>
       )}
 
-      {/* Broadcasts */}
+      {/* Email */}
       <section>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-extrabold">Broadcasts</h2>
-            <p className="text-sm text-ink-soft">Email announcements to your list.</p>
+            <h2 className="font-display text-xl font-extrabold">Email</h2>
+            <p className="mt-1 text-sm text-ink-soft">Email announcements to your list.</p>
           </div>
           <Link
             href="/admin/broadcasts/new"
-            className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white hover:opacity-90"
+            className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white transition-opacity hover:opacity-90"
           >
-            + New broadcast
+            + New email
           </Link>
         </div>
 
         {broadcasts.length === 0 ? (
-          <div className="mt-4 rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
-            <p className="text-ink-soft">No broadcasts yet. Compose your first announcement.</p>
+          <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
+            <p className="text-ink-soft">No emails yet. Compose your first announcement.</p>
           </div>
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ul className="space-y-3">
             {broadcasts.map((b) => (
               <li key={b.id}>
                 <Link
@@ -156,6 +158,21 @@ export default async function EmailHubPage() {
 
       {/* Text artists (SMS) */}
       <section>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="font-display text-xl font-extrabold">Text artists</h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              Event-day heads-ups (load-in time, weather, reminders) sent straight to phones via SMS.
+            </p>
+          </div>
+          {texts.configured && (
+            <span className="text-sm text-ink-soft">
+              {texts.recipients.length} accepted {texts.recipients.length === 1 ? "artist" : "artists"}{" "}
+              opted in to texts
+              {texts.noPhone.length > 0 && ` · ${texts.noPhone.length} without a number/opt-in`}
+            </span>
+          )}
+        </div>
         <TextArtists
           recipientCount={texts.recipients.length}
           noPhoneCount={texts.noPhone.length}

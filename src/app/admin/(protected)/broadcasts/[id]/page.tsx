@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getBroadcast, broadcastReceipts } from "@/lib/broadcast-data";
 import { renderMarkdown } from "@/lib/email-template";
 
-export const metadata: Metadata = { title: "Broadcast", robots: { index: false } };
+export const metadata: Metadata = { title: "Email", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const SEGMENT_LABEL: Record<string, string> = {
@@ -39,7 +39,7 @@ export default async function BroadcastDetail({ params }: { params: Promise<{ id
       <div>
         <Link href="/admin/broadcasts" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
           <BackIcon size={16} aria-hidden />
-          Broadcasts
+          Email
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">{broadcast.subject}</h1>
         <p className="mt-1 text-ink-soft">

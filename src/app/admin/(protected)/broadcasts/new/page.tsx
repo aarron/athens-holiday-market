@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { segmentCounts } from "@/lib/broadcast-data";
 import { Composer } from "@/components/admin/composer";
 
-export const metadata: Metadata = { title: "New broadcast", robots: { index: false } };
+export const metadata: Metadata = { title: "New email", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function NewBroadcastPage() {
@@ -17,9 +17,9 @@ export default async function NewBroadcastPage() {
       <div>
         <Link href="/admin/broadcasts" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
           <BackIcon size={16} aria-hidden />
-          Broadcasts
+          Email
         </Link>
-        <h1 className="mt-2 text-3xl font-extrabold">New broadcast</h1>
+        <h1 className="mt-2 text-3xl font-extrabold">New email</h1>
         <p className="mt-1 text-ink-soft">
           Compose your message, send yourself a test, then send it to the list.
         </p>

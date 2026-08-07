@@ -135,7 +135,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
               onClick={() => setConfirming(true)}
               className="inline-flex items-center gap-1.5 rounded-lg bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
             >
-              Send broadcast
+              Send email
               <ArrowRightIcon size={16} aria-hidden />
             </button>
           </div>

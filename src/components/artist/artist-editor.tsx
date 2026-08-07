@@ -193,7 +193,7 @@ export function ArtistEditor({
             <button
               onClick={() => logoInput.current?.click()}
               disabled={uploading}
-              className="rounded-md border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
+              className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
             >
               Upload logo
             </button>
@@ -214,7 +214,7 @@ export function ArtistEditor({
           onChange={setStatement}
           rows={6}
           placeholder="Example: I throw functional stoneware in small batches — mugs, bowls, and vases meant for everyday use. Each piece is wheel-thrown and glazed by hand, so no two are quite alike."
-          textareaClassName="w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
+          textareaClassName="w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
         />
       </Card>
 
@@ -228,7 +228,7 @@ export function ArtistEditor({
           onChange={setBio}
           rows={4}
           placeholder="Example: I'm a potter based in Athens. I fell for clay in a community studio ten years ago and haven't stopped since."
-          textareaClassName="w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
+          textareaClassName="w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
         />
       </Card>
 
@@ -263,7 +263,7 @@ export function ArtistEditor({
           <button
             onClick={onSubmit}
             disabled={pending || uploading}
-            className="rounded-md bg-fuchsia px-6 py-2.5 font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
+            className="rounded-lg bg-fuchsia px-6 py-2.5 font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
           >
             {pending ? "Submitting…" : "Submit for review"}
           </button>

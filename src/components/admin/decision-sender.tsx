@@ -101,7 +101,7 @@ export function DecisionSender({
         <input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          className="mt-1 h-11 w-full rounded-md border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
+          className="mt-1 h-11 w-full rounded-lg border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
         />
         <label className="mt-3 block text-sm font-semibold text-ink-soft">
           Message <span className="font-normal text-ink-soft/70">— {"{{first_name}}"} is personalized</span>
@@ -110,7 +110,7 @@ export function DecisionSender({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={10}
-          className="mt-1 w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-fern-deep"
+          className="mt-1 w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-fern-deep"
         />
         {showPreview && (
           <div className="mt-4 overflow-hidden rounded-lg border border-ink/10">
@@ -180,12 +180,12 @@ export function DecisionSender({
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder="SEND"
-            className="h-10 w-28 rounded-md border-2 border-ink/15 px-3 text-sm uppercase outline-none focus:border-fern-deep"
+            className="h-10 w-28 rounded-lg border-2 border-ink/15 px-3 text-sm uppercase outline-none focus:border-fern-deep"
           />
           <button
             disabled={!canSend}
             onClick={onSend}
-            className="rounded-md px-6 py-2.5 font-display font-bold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg px-6 py-2.5 font-display font-bold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             style={{ backgroundColor: copy.accent }}
           >
             {pending ? "Sending…" : `Send ${withEmail.length} ${group === "accepted" ? "acceptance" : "waitlist"} emails`}

@@ -9,6 +9,7 @@ export function ContactForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [subscribe, setSubscribe] = useState(false);
   const [company, setCompany] = useState(""); // honeypot — real users leave blank
   const renderedAt = useRef(0);
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -33,6 +34,14 @@ export function ContactForm() {
         setStatus("error");
         setErrMsg(data.error ?? "Something went wrong. Please try again.");
         return;
+      }
+      // Opt-in to the mailing list (best-effort; never block the message).
+      if (subscribe) {
+        fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name }),
+        }).catch(() => {});
       }
       setStatus("done");
     } catch {
@@ -83,7 +92,7 @@ export function ContactForm() {
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-12 w-full rounded-md border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
+            className="h-12 w-full rounded-lg border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
           />
         </label>
         <label className="block">
@@ -95,7 +104,7 @@ export function ContactForm() {
             inputMode="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 w-full rounded-md border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
+            className="h-12 w-full rounded-lg border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
           />
         </label>
       </div>
@@ -107,8 +116,18 @@ export function ContactForm() {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="How can we help?"
-          className="w-full flex-1 resize-none rounded-md border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep sm:min-h-[160px]"
+          className="w-full flex-1 resize-none rounded-lg border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep sm:min-h-[160px]"
         />
+      </label>
+
+      <label className="flex items-start gap-2.5 text-sm text-ink-soft">
+        <input
+          type="checkbox"
+          checked={subscribe}
+          onChange={(e) => setSubscribe(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-fern-deep"
+        />
+        Add me to the mailing list for market news and reminders.
       </label>
 
       {status === "error" && <p className="text-sm font-medium text-poppy">{errMsg}</p>}

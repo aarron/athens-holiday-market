@@ -39,7 +39,7 @@ export function SiteHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative rounded-md px-3.5 py-2 font-display text-[0.95rem] font-medium transition-colors ${
+                className={`relative rounded-lg px-3.5 py-2 font-display text-[0.95rem] font-medium transition-colors ${
                   active ? "text-fern-deep" : "text-ink hover:text-fern-deep"
                 }`}
               >
@@ -60,7 +60,7 @@ export function SiteHeader() {
           aria-label="Toggle menu"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-11 w-11 items-center justify-center rounded-md border-2 border-ink/15 md:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border-2 border-ink/15 md:hidden"
         >
           <span className="relative block h-4 w-5">
             <span
@@ -83,7 +83,7 @@ export function SiteHeader() {
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className="block rounded-md px-3 py-3 font-display text-lg font-medium text-ink hover:bg-cream"
+              className="block rounded-lg px-3 py-3 font-display text-lg font-medium text-ink hover:bg-cream"
             >
               {item.label}
             </Link>

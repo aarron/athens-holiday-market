@@ -77,7 +77,7 @@ export function SharePanel({
           type="button"
           onClick={() => share("square")}
           disabled={busy !== null}
-          className="rounded-md bg-fern-deep px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
+          className="rounded-lg bg-fern-deep px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
         >
           {busy === "square" ? "Preparing…" : "Post / Feed image"}
         </button>
@@ -85,7 +85,7 @@ export function SharePanel({
           type="button"
           onClick={() => share("story")}
           disabled={busy !== null}
-          className="rounded-md border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
+          className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
         >
           {busy === "story" ? "Preparing…" : "Story image"}
         </button>
@@ -101,7 +101,7 @@ export function SharePanel({
             <button
               type="button"
               onClick={() => copyCaption(i)}
-              className="mt-2 rounded-md border-2 border-ink/15 px-3 py-1 text-xs font-semibold hover:bg-cream"
+              className="mt-2 rounded-lg border-2 border-ink/15 px-3 py-1 text-xs font-semibold hover:bg-cream"
             >
               {copied === i ? "Copied ✓" : "Copy caption"}
             </button>

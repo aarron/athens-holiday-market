@@ -23,7 +23,7 @@ export function EmailPostingTeamButton() {
             );
           })
         }
-        className="rounded-md border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
+        className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
       >
         {pending ? "Sending…" : "Email the posting team"}
       </button>

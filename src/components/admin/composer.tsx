@@ -67,7 +67,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
                 setBody(t.body);
               }
             }}
-            className="h-11 w-full rounded-md border-2 border-ink/15 bg-white px-3 text-sm outline-none focus:border-fern-deep"
+            className="h-11 w-full rounded-lg border-2 border-ink/15 bg-white px-3 text-sm outline-none focus:border-fern-deep"
           >
             <option value="">Blank — write from scratch</option>
             {getBroadcastTemplates().map((t) => (
@@ -84,7 +84,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="The Athens Holiday Market is back!"
-            className="h-12 w-full rounded-md border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
+            className="h-12 w-full rounded-lg border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
           />
         </div>
 
@@ -93,7 +93,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
           <select
             value={segment}
             onChange={(e) => setSegment(e.target.value as Segment)}
-            className="h-12 w-full rounded-md border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
+            className="h-12 w-full rounded-lg border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
           >
             {SEGMENTS.map((s) => (
               <option key={s.value} value={s.value}>
@@ -115,7 +115,7 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
             onChange={(e) => setBody(e.target.value)}
             rows={12}
             placeholder={"Hi friends,\n\nWe can't wait to see you at the market on..."}
-            className="w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-fern-deep"
+            className="w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-fern-deep"
           />
         </div>
 
@@ -126,14 +126,14 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
             <button
               disabled={pending || !subject || !body}
               onClick={onTest}
-              className="rounded-md border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-50"
+              className="rounded-lg border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-50"
             >
               {pending ? "Working…" : "Send test to me"}
             </button>
             <button
               disabled={pending || !subject || !body || recipientCount === 0}
               onClick={() => setConfirming(true)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
             >
               Send broadcast
               <ArrowRightIcon size={16} aria-hidden />
@@ -149,14 +149,14 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
               <button
                 disabled={pending}
                 onClick={onSend}
-                className="rounded-md bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
+                className="rounded-lg bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
               >
                 {pending ? "Sending…" : `Yes, send to ${recipientCount}`}
               </button>
               <button
                 disabled={pending}
                 onClick={() => setConfirming(false)}
-                className="rounded-md px-4 py-2.5 text-sm font-semibold text-ink-soft hover:bg-cream"
+                className="rounded-lg px-4 py-2.5 text-sm font-semibold text-ink-soft hover:bg-cream"
               >
                 Cancel
               </button>

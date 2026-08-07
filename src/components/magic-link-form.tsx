@@ -34,7 +34,7 @@ export function MagicLinkForm() {
         required
         autoComplete="email"
         placeholder="you@email.com"
-        className="h-14 w-full rounded-md border-2 border-ink/20 bg-white px-4 text-base outline-none focus:border-fern-deep"
+        className="h-14 w-full rounded-lg border-2 border-ink/20 bg-white px-4 text-base outline-none focus:border-fern-deep"
       />
       <Button type="submit" size="lg" variant="ink" className="w-full" disabled={pending}>
         {pending ? "Sending…" : "Email me a login link"}

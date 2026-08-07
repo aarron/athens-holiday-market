@@ -9,7 +9,7 @@ export function EmailLogisticsButton() {
   const [msg, setMsg] = useState("");
 
   return (
-    <div className="rounded-2xl bg-cream-soft p-4">
+    <div className="rounded-xl bg-cream-soft p-4">
       <p className="mb-2 text-sm text-ink-soft">
         Email event-day logistics (setup times, booth info, ordering) to every accepted artist.
       </p>

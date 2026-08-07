@@ -16,7 +16,7 @@ export default function ContactPage() {
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(site.location.mapsQuery)}&output=embed`;
 
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-28">
+    <div className="mx-auto max-w-7xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-28">
       <div className="max-w-2xl">
         <div className="flex items-center gap-2">
           <Flower size={22} color="var(--color-fuchsia)" />
@@ -33,18 +33,18 @@ export default function ContactPage() {
 
       <div className="mt-12 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-stretch">
         {/* Form */}
-        <div className="flex flex-col rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
+        <div className="flex flex-col rounded-xl bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
           <ContactForm />
         </div>
 
-        {/* Directions */}
+        {/* Directions — plain content, not boxed */}
         <div className="space-y-5">
-          <div className="rounded-2xl bg-cream-soft p-6 sm:p-8">
-            <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-teal">
+          <div>
+            <h2 className="font-display text-sm font-bold uppercase tracking-[0.16em] text-fern-deep">
               Find the market
             </h2>
             <div className="mt-3 flex items-start gap-2.5">
-              <MapPinIcon size={24} className="mt-0.5 shrink-0 text-teal" aria-hidden />
+              <MapPinIcon size={24} className="mt-0.5 shrink-0 text-fern-deep" aria-hidden />
               <div>
                 <p className="font-display text-xl font-extrabold">{site.location.name}</p>
                 <address className="mt-1 not-italic text-ink-soft">
@@ -60,7 +60,7 @@ export default function ContactPage() {
                 href={site.host.url}
                 target="_blank"
                 rel="noreferrer"
-                className="font-semibold text-teal underline underline-offset-4"
+                className="font-semibold text-fern-deep underline underline-offset-4"
               >
                 {site.host.name}
               </a>
@@ -74,7 +74,7 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-ink/10 shadow-[var(--shadow-card)]">
+          <div className="overflow-hidden rounded-xl border border-ink/10 shadow-[var(--shadow-card)]">
             <iframe
               title={`Map to ${site.location.name}`}
               src={mapEmbed}
@@ -86,7 +86,7 @@ export default function ContactPage() {
             />
           </div>
 
-          <p className="flex flex-wrap items-center justify-center gap-1.5 text-center text-sm text-ink-soft">
+          <p className="flex flex-wrap items-center gap-1.5 text-sm text-ink-soft">
             <MailIcon size={16} className="text-fuchsia" aria-hidden />
             Prefer email? <a href={`mailto:${site.contactEmail}`} className="font-semibold text-fuchsia underline underline-offset-4">{site.contactEmail}</a>
           </p>

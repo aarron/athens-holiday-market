@@ -90,7 +90,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="person@email.com"
-              className="h-10 w-full rounded-md border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
+              className="h-10 w-full rounded-lg border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
             />
           </div>
           <div className="flex-1">
@@ -98,7 +98,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-10 w-full rounded-md border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
+              className="h-10 w-full rounded-lg border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
             />
           </div>
           <label className="flex h-10 items-center gap-2 text-sm font-semibold text-ink-soft">
@@ -107,7 +107,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
           </label>
           <button
             disabled={pending}
-            className="h-10 rounded-md bg-ink px-4 text-sm font-display font-bold text-paper hover:bg-ink-soft disabled:opacity-60"
+            className="h-10 rounded-lg bg-ink px-4 text-sm font-display font-bold text-paper hover:bg-ink-soft disabled:opacity-60"
           >
             Add
           </button>
@@ -122,7 +122,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search email or name…"
-            className="h-10 min-w-[180px] flex-1 rounded-md border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
+            className="h-10 min-w-[180px] flex-1 rounded-lg border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
           />
           <div className="flex flex-wrap gap-1.5">
             {FILTERS.map((f) => (
@@ -175,7 +175,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
                         <button
                           disabled={pending}
                           onClick={() => act(() => setSubscriberStatus(r.id, "subscribed"))}
-                          className="rounded-md border-2 border-ink/15 px-2.5 py-1 text-xs font-semibold hover:bg-cream disabled:opacity-60"
+                          className="rounded-lg border-2 border-ink/15 px-2.5 py-1 text-xs font-semibold hover:bg-cream disabled:opacity-60"
                         >
                           Resubscribe
                         </button>
@@ -183,7 +183,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
                         <button
                           disabled={pending}
                           onClick={() => act(() => setSubscriberStatus(r.id, "unsubscribed"))}
-                          className="rounded-md border-2 border-ink/15 px-2.5 py-1 text-xs font-semibold hover:bg-cream disabled:opacity-60"
+                          className="rounded-lg border-2 border-ink/15 px-2.5 py-1 text-xs font-semibold hover:bg-cream disabled:opacity-60"
                         >
                           Unsubscribe
                         </button>
@@ -193,7 +193,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
                         onClick={() => {
                           if (confirm(`Permanently remove ${r.email}?`)) act(() => removeSubscriber(r.id));
                         }}
-                        className="rounded-md px-2.5 py-1 text-xs font-semibold text-poppy hover:bg-[#fde7e6] disabled:opacity-60"
+                        className="rounded-lg px-2.5 py-1 text-xs font-semibold text-poppy hover:bg-[#fde7e6] disabled:opacity-60"
                       >
                         Remove
                       </button>

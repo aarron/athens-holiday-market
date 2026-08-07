@@ -127,25 +127,24 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ─────────────────────── Countdown ─────────────────────── */}
-      <section className="bg-cream-soft">
-        <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
-          <div className="flex items-center justify-center gap-2">
-            <ClockIcon size={18} className="text-fuchsia" aria-hidden />
-            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
-              The countdown is on
-            </p>
-          </div>
-          <h2 className="mt-3 text-center text-3xl font-extrabold sm:text-4xl">
-            Until the market opens
-          </h2>
-          <div className="mt-8">
-            <CountdownClock />
-          </div>
+      {/* ──────────────── Countdown + signup (one box) ──────────────── */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-3xl px-5 py-12 text-center sm:px-8 sm:py-14">
+          <div>
+            <div className="flex items-center justify-center gap-2">
+              <ClockIcon size={18} className="text-fuchsia" aria-hidden />
+              <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia">
+                The countdown is on
+              </p>
+            </div>
+            <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">Until the market opens</h2>
+            <div className="mt-8">
+              <CountdownClock />
+            </div>
 
-          {/* Capture emails high on the page */}
-          <div className="mx-auto mt-10 max-w-2xl rounded-2xl bg-white p-6 text-center shadow-[var(--shadow-card)] sm:p-8">
-            <h3 className="font-display text-2xl font-extrabold sm:text-3xl">Get on the list</h3>
+            <div className="my-8 border-t border-ink/10" />
+
+            <h3 className="font-display text-2xl font-extrabold sm:text-3xl">Send me a reminder email</h3>
             <p className="mx-auto mt-1.5 max-w-md text-ink-soft">
               We&apos;ll send the artist lineup and a reminder before the market — no spam, just
               holiday cheer.

@@ -68,7 +68,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@email.com"
-          className={`h-14 flex-1 rounded-md border-2 px-4 text-base outline-none transition-colors ${
+          className={`h-14 flex-1 rounded-lg border-2 px-4 text-base outline-none transition-colors ${
             dark
               ? "border-paper/25 bg-white/10 text-paper placeholder:text-paper/50 focus:border-fern"
               : "border-ink/20 bg-white text-ink placeholder:text-ink-soft/60 focus:border-fern-deep"

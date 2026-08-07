@@ -35,7 +35,7 @@ export function VoteButtons({ applicationId, myVote }: { applicationId: number; 
               setCurrent(v);
               start(() => castVote(applicationId, v));
             }}
-            className={`h-11 flex-1 rounded-md border-2 font-display font-bold transition-all disabled:opacity-60 ${
+            className={`h-11 flex-1 rounded-lg border-2 font-display font-bold transition-all disabled:opacity-60 ${
               active ? "text-white" : "text-ink hover:bg-cream"
             }`}
             style={active ? { backgroundColor: color, borderColor: color } : { borderColor: "var(--color-ink)", opacity: 0.9 }}
@@ -57,7 +57,7 @@ export function CommentBox({ applicationId }: { applicationId: number }) {
         ref={ref}
         rows={3}
         placeholder="Add a note for the jury…"
-        className="w-full rounded-md border-2 border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-fern-deep"
+        className="w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-fern-deep"
       />
       <button
         disabled={pending}
@@ -69,7 +69,7 @@ export function CommentBox({ applicationId }: { applicationId: number }) {
             if (ref.current) ref.current.value = "";
           });
         }}
-        className="mt-2 rounded-md bg-ink px-4 py-2 text-sm font-display font-semibold text-paper transition-colors hover:bg-ink-soft disabled:opacity-60"
+        className="mt-2 rounded-lg bg-ink px-4 py-2 text-sm font-display font-semibold text-paper transition-colors hover:bg-ink-soft disabled:opacity-60"
       >
         {pending ? "Posting…" : "Post note"}
       </button>
@@ -112,7 +112,7 @@ export function DecisionControls({
                   setCur(s);
                   start(() => setStatus(applicationId, s as never));
                 }}
-                className="h-11 rounded-md border-2 font-display text-sm font-bold transition-all disabled:opacity-60"
+                className="h-11 rounded-lg border-2 font-display text-sm font-bold transition-all disabled:opacity-60"
                 style={active ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: "rgba(23,22,27,0.15)" }}
               >
                 {label}
@@ -131,7 +131,7 @@ export function DecisionControls({
             setPaid(next);
             start(() => setBoothFee(applicationId, next));
           }}
-          className={`mt-2 h-11 w-full rounded-md border-2 font-display text-sm font-bold transition-all disabled:opacity-50 ${
+          className={`mt-2 h-11 w-full rounded-lg border-2 font-display text-sm font-bold transition-all disabled:opacity-50 ${
             paid ? "border-fern-deep bg-fern-soft text-fern-deep" : "border-ink/15 text-ink hover:bg-cream"
           }`}
         >
@@ -168,7 +168,7 @@ export function PublishControls({
             href={`/artists/${slug}`}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-1.5 rounded-md bg-fern-soft px-4 py-2.5 text-center text-sm font-display font-bold text-fern-deep"
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-fern-soft px-4 py-2.5 text-center text-sm font-display font-bold text-fern-deep"
           >
             View public page
             <ExternalIcon size={14} aria-hidden />
@@ -182,7 +182,7 @@ export function PublishControls({
                 setMsg("Hidden from the directory.");
               })
             }
-            className="w-full rounded-md border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
+            className="w-full rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
           >
             Unpublish
           </button>
@@ -202,7 +202,7 @@ export function PublishControls({
               }
             })
           }
-          className="mt-3 w-full rounded-md bg-fern-deep px-4 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
+          className="mt-3 w-full rounded-lg bg-fern-deep px-4 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
         >
           {pending ? "Publishing…" : "Publish to directory"}
         </button>
@@ -231,7 +231,7 @@ export function SendArtistLinkButton({ email }: { email: string }) {
             );
           })
         }
-        className="w-full rounded-md border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
+        className="w-full rounded-lg border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
       >
         {pending ? "Sending…" : "Email artist their edit link"}
       </button>

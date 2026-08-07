@@ -71,7 +71,7 @@ export function ProofreadField({
           type="button"
           onClick={() => run("grammar")}
           disabled={disabled}
-          className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
+          className="rounded-lg border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
         >
           {proofing === "grammar" ? "Checking…" : "Check grammar & spelling"}
         </button>
@@ -79,7 +79,7 @@ export function ProofreadField({
           type="button"
           onClick={() => run("polish")}
           disabled={disabled}
-          className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
+          className="rounded-lg border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
         >
           {proofing === "polish" ? "Polishing…" : "Polish for clarity"}
         </button>
@@ -102,14 +102,14 @@ export function ProofreadField({
                 onChange(suggestion);
                 setSuggestion(null);
               }}
-              className="rounded-md bg-fern-deep px-4 py-1.5 text-sm font-bold text-white hover:opacity-90"
+              className="rounded-lg bg-fern-deep px-4 py-1.5 text-sm font-bold text-white hover:opacity-90"
             >
               Use this
             </button>
             <button
               type="button"
               onClick={() => setSuggestion(null)}
-              className="rounded-md border-2 border-ink/15 px-4 py-1.5 text-sm font-semibold hover:bg-cream"
+              className="rounded-lg border-2 border-ink/15 px-4 py-1.5 text-sm font-semibold hover:bg-cream"
             >
               Keep mine
             </button>

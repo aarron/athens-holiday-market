@@ -36,7 +36,7 @@ export default async function AdminArtistReview({ params }: { params: Promise<{ 
             href={`/artists/${artist.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-md bg-fern-soft px-4 py-2 text-sm font-display font-bold text-fern-deep"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-fern-soft px-4 py-2 text-sm font-display font-bold text-fern-deep"
           >
             View live page
             <ExternalIcon size={14} aria-hidden />

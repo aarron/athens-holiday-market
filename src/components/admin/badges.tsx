@@ -35,7 +35,7 @@ export function VoteTally({ tally }: { tally: Tally }) {
   const item = (n: number, color: string, title: string) => (
     <span
       title={title}
-      className="inline-flex min-w-6 items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-bold tabular-nums"
+      className="inline-flex min-w-6 items-center justify-center gap-1 rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums"
       style={{ backgroundColor: `${color}1a`, color }}
     >
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />

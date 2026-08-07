@@ -78,7 +78,7 @@ export default async function EmailHubPage() {
 
       {/* Decisions — prominent when there are people left to notify, muted once done */}
       {hasDecisions && totalToNotify > 0 && groups && (
-        <section className="rounded-2xl border-2 border-tangerine/40 bg-tangerine/5 p-5 sm:p-6">
+        <section className="rounded-xl border-2 border-tangerine/40 bg-tangerine/5 p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl font-extrabold">Send decisions</h2>
             <span className="rounded-full bg-tangerine px-3 py-1 text-sm font-bold text-white">
@@ -115,7 +115,7 @@ export default async function EmailHubPage() {
           </div>
           <Link
             href="/admin/broadcasts/new"
-            className="rounded-md bg-fuchsia px-5 py-2.5 font-display font-bold text-white hover:opacity-90"
+            className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white hover:opacity-90"
           >
             + New broadcast
           </Link>

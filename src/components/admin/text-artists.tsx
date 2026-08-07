@@ -53,7 +53,7 @@ export function TextArtists({
         onChange={(e) => setMsg(e.target.value)}
         rows={3}
         placeholder="e.g. Athens Holiday Market load-in starts at 3pm today at Big City Bread. See you there!"
-        className="mt-4 w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm outline-none focus:border-fern-deep"
+        className="mt-4 w-full rounded-lg border-2 border-ink/15 px-3 py-2 text-sm outline-none focus:border-fern-deep"
       />
       <div className="mt-1 text-right text-xs text-ink-soft">
         {chars} chars · {segments} SMS {segments === 1 ? "segment" : "segments"} each
@@ -66,7 +66,7 @@ export function TextArtists({
           value={testTo}
           onChange={(e) => setTestTo(e.target.value)}
           placeholder="your mobile #"
-          className="w-40 rounded-md border-2 border-ink/15 px-2 py-1 text-sm outline-none focus:border-fern-deep"
+          className="w-40 rounded-lg border-2 border-ink/15 px-2 py-1 text-sm outline-none focus:border-fern-deep"
         />
         <button
           disabled={pending || !testTo.trim() || chars === 0}
@@ -76,7 +76,7 @@ export function TextArtists({
               setResult(r.ok ? `Test sent to ${r.to} ✓` : r.error);
             })
           }
-          className="rounded-md border-2 border-ink/15 px-3 py-1 text-sm font-semibold hover:bg-white disabled:opacity-50"
+          className="rounded-lg border-2 border-ink/15 px-3 py-1 text-sm font-semibold hover:bg-white disabled:opacity-50"
         >
           Send test
         </button>
@@ -92,7 +92,7 @@ export function TextArtists({
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="SEND"
-            className="w-28 rounded-md border-2 border-ink/15 px-3 py-2 text-sm outline-none focus:border-poppy"
+            className="w-28 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm outline-none focus:border-poppy"
           />
           <button
             disabled={!canSend}
@@ -112,7 +112,7 @@ export function TextArtists({
                 }
               })
             }
-            className="rounded-md bg-poppy px-5 py-2 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-poppy px-5 py-2 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
           >
             {pending ? "Sending…" : `Text ${recipientCount} artists`}
           </button>

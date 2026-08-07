@@ -9,7 +9,7 @@ export default async function ArtistPortalLayout({ children }: { children: React
     <div className="min-h-screen bg-paper">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:font-display focus:font-semibold focus:text-paper focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-fern-deep"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:font-display focus:font-semibold focus:text-paper focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-fern-deep"
       >
         Skip to content
       </a>
@@ -22,7 +22,7 @@ export default async function ArtistPortalLayout({ children }: { children: React
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-ink-soft sm:inline">{user.email}</span>
             <form action={signOutAction}>
-              <button className="rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream">
+              <button className="rounded-lg border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream">
                 Log out
               </button>
             </form>

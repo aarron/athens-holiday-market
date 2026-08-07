@@ -107,7 +107,7 @@ export function AvatarMenu({
           <form action={signOutAction}>
             <button
               role="menuitem"
-              className="w-full rounded-md px-3 py-2 text-left text-sm font-semibold transition-colors hover:bg-cream"
+              className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors hover:bg-cream"
             >
               Log out
             </button>

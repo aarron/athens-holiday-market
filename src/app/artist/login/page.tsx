@@ -15,7 +15,7 @@ export default async function ArtistLogin() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-paper px-5">
-      <div className="w-full max-w-md rounded-2xl bg-white p-10 text-center shadow-[var(--shadow-lift)]">
+      <div className="w-full max-w-md rounded-xl bg-white p-10 text-center shadow-[var(--shadow-lift)]">
         <Flower size={56} color="var(--color-fuchsia)" spin className="mx-auto" />
         <h1 className="mt-6 text-3xl font-extrabold">Artist login</h1>
         <p className="mt-2 text-ink-soft">

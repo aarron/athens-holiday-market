@@ -41,7 +41,7 @@ const STATUS_RANK: Record<string, number> = {
 };
 
 const selectCls =
-  "h-10 rounded-md border-2 border-ink/15 bg-paper px-2.5 text-sm font-semibold text-ink outline-none focus:border-fern-deep";
+  "h-10 rounded-lg border-2 border-ink/15 bg-paper px-2.5 text-sm font-semibold text-ink outline-none focus:border-fern-deep";
 
 export function ApplicationsTable({ rows }: { rows: Row[] }) {
   const [q, setQ] = useState("");
@@ -131,7 +131,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search artists or mediums…"
-          className="h-10 min-w-[180px] flex-1 rounded-md border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
+          className="h-10 min-w-[180px] flex-1 rounded-lg border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
         />
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Filter by:</span>
         <select
@@ -165,7 +165,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
               setStatusFilter("all");
               setPaymentFilter("all");
             }}
-            className="h-10 rounded-md px-3 text-sm font-semibold text-ink-soft hover:bg-cream"
+            className="h-10 rounded-lg px-3 text-sm font-semibold text-ink-soft hover:bg-cream"
           >
             Clear
           </button>
@@ -192,7 +192,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
                       src={r.photo}
                       alt=""
                       flowerSize={16}
-                      className="h-10 w-10 shrink-0 rounded-md object-cover"
+                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
                     />
                     <span className="font-display font-bold group-hover:text-fern-deep">{r.name}</span>
                   </Link>

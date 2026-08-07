@@ -31,7 +31,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 const field =
-  "w-full rounded-md border-2 border-ink/15 bg-white px-4 py-3 text-base text-ink outline-none transition-colors focus:border-fern-deep placeholder:text-ink-soft/50";
+  "w-full rounded-lg border-2 border-ink/15 bg-white px-4 py-3 text-base text-ink outline-none transition-colors focus:border-fern-deep placeholder:text-ink-soft/50";
 const label = "block font-display text-sm font-bold text-ink";
 const errCls = "mt-1 text-sm font-medium text-poppy";
 
@@ -283,7 +283,7 @@ export function ApplicationForm() {
         <p className="mt-0.5 text-sm text-ink-soft">
           {min} to {max} images, each under {site.applications.maxPhotoMb}MB (JPG, PNG, or WEBP).
         </p>
-        <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-ink/25 bg-white px-4 py-8 text-center transition-colors hover:border-fern-deep">
+        <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-ink/25 bg-white px-4 py-8 text-center transition-colors hover:border-fern-deep">
           <Flower size={28} color="var(--color-fern-deep)" />
           <span className="mt-2 font-display font-semibold">
             {photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} selected` : "Choose photos"}
@@ -333,7 +333,7 @@ export function ApplicationForm() {
       )}
 
       {serverError && (
-        <p className="rounded-md bg-poppy/10 px-4 py-3 text-sm font-medium text-poppy">{serverError}</p>
+        <p className="rounded-lg bg-poppy/10 px-4 py-3 text-sm font-medium text-poppy">{serverError}</p>
       )}
 
       <Button type="submit" size="lg" disabled={status === "submitting"} className="w-full sm:w-auto">

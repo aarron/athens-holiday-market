@@ -25,7 +25,7 @@ export default async function AdminLogin({
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-paper px-5">
-      <div className="w-full max-w-md rounded-2xl bg-white p-10 text-center shadow-[var(--shadow-lift)]">
+      <div className="w-full max-w-md rounded-xl bg-white p-10 text-center shadow-[var(--shadow-lift)]">
         <Flower size={56} color="var(--color-fuchsia)" className="mx-auto" />
         <h1 className="mt-6 text-3xl font-extrabold">Jury &amp; Admin</h1>
         <p className="mt-2 text-ink-soft">
@@ -33,7 +33,7 @@ export default async function AdminLogin({
         </p>
 
         {error && ERRORS[error] && (
-          <p className="mt-4 rounded-md bg-[#fde7e6] px-4 py-2 text-sm font-medium text-poppy">
+          <p className="mt-4 rounded-lg bg-[#fde7e6] px-4 py-2 text-sm font-medium text-poppy">
             {ERRORS[error]}
           </p>
         )}

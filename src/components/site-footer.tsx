@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { site, mapsHref } from "@/lib/site";
 import { Flower } from "@/components/brand";
-import { MapPinIcon, MailIcon, ArrowRightIcon, BugFaceIcon } from "@/components/icons";
+import { MapPinIcon, MailIcon, ArrowRightIcon, BugFaceIcon, InstagramIcon, FacebookIcon } from "@/components/icons";
 
 export function SiteFooter() {
   return (
@@ -22,6 +22,26 @@ export function SiteFooter() {
             </a>
             , Athens, Georgia.
           </p>
+          <div className="mt-5 flex items-center gap-3">
+            <a
+              href={site.social.instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Athens Holiday Market on Instagram"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-paper/20 text-paper/80 transition-colors hover:border-fern hover:text-fern"
+            >
+              <InstagramIcon size={20} aria-hidden />
+            </a>
+            <a
+              href={site.social.facebookUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Athens Holiday Market on Facebook"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-paper/20 text-paper/80 transition-colors hover:border-fern hover:text-fern"
+            >
+              <FacebookIcon size={20} aria-hidden />
+            </a>
+          </div>
         </div>
 
         <div>

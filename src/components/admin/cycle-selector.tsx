@@ -12,7 +12,7 @@ export function CycleSelector({ cycles, current }: { cycles: CycleOption[]; curr
       <select
         value={current}
         onChange={(e) => router.push(`/admin?year=${e.target.value}`)}
-        className="h-10 rounded-md border-2 border-ink/15 bg-white px-2.5 text-sm font-display font-bold text-ink outline-none focus:border-fern-deep"
+        className="h-10 rounded-lg border-2 border-ink/15 bg-white px-2.5 text-sm font-display font-bold text-ink outline-none focus:border-fern-deep"
       >
         {cycles.map((c) => (
           <option key={c.year} value={c.year}>

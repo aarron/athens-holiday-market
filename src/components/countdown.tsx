@@ -126,7 +126,7 @@ export function CountdownClock() {
   }
 
   return (
-    <div className="mx-auto flex w-fit max-w-full items-start justify-center gap-2 overflow-x-auto rounded-2xl bg-white px-4 py-6 shadow-[var(--shadow-lift)] sm:gap-3 sm:px-9 sm:py-8">
+    <div className="mx-auto flex w-fit max-w-full items-start justify-center gap-2 overflow-x-auto px-2 py-2 sm:gap-3">
       {UNITS.map((u, i) => (
         <Fragment key={u.key}>
           <span className="flex flex-col items-center gap-2.5">

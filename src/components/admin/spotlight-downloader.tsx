@@ -50,7 +50,7 @@ function SpotlightCard({ artist }: { artist: SpotlightArtist }) {
             type="button"
             onClick={() => download("square")}
             disabled={busy !== null}
-            className="flex-1 rounded-md bg-fern-deep px-2 py-1.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-60"
+            className="flex-1 rounded-lg bg-fern-deep px-2 py-1.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-60"
           >
             {busy === "square" ? "…" : "Feed"}
           </button>
@@ -58,7 +58,7 @@ function SpotlightCard({ artist }: { artist: SpotlightArtist }) {
             type="button"
             onClick={() => download("story")}
             disabled={busy !== null}
-            className="flex-1 rounded-md border-2 border-ink/15 px-2 py-1.5 text-xs font-semibold hover:bg-cream disabled:opacity-60"
+            className="flex-1 rounded-lg border-2 border-ink/15 px-2 py-1.5 text-xs font-semibold hover:bg-cream disabled:opacity-60"
           >
             {busy === "story" ? "…" : "Story"}
           </button>

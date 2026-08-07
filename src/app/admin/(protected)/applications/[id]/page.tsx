@@ -21,6 +21,8 @@ import {
   DeleteApplicationButton,
 } from "@/components/admin/controls";
 import { PhotoGallery } from "@/components/admin/photo-gallery";
+import { BoothFeeInvoice } from "@/components/admin/booth-fee-invoice";
+import { paypalConfigured } from "@/lib/paypal";
 import { BackIcon, ExternalIcon, ArrowRightIcon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Application", robots: { index: false } };
@@ -279,6 +281,17 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                 <BoothFeeBadge paid={app.boothFeePaid} status={app.status} />
               </div>
               <DecisionControls applicationId={app.id} status={app.status} boothFeePaid={app.boothFeePaid} />
+              <div className="mt-5 border-t border-ink/10 pt-5">
+                <BoothFeeInvoice
+                  applicationId={app.id}
+                  status={app.status}
+                  paid={app.boothFeePaid}
+                  invoiceId={app.paypalInvoiceId}
+                  invoiceUrl={app.paypalInvoiceUrl}
+                  invoicedAt={app.boothFeeInvoicedAt ? new Date(app.boothFeeInvoicedAt).toISOString() : null}
+                  configured={paypalConfigured()}
+                />
+              </div>
             </div>
           )}
 

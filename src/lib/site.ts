@@ -72,6 +72,8 @@ export const site = {
     minPhotos: 3,
     maxPhotos: 6,
     maxPhotoMb: 10,
+    // Booth fee billed to accepted artists via PayPal invoice ($ total, both nights).
+    boothFee: 75,
   },
   nav: [
     { href: "/", label: "Home" },

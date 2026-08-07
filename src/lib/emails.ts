@@ -110,6 +110,32 @@ export async function sendArtistPageReminder(to: string, name: string) {
   }
 }
 
+/** Nudge an accepted artist whose booth fee is still unpaid, linking the invoice. */
+export async function sendBoothFeeReminder(to: string, name: string, amount: number, invoiceUrl: string | null) {
+  if (!resend) return { skipped: true as const };
+  const payButton = invoiceUrl
+    ? `<p style="margin:0 0 18px"><a href="${invoiceUrl}" style="display:inline-block;background:#d21c96;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:700">Pay your $${amount} booth fee →</a></p>`
+    : `<p style="margin:0 0 14px;line-height:1.6">Look for the PayPal invoice in your inbox (check spam too) and follow the Pay Now button.</p>`;
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:22px">A quick reminder about your booth fee</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, we're so glad you'll be at the ${site.event.year} ${site.name}!
+      Your <strong>$${amount} booth fee</strong> is still showing as unpaid, and your space is held until it's in.</p>
+    ${payButton}
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Already paid? Thank you — you can ignore this, it may have crossed in the mail.
+      Questions? Just reply to this email.</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Reminder: your ${site.name} booth fee`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send booth-fee reminder:", e);
+    return { error: true as const };
+  }
+}
+
 export const CONTACT_TO = process.env.CONTACT_FORM_TO || "";
 
 /** Event-day logistics for an accepted artist (setup, booth, what to bring). */

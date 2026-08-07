@@ -71,6 +71,13 @@
       "when": 1786133391567,
       "tag": "0009_cynical_kingpin",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786140455238,
+      "tag": "0010_living_brother_voodoo",
+      "breakpoints": true
     }
   ]
 }

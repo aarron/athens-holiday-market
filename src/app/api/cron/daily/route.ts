@@ -3,6 +3,7 @@ import { runArtistPageReminders } from "@/lib/artist-reminders";
 import { runEventReminders } from "@/lib/event-reminders";
 import { runNprFlagpoleReminder } from "@/lib/npr-flagpole-reminder";
 import { runScheduledBroadcasts } from "@/lib/broadcast-send";
+import { runBoothFeeReminders } from "@/lib/booth-fee";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export async function GET(req: Request) {
     ["eventReminders", runEventReminders],
     ["nprFlagpole", runNprFlagpoleReminder],
     ["scheduledBroadcasts", runScheduledBroadcasts],
+    ["boothFeeReminders", runBoothFeeReminders],
   ] as const;
 
   const results: Record<string, unknown> = {};

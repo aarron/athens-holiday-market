@@ -83,8 +83,11 @@ export const applications = pgTable(
     decisionSentAt: timestamp("decision_sent_at", { withTimezone: true }),
     // Set when we nudge an accepted artist who hasn't built their page (once).
     pageReminderSentAt: timestamp("page_reminder_sent_at", { withTimezone: true }),
-    // PayPal linkage (Phase 3)
+    // PayPal booth-fee invoicing.
     paypalInvoiceId: text("paypal_invoice_id"),
+    paypalInvoiceUrl: text("paypal_invoice_url"), // payer-facing "view & pay" link
+    boothFeeInvoicedAt: timestamp("booth_fee_invoiced_at", { withTimezone: true }),
+    boothFeeReminderCount: integer("booth_fee_reminder_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

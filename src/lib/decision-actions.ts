@@ -8,6 +8,7 @@ import { applications } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-auth";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
+import { invoiceAcceptedWithoutInvoice } from "@/lib/booth-fee";
 
 const schema = z.object({
   cycleId: z.number(),
@@ -84,7 +85,19 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     }
   }
 
+  // Auto-send booth-fee invoices to the accepted group as they're notified.
+  // Best-effort: a PayPal hiccup must never fail the decision emails.
+  let invoiced = 0;
+  if (group === "accepted") {
+    try {
+      const r = await invoiceAcceptedWithoutInvoice(cycleId);
+      invoiced = r.invoiced;
+    } catch (e) {
+      console.error("[decisions] booth-fee auto-invoice failed:", e);
+    }
+  }
+
   revalidatePath("/admin/decisions");
   revalidatePath("/admin");
-  return { ok: true, count: sent };
+  return { ok: true, count: sent, invoiced };
 }

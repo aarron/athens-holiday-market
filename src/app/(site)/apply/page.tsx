@@ -72,6 +72,18 @@ export default async function ApplyPage({
             opens.
           </p>
 
+          {/* Notify CTA — placed high so folks don't scroll past it */}
+          <div className="mt-8 rounded-xl bg-ink p-7 text-paper">
+            <h2 className="text-2xl font-extrabold text-white">Get notified when it opens</h2>
+            <p className="mt-2 text-paper/70">
+              Subscribe and check the artist box — we&apos;ll email you the moment applications go
+              live.
+            </p>
+            <div className="mt-5">
+              <SubscribeForm tone="dark" />
+            </div>
+          </div>
+
           {/* Guidelines */}
           <h2 className="mt-12 text-2xl font-extrabold">What we&apos;re looking for</h2>
           <ul className="mt-5 space-y-4">
@@ -97,17 +109,6 @@ export default async function ApplyPage({
             ))}
           </ul>
 
-          {/* Notify CTA */}
-          <div className="mt-12 rounded-xl bg-ink p-7 text-paper">
-            <h2 className="text-2xl font-extrabold text-white">Get notified when it opens</h2>
-            <p className="mt-2 text-paper/70">
-              Subscribe and check the artist box — we&apos;ll email you the moment applications go
-              live.
-            </p>
-            <div className="mt-5">
-              <SubscribeForm tone="dark" />
-            </div>
-          </div>
         </div>
       )}
 

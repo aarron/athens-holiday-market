@@ -49,7 +49,9 @@ export default async function ApplyPage({
         <p className="mt-6 font-display text-sm font-bold uppercase tracking-[0.18em] text-fern-deep">
           Vendor applications
         </p>
-        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Sell at the market.</h1>
+        <h1 className="mt-3 text-balance text-4xl font-extrabold sm:text-5xl">
+          Apply to participate in the {site.name}
+        </h1>
       </div>
 
       {window === "before" && (

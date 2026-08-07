@@ -74,10 +74,12 @@ export async function createBoothFeeInvoice(input: {
         },
         // Brand the invoice explicitly so it reads as the market (name + logo),
         // not just the underlying PayPal account. Email is left to the account.
+        // logo_url must be the www canonical: PayPal fetches it server-side and
+        // does NOT follow the apex→www 308 redirect (that would break the logo).
         invoicer: {
           business_name: site.name,
           website: site.url,
-          logo_url: `${site.url}/brand/logo.png`,
+          logo_url: `https://www.${site.url.replace(/^https?:\/\/(www\.)?/, "")}/brand/logo.png`,
         },
         primary_recipients: [
           { billing_info: { name: splitName(input.name), email_address: input.email } },

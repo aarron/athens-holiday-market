@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 export type TabDef = { id: string; label: string; badge?: number; content: ReactNode };
 
@@ -12,6 +12,21 @@ export type TabDef = { id: string; label: string; badge?: number; content: React
  */
 export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: string }) {
   const [active, setActive] = useState(initial ?? tabs[0]?.id);
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Roving arrow-key navigation (ARIA tabs pattern, automatic activation).
+  function onKeyDown(e: React.KeyboardEvent, i: number) {
+    const last = tabs.length - 1;
+    let next = -1;
+    if (e.key === "ArrowRight") next = i === last ? 0 : i + 1;
+    else if (e.key === "ArrowLeft") next = i === 0 ? last : i - 1;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = last;
+    if (next === -1) return;
+    e.preventDefault();
+    setActive(tabs[next].id);
+    btnRefs.current[next]?.focus();
+  }
 
   return (
     <div>
@@ -20,14 +35,19 @@ export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: strin
         aria-label="Sections"
         className="flex gap-6 overflow-x-auto border-b border-ink/12 [-ms-overflow-style:none] [scrollbar-width:none]"
       >
-        {tabs.map((t) => {
+        {tabs.map((t, i) => {
           const on = t.id === active;
           return (
             <button
               key={t.id}
+              id={`tab-${t.id}`}
+              ref={(el) => { btnRefs.current[i] = el; }}
               role="tab"
               aria-selected={on}
+              aria-controls={`panel-${t.id}`}
+              tabIndex={on ? 0 : -1}
               onClick={() => setActive(t.id)}
+              onKeyDown={(e) => onKeyDown(e, i)}
               className={`relative -mb-px shrink-0 border-b-2 px-1 pb-3 text-sm font-display font-bold transition-colors ${
                 on ? "border-fern-deep text-fern-deep" : "border-transparent text-ink-soft hover:text-ink"
               }`}
@@ -45,7 +65,14 @@ export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: strin
 
       <div className="mt-6">
         {tabs.map((t) => (
-          <div key={t.id} role="tabpanel" hidden={t.id !== active}>
+          <div
+            key={t.id}
+            id={`panel-${t.id}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${t.id}`}
+            tabIndex={0}
+            hidden={t.id !== active}
+          >
             {t.content}
           </div>
         ))}

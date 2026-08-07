@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { site, mapsHref } from "@/lib/site";
 import { Flower } from "@/components/brand";
+import { MotionToggle } from "@/components/motion-toggle";
 import { MapPinIcon, MailIcon, ArrowRightIcon, BugFaceIcon, InstagramIcon, FacebookIcon } from "@/components/icons";
 
 export function SiteFooter() {
@@ -108,6 +109,7 @@ export function SiteFooter() {
                 Aarron Walter
               </a>
             </span>
+            <MotionToggle />
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { site } from "@/lib/site";
 import { ButtonLink } from "@/components/ui/button";
@@ -10,6 +10,19 @@ import { ButtonLink } from "@/components/ui/button";
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        toggleRef.current?.focus(); // return focus to the toggle
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <header className="sticky top-0 z-50 border-b-2 border-ink/10 bg-white">
@@ -56,9 +69,11 @@ export function SiteHeader() {
         </nav>
 
         <button
+          ref={toggleRef}
           type="button"
           aria-label="Toggle menu"
           aria-expanded={open}
+          aria-controls="mobile-nav"
           onClick={() => setOpen((v) => !v)}
           className="flex h-11 w-11 items-center justify-center rounded-lg border-2 border-ink/15 md:hidden"
         >
@@ -77,7 +92,7 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <nav className="border-t-2 border-ink/10 bg-paper px-5 pb-5 pt-2 md:hidden">
+        <nav id="mobile-nav" className="border-t-2 border-ink/10 bg-paper px-5 pb-5 pt-2 md:hidden">
           {site.nav.map((item) => (
             <Link
               key={item.href}

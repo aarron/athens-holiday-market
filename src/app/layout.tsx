@@ -51,6 +51,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${plusJakarta.variable} ${inter.variable} h-full`}>
+      <head>
+        {/* Reflect the saved motion preference before first paint so animations
+            never flash on for someone who chose "Reduce motion". */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var m=localStorage.getItem('ahm-motion');var off=m==='off'||(m===null&&matchMedia('(prefers-reduced-motion: reduce)').matches);document.documentElement.dataset.motion=off?'off':'on'}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SafeImg } from "@/components/admin/safe-img";
 import { CloseIcon } from "@/components/icons";
 
 export function PhotoGallery({ photos }: { photos: { id: number; url: string }[] }) {
   const [idx, setIdx] = useState<number | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (idx === null) return;
@@ -13,14 +15,42 @@ export function PhotoGallery({ photos }: { photos: { id: number; url: string }[]
       if (e.key === "Escape") setIdx(null);
       if (e.key === "ArrowRight") setIdx((i) => (i === null ? i : (i + 1) % photos.length));
       if (e.key === "ArrowLeft") setIdx((i) => (i === null ? i : (i - 1 + photos.length) % photos.length));
+      if (e.key === "Tab") {
+        // Trap focus within the lightbox.
+        const focusable = dialogRef.current?.querySelectorAll<HTMLElement>("button");
+        if (!focusable || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    // Move focus into the dialog on open.
+    const focusTimer = requestAnimationFrame(() =>
+      dialogRef.current?.querySelector<HTMLElement>("button")?.focus(),
+    );
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      cancelAnimationFrame(focusTimer);
     };
   }, [idx, photos.length]);
+
+  // Restore focus to the thumbnail that opened the lightbox when it closes.
+  useEffect(() => {
+    if (idx === null && openerRef.current) {
+      openerRef.current.focus();
+      openerRef.current = null;
+    }
+  }, [idx]);
 
   if (photos.length === 0) return null;
 
@@ -30,7 +60,10 @@ export function PhotoGallery({ photos }: { photos: { id: number; url: string }[]
         {photos.map((p, i) => (
           <button
             key={p.id}
-            onClick={() => setIdx(i)}
+            onClick={(e) => {
+              openerRef.current = e.currentTarget;
+              setIdx(i);
+            }}
             className="group block overflow-hidden rounded-lg bg-cream shadow-[var(--shadow-card)]"
             aria-label={`View photo ${i + 1} larger`}
           >
@@ -46,10 +79,12 @@ export function PhotoGallery({ photos }: { photos: { id: number; url: string }[]
 
       {idx !== null && (
         <div
+          ref={dialogRef}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/90 p-4"
           onClick={() => setIdx(null)}
           role="dialog"
           aria-modal="true"
+          aria-label="Photo viewer"
         >
           <button
             onClick={() => setIdx(null)}

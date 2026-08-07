@@ -138,6 +138,11 @@
 .ahm-marquee { animation: ahm-marquee 120s linear infinite; }
 .ahm-marquee-group:hover .ahm-marquee { animation-play-state: paused; }
 
+/* Footer "Reduce motion" toggle — freezes the looping CSS animations in place
+   (the snow canvas and hero video are paused from JS via the same preference). */
+html[data-motion="off"] .ahm-marquee,
+html[data-motion="off"] .ahm-spin { animation-play-state: paused !important; }
+
 /* ── Split-flap countdown digit (Solari board) ── */
 .flap-digit {
   position: relative;

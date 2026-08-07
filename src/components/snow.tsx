@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { MOTION_EVENT, motionEnabled } from "@/lib/motion";
 
 /**
  * Subtle, calm snowfall drawn on a single fixed canvas (no per-flake DOM).
- * Density scales with viewport width; disabled for reduced-motion users.
+ * Density scales with viewport width; disabled for reduced-motion users and
+ * whenever the footer "Reduce motion" toggle is off.
  */
 export function Snow() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -71,12 +70,27 @@ export function Snow() {
       raf = requestAnimationFrame(frame);
     }
 
+    function start() {
+      if (raf || !motionEnabled()) return;
+      frame();
+    }
+    function stop() {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      ctx!.clearRect(0, 0, width, height);
+    }
+    function onMotionChange() {
+      motionEnabled() ? start() : stop();
+    }
+
     resize();
-    frame();
+    start();
     window.addEventListener("resize", resize);
+    window.addEventListener(MOTION_EVENT, onMotionChange);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      window.removeEventListener(MOTION_EVENT, onMotionChange);
     };
   }, []);
 

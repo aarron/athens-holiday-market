@@ -60,6 +60,7 @@ export function AvatarMenu({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const Icon = iconFor(email);
 
   useEffect(() => {
@@ -68,7 +69,10 @@ export function AvatarMenu({
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus(); // return focus to the trigger
+      }
     }
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -81,6 +85,7 @@ export function AvatarMenu({
   return (
     <div ref={ref} className="relative">
       <button
+        ref={triggerRef}
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}

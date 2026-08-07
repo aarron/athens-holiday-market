@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { MOTION_EVENT, motionEnabled } from "@/lib/motion";
 
 /**
- * Background hero video that honors reduced-motion: it never sets `autoPlay`,
- * and only starts playback via JS when the user hasn't asked to reduce motion.
- * Reduced-motion users see the static poster instead.
+ * Background hero video that honors the motion preference: it never sets
+ * `autoPlay`, and only plays when motion is enabled (OS reduced-motion off and
+ * the footer toggle on). Otherwise the static poster shows.
  */
 export function HeroVideo() {
   const ref = useRef<HTMLVideoElement>(null);
@@ -13,10 +14,18 @@ export function HeroVideo() {
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    v.play().catch(() => {
-      /* autoplay may be blocked; poster stays — fine */
-    });
+    const sync = () => {
+      if (motionEnabled()) {
+        v.play().catch(() => {
+          /* autoplay may be blocked; poster stays — fine */
+        });
+      } else {
+        v.pause();
+      }
+    };
+    sync();
+    window.addEventListener(MOTION_EVENT, sync);
+    return () => window.removeEventListener(MOTION_EVENT, sync);
   }, []);
 
   return (

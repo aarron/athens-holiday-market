@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { SubscribeForm } from "@/components/subscribe-form";
 import { CalendarIcon, ClockIcon, MapPinIcon } from "@/components/icons";
 import { CountdownClock } from "@/components/countdown";
+import { HeroVideo } from "@/components/hero-video";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -37,16 +38,7 @@ export default function HomePage() {
     <>
       {/* ───────────────────────── Hero ───────────────────────── */}
       <section className="relative isolate flex min-h-[calc(100svh-4.5rem)] items-center overflow-hidden">
-        <video
-          className="absolute inset-0 -z-20 h-full w-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/video/hero-poster.jpg"
-        >
-          <source src="/video/hero.mp4" type="video/mp4" />
-        </video>
+        <HeroVideo />
         {/* warm scrim for legibility */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/70 via-ink/45 to-ink/80" />
 

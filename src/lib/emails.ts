@@ -112,6 +112,30 @@ export async function sendArtistPageReminder(to: string, name: string) {
 
 export const CONTACT_TO = "redacted@example.com";
 
+/** Annual nudge to submit paid-ad info to NPR + The Flagpole. Best-effort. */
+export async function sendNprFlagpoleReminder(to: string) {
+  if (!resend) return { skipped: true as const };
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:22px">Time to book NPR + Flagpole ads 📻</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi Jamie — a heads-up that it's the window to submit our advertising info to
+      <strong>WUGA / NPR</strong> and <strong>The Flagpole</strong> for the December ${site.event.year} ${site.name}.</p>
+    <p style="margin:0 0 14px;line-height:1.6">This one has slipped past us in years before, and the deadlines fill up — please
+      get our ad details over to both outlets this week. It has to be done by a person, so it's on your list. 🙌</p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">You're getting this because the site sends an automatic
+      reminder in the second week of November each year.</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Reminder: submit NPR + Flagpole ads for the ${site.name}`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send NPR/Flagpole reminder:", e);
+    return { error: true as const };
+  }
+}
+
 // The judges/organizer who post to social in the run-up to the event.
 // (Brent & Ryan focus on event-day logistics and are intentionally excluded.)
 export const SOCIAL_POSTING_TEAM = [

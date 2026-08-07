@@ -34,7 +34,7 @@
   --color-cream-soft: #f8f1e2;
 
   /* type */
-  --font-display: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* radii — MCM keeps corners crisp; small rounds only */

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Jost, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { site } from "@/lib/site";
 import "./globals.css";
 
-const jost = Jost({
+// Display face for headlines + buttons (see --font-display in globals.css).
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-jost",
-  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${jost.variable} ${inter.variable} h-full`}>
+    <html lang="en" className={`${plusJakarta.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

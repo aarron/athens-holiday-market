@@ -8,9 +8,24 @@ function escapeHtml(s: string) {
     .replace(/"/g, "&quot;");
 }
 
+/** A single call-to-action block: `[[Label]](https://url)` on its own line. */
+const BUTTON_RE = /^\[\[(.+?)\]\]\((https?:\/\/[^\s)]+)\)$/;
+
+/** Bulletproof (table-based) email button — renders reliably across clients. */
+function buttonHtml(label: string, url: string): string {
+  return (
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px;border-collapse:separate">` +
+    `<tr><td align="center" bgcolor="#d21c96" style="border-radius:8px">` +
+    `<a href="${url}" style="display:inline-block;padding:13px 30px;font-family:Helvetica,Arial,sans-serif;` +
+    `font-size:15px;font-weight:bold;line-height:1;color:#ffffff;text-decoration:none;border-radius:8px">` +
+    `${escapeHtml(label)}</a></td></tr></table>`
+  );
+}
+
 /**
  * Minimal, safe markdown → email HTML.
- * Supports paragraphs, line breaks, **bold**, *italic*, [links](url), and - lists.
+ * Supports paragraphs, line breaks, **bold**, *italic*, [links](url),
+ * [[button label]](url) call-to-action buttons, and - lists.
  */
 export function renderMarkdown(src: string): string {
   const inline = (s: string) =>
@@ -26,6 +41,10 @@ export function renderMarkdown(src: string): string {
     .trim()
     .split(/\n{2,}/)
     .map((block) => {
+      const trimmed = block.trim();
+      const btn = trimmed.match(BUTTON_RE);
+      if (btn) return buttonHtml(btn[1], btn[2]);
+
       const lines = block.split("\n");
       if (lines.every((l) => /^\s*[-*]\s+/.test(l))) {
         const items = lines

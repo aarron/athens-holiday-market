@@ -58,6 +58,31 @@ export async function sendArtistReviewAlert(to: string[], artistName: string) {
   }
 }
 
+/** Nudge an accepted artist who hasn't built their page yet. Best-effort. */
+export async function sendArtistPageReminder(to: string, name: string) {
+  if (!resend) return { skipped: true as const };
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:22px">Your booth's page is waiting on you 🎨</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, congratulations again on being accepted to the
+      ${site.event.year} ${site.name}! We noticed your artist page isn't live yet.</p>
+    <p style="margin:0 0 14px;line-height:1.6">It only takes a few minutes — we've pre-filled it with your
+      application photos and words. Just sign in, review, add any photos you like, and submit.
+      A great page helps shoppers find you and plan their visit.</p>
+    <p style="margin:0 0 18px"><a href="${site.url}/artist/login" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Finish your artist page →</a></p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Sign in with the email you applied with — the button sends a one-time link, no password needed.</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Don't forget to set up your ${site.name} artist page`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send artist-page reminder:", e);
+    return { error: true as const };
+  }
+}
+
 export const CONTACT_TO = "redacted@example.com";
 
 /** Forward a contact-form message to the organizer inbox. */
@@ -130,6 +155,10 @@ const DECISION_COPY: Record<Decision, { subject: string; heading: string; body: 
   },
 };
 
+function ctaButton(href: string, label: string) {
+  return `<p style="margin:0 0 18px"><a href="${href}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">${label}</a></p>`;
+}
+
 /** Send an applicant their decision. Best-effort. */
 export async function sendDecisionEmail(to: string, name: string, decision: Decision) {
   if (!resend) {
@@ -137,10 +166,22 @@ export async function sendDecisionEmail(to: string, name: string, decision: Deci
     return { skipped: true as const };
   }
   const c = DECISION_COPY[decision];
+  // Accepted artists get a clear next step: build their public page.
+  const buildPage =
+    decision === "accepted"
+      ? `<div style="margin:0 0 18px;padding:16px 18px;background:#f1f7ec;border-radius:10px">
+           <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — build your artist page.</strong>
+           We've started it for you with your application photos and words. Sign in with this email address
+           (<strong>${escapeHtml(to)}</strong>), review it, add or swap photos, and submit it for us to publish.</p>
+           ${ctaButton(`${site.url}/artist/login`, "Build your artist page →")}
+           <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">The button emails you a one-time sign-in link — no password needed.</p>
+         </div>`
+      : "";
   const inner = `
     <h1 style="margin:0 0 12px;font-size:24px">${c.heading}</h1>
     <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)},</p>
     <p style="margin:0 0 14px;line-height:1.6">${c.body}</p>
+    ${buildPage}
     <p style="margin:0;line-height:1.6">Warmly,<br/>The ${site.name} team</p>`;
   try {
     const res = await resend.emails.send({ from: EMAIL_FROM, to, subject: c.subject, html: wrap(inner) });

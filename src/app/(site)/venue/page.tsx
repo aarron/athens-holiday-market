@@ -25,7 +25,7 @@ export default function VenuePage() {
             The venue
           </p>
         </div>
-        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Big City Bread Cafe.</h1>
+        <h1 className="mt-3 text-4xl font-extrabold sm:text-6xl">Big City Bread Cafe</h1>
         <p className="mt-5 text-lg text-ink-soft">
           Our market sets up in the courtyard at Big City Bread — a family-run bakery and cafe that
           has been an Athens favorite since {host.since}. Come for the handmade gifts and make an

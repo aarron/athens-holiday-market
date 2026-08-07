@@ -4,6 +4,7 @@ import { requireArtist } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { artists } from "@/db/schema";
 import { ArtistEditor } from "@/components/artist/artist-editor";
+import { SharePanel } from "@/components/artist/share-panel";
 
 export const metadata: Metadata = { title: "Your page", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -42,6 +43,16 @@ export default async function ArtistPortalPage() {
       : "draft";
 
   return (
-    <ArtistEditor initial={initial} status={status} slug={artist.slug} published={artist.published} />
+    <div className="space-y-6">
+      {artist.published && (
+        <SharePanel
+          name={artist.name}
+          medium={artist.medium ?? ""}
+          slug={artist.slug}
+          photoUrl={artist.photos[0]?.url ?? null}
+        />
+      )}
+      <ArtistEditor initial={initial} status={status} slug={artist.slug} published={artist.published} />
+    </div>
   );
 }

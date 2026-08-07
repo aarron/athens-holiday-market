@@ -81,6 +81,8 @@ export const applications = pgTable(
     decisionResendId: text("decision_resend_id"),
     decisionEmailStatus: text("decision_email_status"), // sent|delivered|opened|bounced|failed
     decisionSentAt: timestamp("decision_sent_at", { withTimezone: true }),
+    // Set when we nudge an accepted artist who hasn't built their page (once).
+    pageReminderSentAt: timestamp("page_reminder_sent_at", { withTimezone: true }),
     // PayPal linkage (Phase 3)
     paypalInvoiceId: text("paypal_invoice_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

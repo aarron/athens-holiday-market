@@ -11,6 +11,13 @@ export const site = {
     "The Athens Holiday Market returns to the Big City Bread courtyard — two festive evenings of handmade gifts from local artists. Shop locally for the holidays.",
   url: "https://athensholidaymarket.com",
   contactEmail: "hello@athensholidaymarket.com",
+  // NOTE: confirm the Instagram handle — assumed to match the Facebook page.
+  social: {
+    instagram: "@athensholidaymarket",
+    instagramUrl: "https://www.instagram.com/athensholidaymarket",
+    facebookUrl: "https://www.facebook.com/athensholidaymarket",
+    hashtag: "#AthensHolidayMarket",
+  },
   host: {
     name: "Big City Bread Cafe",
     url: "https://www.bigcitybreadcafe.com/",

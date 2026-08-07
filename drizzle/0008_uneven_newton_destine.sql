@@ -1,0 +1,1 @@
+ALTER TABLE "applications" ADD COLUMN "page_reminder_sent_at" timestamp with time zone;

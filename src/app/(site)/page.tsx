@@ -145,7 +145,7 @@ export default function HomePage() {
             </p>
           </div>
           <h2 className="mt-3 text-center text-3xl font-extrabold sm:text-4xl">
-            Until the market opens.
+            Until the market opens
           </h2>
           <div className="mt-8">
             <CountdownClock />
@@ -161,7 +161,7 @@ export default function HomePage() {
               Save the date
             </p>
             <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
-              Two evenings under the courtyard lights.
+              Two evenings under the courtyard lights
             </h2>
             <p className="mt-5 max-w-md text-lg text-ink-soft">
               Bring your list and your friends. Sip something warm from {site.host.name}, wander
@@ -247,7 +247,7 @@ export default function HomePage() {
               A courtyard full of artists
             </p>
             <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
-              A little market with a lot of heart.
+              A little market with a lot of heart
             </h2>
             <p className="mt-5 text-lg text-ink-soft">
               For years, the Athens Holiday Market has turned the {site.host.name} courtyard into a
@@ -269,7 +269,7 @@ export default function HomePage() {
             What you&apos;ll find
           </p>
           <h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">
-            Handmade, across every aisle.
+            Handmade, across every aisle
           </h2>
           <p className="mt-5 text-lg text-ink-soft">
             A juried mix of local artists. Here&apos;s a taste of what fills the stalls —
@@ -324,7 +324,7 @@ export default function HomePage() {
               </p>
             </div>
             <h2 className="mt-4 text-4xl font-extrabold text-white sm:text-5xl">
-              Be the first to know.
+              Be the first to know
             </h2>
             <p className="mt-4 max-w-md text-lg text-paper/70">
               Dates, the artist lineup, and market news — straight to your inbox. Artists can opt in
@@ -342,7 +342,7 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-5 py-16 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-              Make something wonderful? Come sell it with us.
+              Make something wonderful? Come sell it with us
             </h2>
             <p className="mt-2 text-lg text-white/85">
               Applications for {site.event.year} open on Labor Day. Booths are juried and fill fast.

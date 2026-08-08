@@ -94,7 +94,7 @@ export default async function AdminDashboard({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold">Applications</h1>
+            <h1 className="text-3xl font-extrabold">Dashboard</h1>
             {isArchive && (
               <span className="rounded-full bg-cream px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-ink-soft">
                 Archive

@@ -45,7 +45,7 @@ const BRIGHTS: Color[] = [
   { name: "Tangerine", token: "--color-tangerine", hex: "#F07F22", use: "Warnings, “to do” state" },
   { name: "Chartreuse", token: "--color-chartreuse", hex: "#B7C72C", use: "Playful highlight" },
   { name: "Fern", token: "--color-fern", hex: "#6CAE43", use: "Light green accent" },
-  { name: "Fern deep", token: "--color-fern-deep", hex: "#3F7D22", use: "Buttons, links on white", aa: true },
+  { name: "Fern deep", token: "--color-fern-deep", hex: "#3F7D22", use: "Buttons, accents on white", aa: true },
   { name: "Fern deeper", token: "--color-fern-deeper", hex: "#2C5817", use: "Button shadow ledge" },
   { name: "Teal", token: "--color-teal", hex: "#17A898", use: "Cool accent" },
   { name: "Sky", token: "--color-sky", hex: "#45BCED", use: "Cool highlight" },
@@ -96,7 +96,7 @@ const ASSETS = [
 ];
 
 const SECTIONS = [
-  ["assets", "Brand assets"], ["color", "Color"], ["type", "Typography"], ["radii", "Radii & shadows"],
+  ["assets", "Brand assets"], ["color", "Color"], ["type", "Typography"], ["links", "Links"], ["radii", "Radii & shadows"],
   ["buttons", "Buttons"], ["forms", "Forms"], ["status", "Status & badges"], ["cards", "Cards & surfaces"],
   ["feedback", "Feedback & confirmation"], ["tabs", "Tabs"], ["icons", "Icons"], ["nav", "Navigation"],
   ["tables", "Tables"], ["layout", "Layout & grid"], ["motion", "Motion"], ["a11y", "Accessibility"],
@@ -369,6 +369,26 @@ export default function StyleGuidePage() {
                     <p className="mt-2"><CopyToken value="shadow-[var(--shadow-lift)]" /></p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* ── Links ── */}
+          <Section id="links" title="Links" kicker="Type">
+            <div className="space-y-4 rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+              <p className="text-sm text-ink-soft">
+                Inline text links use the <CopyToken value="link" /> class — berry ink, underline on
+                hover/focus so color isn&apos;t the only signal. It&apos;s opt-in, so nav items,
+                button-style links, cards, and the dark footer keep their own treatment.
+              </p>
+              <p className="text-lg leading-relaxed">
+                Come find handmade goods in the{" "}
+                <a href="#links" className="link font-semibold">Big City Bread courtyard</a> this
+                December, or <a href="#links" className="link font-semibold">apply for a booth</a>.
+              </p>
+              <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-ink-soft">
+                <span>Resting — <span className="font-semibold" style={{ color: "var(--color-berry)" }}>berry</span>, no underline</span>
+                <span>Hover / focus — underline + <span className="font-semibold" style={{ color: "var(--color-fuchsia-deep)" }}>fuchsia-deep</span></span>
               </div>
             </div>
           </Section>

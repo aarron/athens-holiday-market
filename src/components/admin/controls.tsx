@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { ExternalIcon } from "@/components/icons";
+import { VOTE_STATES } from "@/components/admin/badges";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/field";
@@ -19,18 +20,15 @@ import {
 
 type Vote = "yes" | "maybe" | "no";
 
-const VOTE_OPTS: [Vote, string, string][] = [
-  ["yes", "Yes", "var(--color-fern-deep)"],
-  ["maybe", "Maybe", "var(--color-tangerine)"],
-  ["no", "No", "var(--color-poppy)"],
-];
+const VOTE_ORDER: Vote[] = ["yes", "maybe", "no"];
 
 export function VoteButtons({ applicationId, myVote }: { applicationId: number; myVote?: Vote }) {
   const [pending, start] = useTransition();
   const [current, setCurrent] = useState<Vote | undefined>(myVote);
   return (
     <div className="flex gap-2">
-      {VOTE_OPTS.map(([v, label, color]) => {
+      {VOTE_ORDER.map((v) => {
+        const s = VOTE_STATES[v];
         const active = current === v;
         return (
           <button
@@ -40,12 +38,13 @@ export function VoteButtons({ applicationId, myVote }: { applicationId: number; 
               setCurrent(v);
               start(() => castVote(applicationId, v));
             }}
-            className={`h-11 flex-1 rounded-lg border-2 font-display font-bold transition-all disabled:opacity-60 ${
+            className={`inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border-2 font-display font-bold transition-all disabled:opacity-60 ${
               active ? "text-white" : "text-ink hover:bg-cream"
             }`}
-            style={active ? { backgroundColor: color, borderColor: color } : { borderColor: "var(--color-ink)", opacity: 0.9 }}
+            style={active ? { backgroundColor: s.hue, borderColor: s.hue } : { borderColor: "var(--color-ink)", opacity: 0.9 }}
           >
-            {label}
+            <s.Icon size={18} aria-hidden />
+            {s.label}
           </button>
         );
       })}

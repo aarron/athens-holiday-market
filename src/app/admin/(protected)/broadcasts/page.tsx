@@ -261,7 +261,7 @@ export default async function EmailHubPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold">Email &amp; messaging</h1>
+        <h1 className="text-3xl font-extrabold">Email &amp; Text</h1>
         <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
       </div>
 

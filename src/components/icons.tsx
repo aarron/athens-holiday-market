@@ -38,6 +38,11 @@ export { IconShareOs as ShareIcon } from "@central-icons-react/round-outlined-ra
 export { IconChainLink1 as LinkIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconChainLink1";
 export { IconGlobe as GlobeIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconGlobe";
 
+// Jury vote states — yes / maybe / no.
+export { IconThumbsUp as ThumbsUpIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconThumbsUp";
+export { IconThumbsDown as ThumbsDownIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconThumbsDown";
+export { IconEmojiMouthless as MaybeIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconEmojiMouthless";
+
 // Playful avatar icons — one gets assigned to each admin (see avatar-menu).
 export { IconGhost as GhostIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconGhost";
 export { IconCat as CatIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconCat";

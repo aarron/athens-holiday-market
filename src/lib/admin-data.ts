@@ -193,8 +193,10 @@ export async function getArtistForApplication(applicationId: number) {
 }
 
 /** All jury members + admins, for per-judge vote columns. */
+/** The jury roster = users with the judge role. Admins/organizers are excluded
+ *  (they run the console; they aren't scored jurors). */
 export async function getJurors() {
-  return db.query.users.findMany({ orderBy: [users.id] });
+  return db.query.users.findMany({ where: eq(users.role, "judge"), orderBy: [users.id] });
 }
 
 export async function listArtistsForAdmin() {

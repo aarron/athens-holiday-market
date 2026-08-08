@@ -11,7 +11,7 @@ import {
   tally,
 } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
-import { StatusBadge, BoothFeeBadge, VoteTally } from "@/components/admin/badges";
+import { StatusBadge, BoothFeeBadge, VoteTally, VOTE_STATES, type VoteValue } from "@/components/admin/badges";
 import {
   VoteButtons,
   CommentBox,
@@ -54,11 +54,6 @@ const HISTORY_COLOR: Record<string, string> = {
   under_review: "var(--color-sky-deep)",
 };
 
-const VOTE_LABEL: Record<string, { label: string; color: string }> = {
-  yes: { label: "Yes", color: "var(--color-fern-deep)" },
-  maybe: { label: "Maybe", color: "var(--color-tangerine)" },
-  no: { label: "No", color: "var(--color-poppy)" },
-};
 
 export default async function ApplicationDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -255,13 +250,17 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             <ul className="mt-4 space-y-2 border-t border-ink/5 pt-4">
               {jurors.map((j) => {
                 const v = voteByUser.get(j.id);
-                const style = v ? VOTE_LABEL[v] : null;
+                const s = v ? VOTE_STATES[v as VoteValue] : null;
                 return (
                   <li key={j.id} className="flex items-center justify-between text-sm">
                     <span>{j.name ?? j.email}</span>
-                    {style ? (
-                      <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundColor: `${style.color}1a`, color: style.color }}>
-                        {style.label}
+                    {s ? (
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold"
+                        style={{ backgroundColor: `${s.hue}1a`, color: s.text }}
+                      >
+                        <s.Icon size={14} aria-hidden />
+                        {s.label}
                       </span>
                     ) : (
                       <span className="text-ink-soft/40">—</span>

@@ -11,8 +11,9 @@ const FETCH_HEADERS = {
   Accept: "text/html,application/xhtml+xml",
 };
 
-// Skip obvious non-artwork assets.
-const JUNK = /(logo|icon|sprite|favicon|avatar|badge|payment|placeholder|spacer|1x1|pixel)/i;
+// Skip obvious non-artwork assets: chrome, logos, social glyphs, badges, etc.
+const JUNK =
+  /(logo|icon|favicon|sprite|avatar|badge|payment|placeholder|spacer|1x1|pixel|watermark|seal|trust|cart|instagram|facebook|twitter|tiktok|pinterest|youtube|social|emblem|wordmark)/i;
 
 function absolutize(src: string, base: string): string | null {
   try {

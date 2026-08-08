@@ -155,40 +155,6 @@ export function Composer({
           </select>
         </div>
 
-        {/* When to send */}
-        <fieldset>
-          <legend className="mb-1 block text-sm font-semibold text-ink-soft">When to send</legend>
-          <div className="flex flex-wrap gap-4">
-            {(["now", "schedule"] as const).map((m) => (
-              <label key={m} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="when"
-                  checked={mode === m}
-                  onChange={() => { setMode(m); setConfirming(false); }}
-                  className="h-4 w-4 accent-fern-deep"
-                />
-                {m === "now" ? "Send now" : "Schedule for later"}
-              </label>
-            ))}
-          </div>
-          {mode === "schedule" && (
-            <div className="mt-2">
-              <input
-                type="datetime-local"
-                aria-label="Send date and time"
-                value={scheduledFor}
-                onChange={(e) => setScheduledFor(e.target.value)}
-                className="h-11 w-full rounded-lg border-2 border-ink/15 bg-white px-3 text-sm outline-none focus:border-fern-deep sm:w-auto"
-              />
-              <p className="mt-1 text-xs text-ink-soft/70">
-                Scheduled emails go out on the chosen day at the daily 9:00am ET job — cancelable
-                until then.
-              </p>
-            </div>
-          )}
-        </fieldset>
-
         <div>
           <label className="mb-1 block text-sm font-semibold text-ink-soft" htmlFor="bc-body">
             Message
@@ -236,12 +202,23 @@ export function Composer({
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
-                disabled={pending || !subject || !body || recipientCount === 0 || !scheduleReady}
-                onClick={() => setConfirming(true)}
+                disabled={pending || !subject || !body || recipientCount === 0}
+                onClick={() => { setMode("now"); setConfirming(true); }}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
               >
-                {mode === "schedule" ? "Schedule email" : "Send email"}
-                {mode === "schedule" ? <ClockIcon size={16} aria-hidden /> : <ArrowRightIcon size={16} aria-hidden />}
+                Send now
+                <ArrowRightIcon size={16} aria-hidden />
+              </button>
+              <button
+                disabled={pending || !subject || !body || recipientCount === 0}
+                aria-expanded={mode === "schedule"}
+                onClick={() => setMode(mode === "schedule" ? "now" : "schedule")}
+                className={`inline-flex items-center gap-1.5 rounded-lg border-2 px-5 py-2.5 text-sm font-display font-bold transition-colors disabled:opacity-50 ${
+                  mode === "schedule" ? "border-fern-deep bg-fern-soft text-fern-deep" : "border-ink/15 text-ink hover:bg-cream"
+                }`}
+              >
+                <ClockIcon size={16} aria-hidden />
+                Schedule send
               </button>
               <button
                 disabled={pending || (!subject && !body)}
@@ -251,6 +228,34 @@ export function Composer({
                 {draftId ? "Update draft" : "Save draft"}
               </button>
             </div>
+
+            {mode === "schedule" && (
+              <div className="rounded-lg border-2 border-fern-deep/30 bg-fern-soft/40 p-4">
+                <label htmlFor="bc-when" className="mb-1 block text-sm font-semibold text-ink-soft">
+                  Send date and time
+                </label>
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    id="bc-when"
+                    type="datetime-local"
+                    value={scheduledFor}
+                    onChange={(e) => setScheduledFor(e.target.value)}
+                    className="h-11 rounded-lg border-2 border-ink/15 bg-white px-3 text-sm outline-none focus:border-fern-deep"
+                  />
+                  <button
+                    disabled={pending || !scheduleReady}
+                    onClick={() => setConfirming(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
+                  >
+                    Schedule
+                    <ArrowRightIcon size={16} aria-hidden />
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-ink-soft/70">
+                  Goes out on the chosen day at the daily 9:00am ET job — cancelable until then.
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="rounded-xl border-2 border-fuchsia/40 bg-fuchsia/5 p-4">

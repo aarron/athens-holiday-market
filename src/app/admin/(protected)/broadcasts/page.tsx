@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { listBroadcasts, broadcastReceiptSummaries } from "@/lib/broadcast-data";
 import { getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
-import { getTextRecipients } from "@/lib/sms-actions";
+import { getTextAudience } from "@/lib/sms-actions";
 import { getScheduledSends } from "@/lib/scheduled-sends";
 import { TextArtists } from "@/components/admin/text-artists";
 import { ScheduledSends } from "@/components/admin/scheduled-sends";
@@ -94,10 +94,10 @@ function DecisionCard({
 
 export default async function EmailHubPage() {
   await requireAdmin();
-  const [broadcasts, cycle, texts, scheduled, receipts] = await Promise.all([
+  const [broadcasts, cycle, textAudience, scheduled, receipts] = await Promise.all([
     listBroadcasts(),
     getActiveCycle(),
-    getTextRecipients(),
+    getTextAudience(),
     getScheduledSends(),
     broadcastReceiptSummaries(),
   ]);
@@ -233,26 +233,13 @@ export default async function EmailHubPage() {
 
   const textPanel = (
     <section>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 className="font-display text-xl font-extrabold">Text artists</h2>
-          <p className="mt-1 text-sm text-ink-soft">
-            Event-day heads-ups (load-in time, weather, reminders) sent straight to phones via SMS.
-          </p>
-        </div>
-        {texts.configured && (
-          <span className="text-sm text-ink-soft">
-            {texts.recipients.length} accepted {texts.recipients.length === 1 ? "artist" : "artists"}{" "}
-            opted in to texts
-            {texts.noPhone.length > 0 && ` · ${texts.noPhone.length} without a number/opt-in`}
-          </span>
-        )}
+      <div className="mb-4">
+        <h2 className="font-display text-xl font-extrabold">Text messages</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Event-day heads-ups (load-in time, weather, reminders) sent straight to phones via SMS.
+        </p>
       </div>
-      <TextArtists
-        recipientCount={texts.recipients.length}
-        noPhoneCount={texts.noPhone.length}
-        configured={texts.configured}
-      />
+      <TextArtists audience={textAudience} />
     </section>
   );
 

@@ -16,6 +16,9 @@ const serverSchema = z.object({
   BLOB_READ_WRITE_TOKEN: optionalStr,
   ADMIN_EMAILS: optionalStr,
   JUDGE_EMAILS: optionalStr,
+  // Comma-separated phone numbers for the "Judges" option when texting.
+  // Kept in env (not the DB) because this repo is public.
+  JUDGE_PHONES: optionalStr,
   EMAIL_FROM: optionalStr,
 });
 
@@ -40,3 +43,9 @@ function splitList(value?: string): string[] {
 /** Bootstrap allowlists, merged with DB-managed users at runtime. */
 export const bootstrapAdmins = splitList(env.ADMIN_EMAILS);
 export const bootstrapJudges = splitList(env.JUDGE_EMAILS);
+
+/** Raw judge phone strings from config (not lowercased — normalized at send). */
+export const judgePhoneList = (env.JUDGE_PHONES ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);

@@ -1,31 +1,53 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { sendEventText, sendTestText } from "@/lib/sms-actions";
+import { useMemo, useState, useTransition } from "react";
+import { sendEventText, type TextAudience } from "@/lib/sms-actions";
+import { normalizePhone } from "@/lib/phone";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { StatusMessage } from "@/components/ui/status-message";
 
-export function TextArtists({
-  recipientCount,
-  noPhoneCount,
-  configured,
-}: {
-  recipientCount: number;
-  noPhoneCount: number;
-  configured: boolean;
-}) {
+export function TextArtists({ audience }: { audience: TextAudience }) {
+  const { configured, year, artistCount, artistNoPhone, judgeCount } = audience;
+
   const [msg, setMsg] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [testTo, setTestTo] = useState("");
+  const [artists, setArtists] = useState(true);
+  const [judges, setJudges] = useState(false);
+  const [other, setOther] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const chars = msg.trim().length;
   const segments = Math.max(1, Math.ceil(chars / 153));
-  const canSend =
-    configured && confirm.trim().toUpperCase() === "SEND" && chars > 0 && recipientCount > 0 && !pending;
+
+  // Rough recipient count for the label (real de-dupe happens server-side).
+  const otherCount = useMemo(
+    () => other.split(/[,\n]+/).map((s) => s.trim()).filter((s) => normalizePhone(s)).length,
+    [other],
+  );
+  const recipientCount =
+    (artists ? artistCount : 0) + (judges ? judgeCount : 0) + otherCount;
+
+  const canSend = configured && chars > 0 && recipientCount > 0 && !pending;
+
+  function send() {
+    setResult(null);
+    start(async () => {
+      const r = await sendEventText({ message: msg, artists, judges, other });
+      if (r.ok) {
+        setResult(
+          `Sent to ${r.sent} ${r.sent === 1 ? "number" : "numbers"}${
+            r.failed.length ? ` · ${r.failed.length} failed` : ""
+          }`,
+        );
+        setMsg("");
+        setOther("");
+      } else {
+        setResult(r.error);
+      }
+    });
+  }
 
   if (!configured) {
     return (
@@ -40,80 +62,76 @@ export function TextArtists({
 
   return (
     <Card>
+      <label htmlFor="tx-msg" className="text-sm font-semibold">
+        Message
+      </label>
       <Textarea
+        id="tx-msg"
         value={msg}
         onChange={(e) => setMsg(e.target.value)}
         rows={3}
+        className="mt-1"
         placeholder="e.g. Athens Holiday Market load-in starts at 3pm today at Big City Bread. See you there!"
       />
       <div className="mt-1 text-right text-xs text-ink-soft">
         {chars} chars · {segments} SMS {segments === 1 ? "segment" : "segments"} each
       </div>
 
-      {/* Send — primary blast first, then the optional test, so the main flow reads straight through. */}
-      <div className="mt-4 border-t border-ink/10 pt-4">
-        <label htmlFor="tx-confirm" className="text-sm font-semibold">
-          Text all {recipientCount} accepted artists — type <span className="font-mono">SEND</span> to confirm
-        </label>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Input
-            id="tx-confirm"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="SEND"
-            aria-label="Type SEND to confirm"
-            className="!w-28 uppercase"
-          />
-          <Button
-            variant="danger"
-            size="sm"
-            disabled={!canSend}
-            loading={pending}
-            loadingLabel="Sending…"
-            onClick={() =>
-              start(async () => {
-                const r = await sendEventText(msg);
-                if (r.ok) {
-                  setResult(
-                    `Sent to ${r.sent} artist${r.sent === 1 ? "" : "s"}${
-                      r.failed.length ? ` · ${r.failed.length} failed (${r.failed.join(", ")})` : ""
-                    }`,
-                  );
-                  setMsg("");
-                  setConfirm("");
-                } else {
-                  setResult(r.error);
-                }
-              })
-            }
-          >
-            {`Text ${recipientCount} artists`}
-          </Button>
-        </div>
+      {/* Recipients */}
+      <fieldset className="mt-4">
+        <legend className="text-sm font-semibold">Recipients</legend>
+        <div className="mt-2 space-y-2">
+          <label className="flex items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={artists}
+              onChange={(e) => setArtists(e.target.checked)}
+              className="size-4 accent-fern-deep"
+            />
+            <span>
+              Accepted artists{year ? ` (${year})` : ""}
+              <span className="ml-1.5 text-ink-soft">
+                — {artistCount}
+                {artistNoPhone > 0 && ` · ${artistNoPhone} without a number/opt-in`}
+              </span>
+            </span>
+          </label>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-          <span>Or send a test to your phone:</span>
-          <Input
-            value={testTo}
-            onChange={(e) => setTestTo(e.target.value)}
-            placeholder="your mobile #"
-            aria-label="Test mobile number"
-            className="!w-40"
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={pending || !testTo.trim() || chars === 0}
-            onClick={() =>
-              start(async () => {
-                const r = await sendTestText(testTo, msg);
-                setResult(r.ok ? `Test sent to ${r.to} ✓` : r.error);
-              })
-            }
-          >
-            Send test
-          </Button>
+          <label className="flex items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={judges}
+              onChange={(e) => setJudges(e.target.checked)}
+              className="size-4 accent-fern-deep"
+            />
+            <span>
+              Judges<span className="ml-1.5 text-ink-soft">— {judgeCount}</span>
+            </span>
+          </label>
+
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
+            <span className="text-sm">Other numbers</span>
+            <Input
+              value={other}
+              onChange={(e) => setOther(e.target.value)}
+              placeholder="706-555-1234, 706-555-9876"
+              aria-label="Other phone numbers, comma-separated"
+              className="!h-10 flex-1 text-sm sm:max-w-md"
+            />
+          </div>
         </div>
+      </fieldset>
+
+      {/* Primary action, left-aligned; recipient count to its right. */}
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <Button variant="create" disabled={!canSend} loading={pending} loadingLabel="Sending…" onClick={send}>
+          Send Text
+        </Button>
+        <span className="text-sm text-ink-soft">
+          {recipientCount === 0
+            ? "No recipients selected"
+            : `${recipientCount} ${recipientCount === 1 ? "recipient" : "recipients"}`}
+        </span>
       </div>
 
       {result && <StatusMessage className="mt-3">{result}</StatusMessage>}

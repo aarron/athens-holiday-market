@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { proofreadText, type ProofreadMode } from "@/lib/proofread-actions";
+import { Button } from "@/components/ui/button";
+import { StatusMessage } from "@/components/ui/status-message";
 
 function wordCount(s: string) {
   const t = s.trim();
@@ -76,26 +78,30 @@ export function ProofreadField({
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => run("grammar")}
           disabled={disabled}
-          className="rounded-lg border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
+          loading={proofing === "grammar"}
+          loadingLabel="Checking…"
         >
-          {proofing === "grammar" ? "Checking…" : "Check grammar & spelling"}
-        </button>
-        <button
-          type="button"
+          Check grammar &amp; spelling
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => run("polish")}
           disabled={disabled}
-          className="rounded-lg border-2 border-ink/15 px-3 py-1.5 text-sm font-semibold hover:bg-cream disabled:opacity-50"
+          loading={proofing === "polish"}
+          loadingLabel="Polishing…"
         >
-          {proofing === "polish" ? "Polishing…" : "Polish for clarity"}
-        </button>
+          Polish for clarity
+        </Button>
         <span className="ml-auto text-xs text-ink-soft/70">{wordCount(value)} words</span>
       </div>
 
-      {proofErr && <p className="text-sm font-medium text-poppy-deep">{proofErr}</p>}
+      {proofErr && <StatusMessage tone="error">{proofErr}</StatusMessage>}
 
       {suggestion && (
         <div className="rounded-lg border-2 border-fern-deep/25 bg-fern-soft/40 p-4">
@@ -105,23 +111,19 @@ export function ProofreadField({
             These are just suggestions — your words stay yours. Use them or keep your own.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              type="button"
+            <Button
+              variant="confirm"
+              size="sm"
               onClick={() => {
                 onChange(suggestion);
                 setSuggestion(null);
               }}
-              className="rounded-lg bg-fern-deep px-4 py-1.5 text-sm font-bold text-white hover:opacity-90"
             >
               Use this
-            </button>
-            <button
-              type="button"
-              onClick={() => setSuggestion(null)}
-              className="rounded-lg border-2 border-ink/15 px-4 py-1.5 text-sm font-semibold hover:bg-cream"
-            >
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setSuggestion(null)}>
               Keep mine
-            </button>
+            </Button>
           </div>
         </div>
       )}

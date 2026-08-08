@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { site } from "@/lib/site";
 import { makeShareCard, type ShareCardKind as Kind } from "@/lib/share-card";
+import { Button } from "@/components/ui/button";
+import { StatusMessage } from "@/components/ui/status-message";
 
 const d0 = new Date(site.event.days[0].date + "T00:00");
 const d1 = new Date(site.event.days[1].date + "T00:00");
@@ -73,25 +75,29 @@ export function SharePanel({
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          variant="confirm"
+          size="sm"
           onClick={() => share("square")}
           disabled={busy !== null}
-          className="rounded-lg bg-fern-deep px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
+          loading={busy === "square"}
+          loadingLabel="Preparing…"
         >
-          {busy === "square" ? "Preparing…" : "Post / Feed image"}
-        </button>
-        <button
-          type="button"
+          Post / Feed image
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => share("story")}
           disabled={busy !== null}
-          className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
+          loading={busy === "story"}
+          loadingLabel="Preparing…"
         >
-          {busy === "story" ? "Preparing…" : "Story image"}
-        </button>
+          Story image
+        </Button>
       </div>
 
-      {err && <p className="mt-2 text-sm font-medium text-poppy-deep">{err}</p>}
+      {err && <StatusMessage tone="error" className="mt-2">{err}</StatusMessage>}
 
       <div className="mt-5 space-y-3">
         <p className="text-sm font-bold text-ink">Captions</p>

@@ -146,12 +146,17 @@ export async function publishArtist(applicationId: number) {
           updatedAt: new Date(),
         })
         .where(eq(artists.id, samePerson.id));
-      // Replace photos with this application's set.
-      await db.delete(artistPhotos).where(eq(artistPhotos.artistId, samePerson.id));
+      // Replace photos atomically (neon-http has no interactive tx, so batch
+      // the delete + insert) — never leave the page with zero photos mid-swap.
       if (app.photos.length) {
-        await db.insert(artistPhotos).values(
-          app.photos.slice(0, 6).map((p, idx) => ({ artistId: samePerson.id, url: p.url, position: idx })),
-        );
+        await db.batch([
+          db.delete(artistPhotos).where(eq(artistPhotos.artistId, samePerson.id)),
+          db.insert(artistPhotos).values(
+            app.photos.slice(0, 6).map((p, idx) => ({ artistId: samePerson.id, url: p.url, position: idx })),
+          ),
+        ]);
+      } else {
+        await db.delete(artistPhotos).where(eq(artistPhotos.artistId, samePerson.id));
       }
       revalidatePath(`/admin/applications/${applicationId}`);
       revalidatePath("/artists");
@@ -166,20 +171,27 @@ export async function publishArtist(applicationId: number) {
   let i = 1;
   while (await db.query.artists.findFirst({ where: eq(artists.slug, slug) })) slug = `${base}-${++i}`;
 
-  const [created] = await db
-    .insert(artists)
-    .values({
-      applicationId,
-      slug,
-      name: app.name,
-      statement: app.description,
-      bio: app.bio ?? null,
-      medium: app.medium,
-      website: cleanUrl(app.website),
-      socials: sanitizeSocials(app.socials as Record<string, string>),
-      published: true,
-    })
-    .returning({ id: artists.id });
+  const artistValues = {
+    applicationId,
+    name: app.name,
+    statement: app.description,
+    bio: app.bio ?? null,
+    medium: app.medium,
+    website: cleanUrl(app.website),
+    socials: sanitizeSocials(app.socials as Record<string, string>),
+    published: true,
+  };
+  let created;
+  try {
+    [created] = await db.insert(artists).values({ ...artistValues, slug }).returning({ id: artists.id });
+  } catch {
+    // Lost the slug race to a concurrent publish (check-then-insert). Rely on the
+    // unique constraint and retry once with a guaranteed-unique slug.
+    [created] = await db
+      .insert(artists)
+      .values({ ...artistValues, slug: `${base}-${applicationId}` })
+      .returning({ id: artists.id });
+  }
 
   if (app.photos.length) {
     await db.insert(artistPhotos).values(
@@ -291,11 +303,16 @@ export async function approveArtistSubmission(artistId: number) {
     .where(eq(artists.id, artistId));
 
   if (pc.photoUrls) {
-    await db.delete(artistPhotos).where(eq(artistPhotos.artistId, artistId));
+    // Atomic replace (see publishArtist) so an approved page never flashes empty.
     if (pc.photoUrls.length) {
-      await db.insert(artistPhotos).values(
-        pc.photoUrls.slice(0, 6).map((url, i) => ({ artistId, url, position: i })),
-      );
+      await db.batch([
+        db.delete(artistPhotos).where(eq(artistPhotos.artistId, artistId)),
+        db.insert(artistPhotos).values(
+          pc.photoUrls.slice(0, 6).map((url, i) => ({ artistId, url, position: i })),
+        ),
+      ]);
+    } else {
+      await db.delete(artistPhotos).where(eq(artistPhotos.artistId, artistId));
     }
   }
   revalidatePath("/admin/artists");

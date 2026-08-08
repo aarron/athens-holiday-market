@@ -75,9 +75,17 @@ export async function POST(req: Request) {
     })
     .returning({ id: applications.id });
 
-  await db.insert(applicationPhotos).values(
-    d.photoUrls.map((url, i) => ({ applicationId: app.id, url, position: i })),
-  );
+  // Photos need the app id, so they can't batch with the insert above. If they
+  // fail, roll back the application so we never leave a photoless orphan.
+  try {
+    await db.insert(applicationPhotos).values(
+      d.photoUrls.map((url, i) => ({ applicationId: app.id, url, position: i })),
+    );
+  } catch (e) {
+    await db.delete(applications).where(eq(applications.id, app.id));
+    console.error("[apply] photo insert failed, rolled back application:", e);
+    return NextResponse.json({ error: "Something went wrong saving your photos. Please try again." }, { status: 500 });
+  }
 
   // Best-effort confirmation email — never block submission on it.
   await sendApplicationReceived(d.email, d.name);

@@ -78,8 +78,13 @@ export async function deliverBroadcast(bc: {
   }
 
   for (const c of chunk(recRows, 500)) await db.insert(broadcastRecipients).values(c);
-  await db.update(broadcasts).set({ status: "sent", sentAt: new Date() }).where(eq(broadcasts.id, bc.id));
-  return { ok: true as const, count: recipients.length };
+  // Reconcile the stored count to the rows actually written, so recipientCount
+  // always matches the receipt rows even if a batch failed mid-send.
+  await db
+    .update(broadcasts)
+    .set({ status: "sent", sentAt: new Date(), recipientCount: recRows.length })
+    .where(eq(broadcasts.id, bc.id));
+  return { ok: true as const, count: recRows.length };
 }
 
 /** Cron: deliver any scheduled broadcast whose time has arrived. */

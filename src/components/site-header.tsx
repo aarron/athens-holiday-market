@@ -46,8 +46,12 @@ export function SiteHeader() {
 
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
           {site.nav.map((item) => {
+            // Match on segment boundaries so "/artists/…" doesn't also light up
+            // "/artist" (login) — a plain startsWith would flag both.
             const active =
-              item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}

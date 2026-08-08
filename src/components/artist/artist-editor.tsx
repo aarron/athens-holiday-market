@@ -275,7 +275,7 @@ function StatusBanner({ status, slug, published }: { status: string; slug: strin
     <div className={`mt-4 flex flex-wrap items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold ${s.cls}`}>
       <span>{s.text}</span>
       {published && (
-        <a href={`/artists/${slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline underline-offset-4">
+        <a href={`/artists/${slug}`} target="_blank" rel="noreferrer" className="link inline-flex items-center gap-1">
           View your live page
           <ExternalIcon size={14} aria-hidden />
         </a>

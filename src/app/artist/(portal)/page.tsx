@@ -137,7 +137,7 @@ export default async function ArtistPortalPage() {
               href={info.menuUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-teal-deep underline underline-offset-4"
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold link"
             >
               View the event menu
               <ExternalIcon size={14} aria-hidden />

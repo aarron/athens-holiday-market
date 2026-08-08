@@ -375,20 +375,41 @@ export default function StyleGuidePage() {
 
           {/* ── Links ── */}
           <Section id="links" title="Links" kicker="Type">
-            <div className="space-y-4 rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <p className="text-sm text-ink-soft">
-                Inline text links use the <CopyToken value="link" /> class — berry ink, underline on
-                hover/focus so color isn&apos;t the only signal. It&apos;s opt-in, so nav items,
-                button-style links, cards, and the dark footer keep their own treatment.
-              </p>
-              <p className="text-lg leading-relaxed">
-                Come find handmade goods in the{" "}
-                <a href="#links" className="link font-semibold">Big City Bread courtyard</a> this
-                December, or <a href="#links" className="link font-semibold">apply for a booth</a>.
-              </p>
-              <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-ink-soft">
-                <span>Resting — <span className="font-semibold" style={{ color: "var(--color-berry)" }}>berry</span>, no underline</span>
-                <span>Hover / focus — underline + <span className="font-semibold" style={{ color: "var(--color-fuchsia-deep)" }}>fuchsia-deep</span></span>
+            <p className="mb-4 max-w-2xl text-sm text-ink-soft">
+              One standard for inline text links, in two surface variants (nav items,
+              button-style links, and cards keep their own treatment). Both variants are
+              WCAG-AA verified; berry has too little contrast on near-black, so dark surfaces
+              use the inverted variant instead.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Light surface */}
+              <div className="space-y-3 rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+                <p className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                  <CopyToken value="link" /> · light surfaces
+                </p>
+                <p className="leading-relaxed">
+                  Come find handmade goods in the{" "}
+                  <a href="#links" className="link font-semibold">Big City Bread courtyard</a> this
+                  December, or <a href="#links" className="link font-semibold">apply for a booth</a>.
+                </p>
+                <p className="text-xs text-ink-soft">
+                  Berry, underline on hover/focus. 7.8:1 on white, 6.5:1 on cream.
+                </p>
+              </div>
+              {/* Dark surface */}
+              <div className="space-y-3 rounded-xl bg-ink p-6 text-paper shadow-[var(--shadow-card)]">
+                <p className="font-display text-sm font-bold uppercase tracking-wide text-paper/60">
+                  <span className="rounded bg-paper/10 px-1.5 py-0.5 font-mono">link-invert</span> · dark surfaces
+                </p>
+                <p className="leading-relaxed text-paper/90">
+                  Hosted at{" "}
+                  <a href="#links" className="link-invert font-semibold">Big City Bread</a>, built by{" "}
+                  <a href="#links" className="link-invert font-semibold">Aarron Walter</a>.
+                </p>
+                <p className="text-xs text-paper/60">
+                  Inherits the light text with a persistent underline; hover brightens to fern.
+                  16.5:1 resting, 6.7:1 hover.
+                </p>
               </div>
             </div>
           </Section>
@@ -798,7 +819,7 @@ export default function StyleGuidePage() {
         <footer className="mt-16 border-t border-ink/10 pt-8 text-sm text-ink-soft">
           <p>
             Athens Holiday Market design system · built by{" "}
-            <a href="https://aarronwalter.com" target="_blank" rel="noreferrer" className="font-semibold text-fern-deep underline underline-offset-4">
+            <a href="https://aarronwalter.com" target="_blank" rel="noreferrer" className="font-semibold link">
               Aarron Walter
             </a>. Tokens live in <code className="font-mono text-xs">src/app/globals.css</code>.
           </p>

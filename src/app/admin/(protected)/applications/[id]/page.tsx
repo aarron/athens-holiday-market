@@ -170,7 +170,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             </h2>
             <dl className="mt-4 divide-y divide-ink/5">
               <DetailRow label="Email">
-                <a href={`mailto:${app.email}`} className="break-all text-fern-deep underline underline-offset-4">
+                <a href={`mailto:${app.email}`} className="break-all link">
                   {app.email}
                 </a>
               </DetailRow>
@@ -181,7 +181,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                     href={app.website.startsWith("http") ? app.website : `https://${app.website}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="break-all text-fern-deep underline underline-offset-4"
+                    className="break-all link"
                   >
                     {app.website}
                   </a>
@@ -297,7 +297,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
               {comms.length === 0 ? (
                 <p className="mt-2 text-sm text-ink-soft">
                   No emails sent yet. Decisions and broadcasts go out from{" "}
-                  <Link href="/admin/broadcasts" className="font-semibold text-fern-deep underline underline-offset-4">
+                  <Link href="/admin/broadcasts" className="font-semibold link">
                     Email
                   </Link>
                   .

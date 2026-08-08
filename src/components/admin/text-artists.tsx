@@ -14,6 +14,7 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
   const [msg, setMsg] = useState("");
   const [artists, setArtists] = useState(true);
   const [judges, setJudges] = useState(false);
+  const [otherEnabled, setOtherEnabled] = useState(false);
   const [other, setOther] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -32,7 +33,7 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
     [other],
   );
   const recipientCount =
-    (artists ? artistCount : 0) + (judges ? judgeCount : 0) + otherCount;
+    (artists ? artistCount : 0) + (judges ? judgeCount : 0) + (otherEnabled ? otherCount : 0);
 
   const canSend = configured && chars > 0 && recipientCount > 0 && !pending;
 
@@ -45,7 +46,13 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
 
   function send() {
     start(async () => {
-      const r = await sendEventText({ message: msg, artists, judges, other, clientToken: token });
+      const r = await sendEventText({
+        message: msg,
+        artists,
+        judges,
+        other: otherEnabled ? other : "",
+        clientToken: token,
+      });
       if (r.ok) {
         setResult(
           "duplicate" in r && r.duplicate
@@ -124,14 +131,28 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
             </span>
           </label>
 
-          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
-            <span className="text-sm">Other numbers</span>
+          <label className="flex items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={otherEnabled}
+              onChange={(e) => setOtherEnabled(e.target.checked)}
+              className="size-4 accent-fern-deep"
+            />
+            <span>Other numbers</span>
+          </label>
+
+          {/* Input sits below the checkbox, aligned under its label. Typing a
+              number auto-enables the row so the count stays in sync. */}
+          <div className="pl-[26px]">
             <Input
               value={other}
-              onChange={(e) => setOther(e.target.value)}
+              onChange={(e) => {
+                setOther(e.target.value);
+                if (e.target.value.trim() && !otherEnabled) setOtherEnabled(true);
+              }}
               placeholder="706-555-1234, 706-555-9876"
               aria-label="Other phone numbers, comma-separated"
-              className="!h-10 flex-1 text-sm sm:max-w-md"
+              className="!h-11 w-full text-sm"
             />
           </div>
         </div>

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listArtistsForAdmin, getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
+import { listArtistsForAdmin } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
 import { SafeImg } from "@/components/admin/safe-img";
-import { EmailLogisticsButton } from "@/components/admin/email-logistics-button";
 import { AddArtistForm } from "@/components/admin/add-artist-form";
 
 export const metadata: Metadata = { title: "Artists", robots: { index: false } };
@@ -18,8 +17,6 @@ function stateOf(a: { submittedAt: Date | null; published: boolean }) {
 export default async function AdminArtists() {
   const artists = await listArtistsForAdmin();
   const pending = artists.filter((a) => a.submittedAt);
-  const cycle = await getActiveCycle();
-  const acceptedCount = cycle ? (await getDecisionGroups(cycle.id)).accepted.total : 0;
   const me = await getSessionUser();
   const isAdmin = me?.role === "admin";
 
@@ -32,10 +29,6 @@ export default async function AdminArtists() {
             ? `${pending.length} submission${pending.length === 1 ? "" : "s"} awaiting review.`
             : "No submissions awaiting review."}
         </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <EmailLogisticsButton count={acceptedCount} />
       </div>
 
       {isAdmin && <AddArtistForm />}

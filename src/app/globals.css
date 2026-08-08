@@ -116,6 +116,20 @@
     text-decoration-line: underline;
   }
 
+  /* Dark-surface variant (e.g. the ink footer): berry has too little contrast
+     on near-black, so links inherit the light text color with a persistent
+     underline for affordance, and brighten to fern on hover. Both states clear
+     WCAG AA on the ink footer (paper 16.5:1, fern 6.7:1). */
+  .link-invert {
+    color: inherit;
+    text-decoration-line: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+  }
+  .link-invert:hover {
+    color: var(--color-fern);
+  }
+
   /* Tailwind v4 no longer defaults buttons to a pointer cursor; restore it
      for all enabled buttons and button-role controls. */
   button:not(:disabled),

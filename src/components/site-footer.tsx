@@ -18,7 +18,7 @@ export function SiteFooter() {
           <p className="mt-4 max-w-sm text-paper/70">{site.tagline}</p>
           <p className="mt-4 text-sm text-paper/50">
             Hosted at{" "}
-            <a href={site.host.url} className="underline underline-offset-4 hover:text-fern">
+            <a href={site.host.url} className="link-invert">
               {site.host.name}
             </a>
             , Athens, Georgia.
@@ -74,7 +74,7 @@ export function SiteFooter() {
               </div>
               <a
                 href={mapsHref()}
-                className="mt-2 inline-flex items-center gap-1 text-fern underline underline-offset-4"
+                className="mt-2 inline-flex items-center gap-1 link-invert"
               >
                 Get directions
                 <ArrowRightIcon size={15} aria-hidden />
@@ -90,7 +90,7 @@ export function SiteFooter() {
             © {site.event.year} {site.name}. Shop locally for the holidays.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <a href={`mailto:${site.contactEmail}`} className="inline-flex items-center gap-1.5 hover:text-fern">
+            <a href={`mailto:${site.contactEmail}`} className="link-invert inline-flex items-center gap-1.5">
               <MailIcon size={16} aria-hidden />
               {site.contactEmail}
             </a>
@@ -98,14 +98,14 @@ export function SiteFooter() {
               href={`${site.repoUrl}/issues/new`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-fern"
+              className="link-invert inline-flex items-center gap-1.5"
             >
               <BugFaceIcon size={16} aria-hidden />
               Report a bug
             </a>
             <span>
               Built by{" "}
-              <a href="http://aarronwalter.com" target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-fern">
+              <a href="http://aarronwalter.com" target="_blank" rel="noreferrer" className="link-invert">
                 Aarron Walter
               </a>
             </span>

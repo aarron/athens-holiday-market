@@ -11,6 +11,7 @@ import { SectionTabs } from "@/components/admin/section-tabs";
 import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
 import { DeleteDraftButton } from "@/components/admin/delete-draft-button";
 import { AddRecipientButton } from "@/components/admin/add-recipient-button";
+import { EmailLogisticsButton } from "@/components/admin/email-logistics-button";
 import { ButtonLink } from "@/components/ui/button";
 import { ClockIcon, CheckCircleIcon, DraftIcon, SendingIcon } from "@/components/icons";
 import type { ComponentType } from "react";
@@ -135,7 +136,7 @@ export default async function EmailHubPage() {
           <span className="font-semibold text-fern-deep">
             ✓ All decisions sent — {groups.accepted.total} accepted, {groups.waitlist.total} waitlisted notified.
           </span>
-          <Link href={`/admin/decisions/accepted${yq}`} className="font-semibold text-fern-deep underline underline-offset-4">
+          <Link href={`/admin/decisions/accepted${yq}`} className="font-semibold link">
             Review
           </Link>
         </section>
@@ -237,6 +238,9 @@ export default async function EmailHubPage() {
     <div className="space-y-8">
       {decisionsPanel}
       {emailTable}
+      {groups && groups.accepted.total > 0 && (
+        <EmailLogisticsButton count={groups.accepted.total} />
+      )}
     </div>
   );
 

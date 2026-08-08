@@ -38,7 +38,7 @@ export function AddRecipientButton({ broadcastId }: { broadcastId: number }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="whitespace-nowrap text-sm font-semibold text-fern-deep underline underline-offset-4 hover:text-fern"
+        className="link whitespace-nowrap text-sm font-semibold"
       >
         Add recipient
       </button>

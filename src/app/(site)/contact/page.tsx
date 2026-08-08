@@ -60,7 +60,7 @@ export default function ContactPage() {
                 href={site.host.url}
                 target="_blank"
                 rel="noreferrer"
-                className="font-semibold text-fern-deep underline underline-offset-4"
+                className="font-semibold link"
               >
                 {site.host.name}
               </a>

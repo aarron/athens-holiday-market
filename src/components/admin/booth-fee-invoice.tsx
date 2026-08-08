@@ -67,7 +67,7 @@ export function BoothFeeInvoice({
             {invoiceUrl && (
               <>
                 {" · "}
-                <a href={invoiceUrl} target="_blank" rel="noreferrer" className="font-semibold text-fuchsia-deep underline underline-offset-4">
+                <a href={invoiceUrl} target="_blank" rel="noreferrer" className="font-semibold link">
                   View invoice
                 </a>
               </>

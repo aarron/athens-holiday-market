@@ -10,6 +10,7 @@ import { ScheduledSends } from "@/components/admin/scheduled-sends";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
 import { DeleteDraftButton } from "@/components/admin/delete-draft-button";
+import { ButtonLink } from "@/components/ui/button";
 import { ClockIcon, CheckCircleIcon, DraftIcon, SendingIcon } from "@/components/icons";
 import type { ComponentType } from "react";
 
@@ -126,12 +127,9 @@ export default async function EmailHubPage() {
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <h2 className="font-display text-xl font-extrabold">Email</h2>
-        <Link
-          href="/admin/broadcasts/new"
-          className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white transition-opacity hover:opacity-90"
-        >
+        <ButtonLink href="/admin/broadcasts/new" variant="create" size="sm">
           + New email
-        </Link>
+        </ButtonLink>
       </div>
 
       {broadcasts.length === 0 ? (

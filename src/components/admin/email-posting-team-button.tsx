@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { emailPostingTeam } from "@/lib/admin-actions";
+import { Button } from "@/components/ui/button";
+import { StatusMessage } from "@/components/ui/status-message";
 
 export function EmailPostingTeamButton() {
   const [pending, start] = useTransition();
@@ -11,19 +13,17 @@ export function EmailPostingTeamButton() {
   return (
     <div className="flex flex-wrap items-center gap-3">
       {!armed ? (
-        <button
-          type="button"
-          onClick={() => { setArmed(true); setMsg(""); }}
-          className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream"
-        >
+        <Button variant="secondary" size="sm" onClick={() => { setArmed(true); setMsg(""); }}>
           Email the posting team
-        </button>
+        </Button>
       ) : (
         <span className="inline-flex flex-wrap items-center gap-2 rounded-lg border-2 border-ink/15 bg-cream-soft px-3 py-2 text-sm text-ink-soft">
           Send the social kit to the posting team?
-          <button
-            type="button"
-            disabled={pending}
+          <Button
+            variant="confirm"
+            size="sm"
+            loading={pending}
+            loadingLabel="Sending…"
             onClick={() =>
               start(async () => {
                 const r = await emailPostingTeam();
@@ -35,16 +35,15 @@ export function EmailPostingTeamButton() {
                 );
               })
             }
-            className="rounded-lg bg-fern-deep px-4 py-1.5 text-sm font-display font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            {pending ? "Sending…" : "Confirm"}
-          </button>
+            Confirm
+          </Button>
           <button type="button" disabled={pending} onClick={() => setArmed(false)} className="font-semibold text-ink-soft underline underline-offset-2 disabled:opacity-60">
             Cancel
           </button>
         </span>
       )}
-      {msg && <span role="status" className="text-sm font-medium text-ink-soft">{msg}</span>}
+      {msg && <StatusMessage>{msg}</StatusMessage>}
     </div>
   );
 }

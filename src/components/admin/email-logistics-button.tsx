@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { emailAcceptedArtistsLogistics } from "@/lib/admin-actions";
+import { Button } from "@/components/ui/button";
+import { StatusMessage } from "@/components/ui/status-message";
 
 export function EmailLogisticsButton({ count = 0 }: { count?: number }) {
   const [pending, start] = useTransition();
@@ -15,9 +17,11 @@ export function EmailLogisticsButton({ count = 0 }: { count?: number }) {
         {count > 0 ? ` (${count})` : ""}.
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          disabled={pending}
+        <Button
+          variant={armed ? "danger" : "confirm"}
+          size="sm"
+          loading={pending}
+          loadingLabel="Sending…"
           onClick={() => {
             if (!armed) {
               setArmed(true);
@@ -34,26 +38,17 @@ export function EmailLogisticsButton({ count = 0 }: { count?: number }) {
               );
             });
           }}
-          className={`rounded-lg px-4 py-2 text-sm font-bold text-white disabled:opacity-60 ${
-            armed ? "bg-poppy hover:opacity-90" : "bg-fern-deep hover:opacity-90"
-          }`}
         >
-          {pending
-            ? "Sending…"
-            : armed
-              ? `Confirm — email ${count > 0 ? count : "all"} accepted artist${count === 1 ? "" : "s"}`
-              : "Email logistics to artists"}
-        </button>
+          {armed
+            ? `Confirm — email ${count > 0 ? count : "all"} accepted artist${count === 1 ? "" : "s"}`
+            : "Email logistics to artists"}
+        </Button>
         {armed && !pending && (
-          <button
-            type="button"
-            onClick={() => setArmed(false)}
-            className="text-sm font-semibold text-ink-soft hover:text-ink"
-          >
+          <button type="button" onClick={() => setArmed(false)} className="text-sm font-semibold text-ink-soft hover:text-ink">
             Cancel
           </button>
         )}
-        {msg && <span className="text-sm font-medium text-ink-soft">{msg}</span>}
+        {msg && <StatusMessage>{msg}</StatusMessage>}
       </div>
     </div>
   );

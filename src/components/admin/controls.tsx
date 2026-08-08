@@ -2,6 +2,10 @@
 
 import { useRef, useState, useTransition } from "react";
 import { ExternalIcon } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/field";
+import { StatusMessage } from "@/components/ui/status-message";
 import {
   castVote,
   addComment,
@@ -54,14 +58,13 @@ export function CommentBox({ applicationId }: { applicationId: number }) {
   const [pending, start] = useTransition();
   return (
     <div className="mt-4">
-      <textarea
-        ref={ref}
-        rows={3}
-        placeholder="Add a note for the jury…"
-        className="w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-fern-deep"
-      />
-      <button
-        disabled={pending}
+      <Textarea ref={ref} rows={3} placeholder="Add a note for the jury…" />
+      <Button
+        variant="ink"
+        size="sm"
+        className="mt-2"
+        loading={pending}
+        loadingLabel="Posting…"
         onClick={() => {
           const body = ref.current?.value ?? "";
           if (!body.trim()) return;
@@ -70,10 +73,9 @@ export function CommentBox({ applicationId }: { applicationId: number }) {
             if (ref.current) ref.current.value = "";
           });
         }}
-        className="mt-2 rounded-lg bg-ink px-4 py-2 text-sm font-display font-semibold text-paper transition-colors hover:bg-ink-soft disabled:opacity-60"
       >
-        {pending ? "Posting…" : "Post note"}
-      </button>
+        Post note
+      </Button>
     </div>
   );
 }
@@ -160,12 +162,9 @@ export function PublishControls({
   const [armed, setArmed] = useState(false);
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-      <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
-        Public profile
-      </h2>
+    <Card title="Public profile">
       {published && slug ? (
-        <div className="mt-3 space-y-2">
+        <div className="space-y-2">
           <a
             href={`/artists/${slug}`}
             target="_blank"
@@ -175,7 +174,10 @@ export function PublishControls({
             View public page
             <ExternalIcon size={14} aria-hidden />
           </a>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full"
             disabled={pending}
             onClick={() =>
               start(async () => {
@@ -184,27 +186,26 @@ export function PublishControls({
                 setMsg("Hidden from the directory.");
               })
             }
-            className="w-full rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
           >
             Unpublish
-          </button>
+          </Button>
         </div>
       ) : !armed ? (
-        <button
-          onClick={() => setArmed(true)}
-          className="mt-3 w-full rounded-lg bg-fern-deep px-4 py-2.5 text-sm font-display font-bold text-white transition-opacity hover:opacity-90"
-        >
+        <Button variant="confirm" size="sm" className="w-full" onClick={() => setArmed(true)}>
           Publish to directory
-        </button>
+        </Button>
       ) : (
-        <div className="mt-3 rounded-lg border-2 border-fern-deep/30 bg-fern-soft/50 p-3">
+        <div className="rounded-lg border-2 border-fern-deep/30 bg-fern-soft/50 p-3">
           <p className="text-sm text-ink-soft">
             This makes the page public <strong className="text-ink">and emails the artist</strong>{" "}
             that it&apos;s live.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              disabled={pending}
+            <Button
+              variant="confirm"
+              size="sm"
+              loading={pending}
+              loadingLabel="Publishing…"
               onClick={() =>
                 start(async () => {
                   const r = await publishArtist(applicationId);
@@ -218,22 +219,17 @@ export function PublishControls({
                   }
                 })
               }
-              className="rounded-lg bg-fern-deep px-4 py-2 text-sm font-display font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             >
-              {pending ? "Publishing…" : "Publish & notify"}
-            </button>
-            <button
-              disabled={pending}
-              onClick={() => setArmed(false)}
-              className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
-            >
+              Publish &amp; notify
+            </Button>
+            <Button variant="secondary" size="sm" disabled={pending} onClick={() => setArmed(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
-      {msg && <p role="status" className="mt-2 text-sm text-ink-soft">{msg}</p>}
-    </div>
+      {msg && <StatusMessage className="mt-2">{msg}</StatusMessage>}
+    </Card>
   );
 }
 
@@ -242,8 +238,12 @@ export function SendArtistLinkButton({ email }: { email: string }) {
   const [msg, setMsg] = useState("");
   return (
     <div>
-      <button
-        disabled={pending}
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        loading={pending}
+        loadingLabel="Sending…"
         onClick={() =>
           start(async () => {
             const r = await sendArtistLink(email);
@@ -256,11 +256,10 @@ export function SendArtistLinkButton({ email }: { email: string }) {
             );
           })
         }
-        className="w-full rounded-lg border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
       >
-        {pending ? "Sending…" : "Email artist their edit link"}
-      </button>
-      {msg && <p className="mt-2 text-sm text-ink-soft">{msg}</p>}
+        Email artist their edit link
+      </Button>
+      {msg && <StatusMessage className="mt-2">{msg}</StatusMessage>}
     </div>
   );
 }
@@ -291,20 +290,18 @@ export function DeleteApplicationButton({ applicationId, name }: { applicationId
         page (if any). This can&apos;t be undone.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          disabled={pending}
+        <Button
+          variant="danger"
+          size="sm"
+          loading={pending}
+          loadingLabel="Deleting…"
           onClick={() => start(() => deleteApplication(applicationId))}
-          className="rounded-lg bg-poppy px-5 py-2.5 text-sm font-display font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {pending ? "Deleting…" : "Yes, delete permanently"}
-        </button>
-        <button
-          disabled={pending}
-          onClick={() => setArmed(false)}
-          className="rounded-lg border-2 border-ink/15 px-5 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-60"
-        >
+          Yes, delete permanently
+        </Button>
+        <Button variant="secondary" size="sm" disabled={pending} onClick={() => setArmed(false)}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/admin-auth";
 import { Flower } from "@/components/brand";
 import { MagicLinkForm } from "@/components/magic-link-form";
-import { site } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Artist login", robots: { index: false } };
 export const dynamic = "force-dynamic";

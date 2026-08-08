@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { site } from "@/lib/site";
 import { applicationWindow, applicationGuidelines } from "@/lib/applications";
 import { ApplicationForm } from "@/components/application-form";
@@ -127,9 +128,9 @@ export default async function ApplyPage({
           <p className="text-lg text-ink-soft">
             Applications for the {site.event.year} market are now closed. Thank you to everyone who
             applied! Subscribe on the{" "}
-            <a href="/" className="link font-semibold">
+            <Link href="/" className="link font-semibold">
               home page
-            </a>{" "}
+            </Link>{" "}
             to hear about next year.
           </p>
         </div>

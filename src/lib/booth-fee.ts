@@ -59,7 +59,8 @@ export async function invoiceAcceptedWithoutInvoice(cycleId: number) {
   for (const a of rows) {
     if (a.paypalInvoiceId || invalidEmail(a.email)) { skipped++; continue; }
     const r = await invoiceApplication(a, cycleYear);
-    r.ok && !r.already ? invoiced++ : skipped++;
+    if (r.ok && !r.already) invoiced++;
+    else skipped++;
   }
   return { invoiced, skipped, configured: true };
 }

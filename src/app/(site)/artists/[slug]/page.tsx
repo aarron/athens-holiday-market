@@ -60,16 +60,6 @@ export async function generateMetadata({
   };
 }
 
-const SOCIAL_LABELS: Record<string, string> = {
-  instagram: "Instagram",
-  facebook: "Facebook",
-  tiktok: "TikTok",
-  etsy: "Etsy",
-  youtube: "YouTube",
-  x: "X",
-  twitter: "X",
-};
-
 export default async function ArtistPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const artist = await getArtistBySlug(slug);

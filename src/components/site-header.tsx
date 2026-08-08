@@ -44,7 +44,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
           {site.nav.map((item) => {
             const active =
               item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -92,7 +92,7 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <nav id="mobile-nav" className="border-t-2 border-ink/10 bg-paper px-5 pb-5 pt-2 md:hidden">
+        <nav id="mobile-nav" aria-label="Mobile" className="border-t-2 border-ink/10 bg-paper px-5 pb-5 pt-2 md:hidden">
           {site.nav.map((item) => (
             <Link
               key={item.href}

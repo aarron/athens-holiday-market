@@ -26,7 +26,6 @@ export function SharePanel({
   const [copied, setCopied] = useState<number | null>(null);
 
   const pageUrl = `${site.url}/artists/${slug}`;
-  const first = name.split(" ")[0];
   const captions = [
     `I'll be at the ${site.name}! Come find my ${medium.toLowerCase() || "work"} in the Big City Bread courtyard, ${DATE_LABEL}. See my booth → ${pageUrl} ${site.social.hashtag}`,
     `Counting down to the ${site.name} 🎁 Handmade goods and a courtyard full of local makers, ${DATE_LABEL} at Big City Bread. Come say hi at my booth → ${pageUrl} ${site.social.hashtag} ${site.social.instagram}`,

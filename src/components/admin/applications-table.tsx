@@ -102,8 +102,10 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
 
   const hasFilters = q || statusFilter !== "all" || paymentFilter !== "all";
 
-  const Th = ({ col, label }: { col: SortCol; label: string }) => (
+  // A plain render helper (not a component) so it doesn't reset state per render.
+  const th = (col: SortCol, label: string) => (
     <th
+      key={col}
       className="px-5 py-4 font-semibold"
       aria-sort={sortCol === col ? (dir === "asc" ? "ascending" : "descending") : "none"}
     >
@@ -180,11 +182,11 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-ink/10 text-xs text-ink-soft">
-              <Th col="name" label="Artist" />
-              <Th col="medium" label="Medium" />
-              <Th col="yes" label="Votes" />
-              <Th col="status" label="Status" />
-              <Th col="fee" label="Booth fee" />
+              {th("name", "Artist")}
+              {th("medium", "Medium")}
+              {th("yes", "Votes")}
+              {th("status", "Status")}
+              {th("fee", "Booth fee")}
             </tr>
           </thead>
           <tbody>

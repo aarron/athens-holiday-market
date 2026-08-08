@@ -80,7 +80,8 @@ export function Snow() {
       ctx!.clearRect(0, 0, width, height);
     }
     function onMotionChange() {
-      motionEnabled() ? start() : stop();
+      if (motionEnabled()) start();
+      else stop();
     }
 
     resize();

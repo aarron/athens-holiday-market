@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import { signOutAction } from "@/lib/auth-actions";
 import {
   GhostIcon,
@@ -61,7 +61,6 @@ export function AvatarMenu({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const Icon = iconFor(email);
 
   useEffect(() => {
     if (!open) return;
@@ -93,7 +92,7 @@ export function AvatarMenu({
         className="flex h-9 w-9 items-center justify-center rounded-full text-white ring-1 ring-black/10 transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fern-deep"
         style={{ backgroundColor: colorFor(email) }}
       >
-        <Icon size={20} aria-hidden />
+        {createElement(iconFor(email), { size: 20, "aria-hidden": true })}
       </button>
 
       {open && (

@@ -96,15 +96,17 @@ export function MarkdownToolbar({
     });
   }
 
-  const actions: { label: string; title: string; cls?: string; run: () => void }[] = [
-    { label: "H1", title: "Heading", run: () => apply((v, s) => heading(v, s, 1)) },
-    { label: "H2", title: "Subheading", run: () => apply((v, s) => heading(v, s, 2)) },
-    { label: "B", title: "Bold", cls: "font-extrabold", run: () => apply((v, s, e) => wrap(v, s, e, "**", "**", "bold text")) },
-    { label: "I", title: "Italic", cls: "italic", run: () => apply((v, s, e) => wrap(v, s, e, "*", "*", "italic text")) },
-    { label: "Link", title: "Insert link", run: () => apply((v, s, e) => link(v, s, e, false, "link text")) },
-    { label: "Button", title: "Insert call-to-action button", run: () => apply((v, s, e) => link(v, s, e, true, "Button label")) },
-    { label: "• List", title: "Bulleted list", run: () => apply((v, s, e) => bulletList(v, s, e)) },
-    { label: "―", title: "Divider", run: () => apply((v, s, e) => rule(v, s, e)) },
+  // Pure transforms only (no ref access here) — the textarea ref is read solely
+  // inside apply(), which runs from onClick, never during render.
+  const actions: { label: string; title: string; cls?: string; fn: (v: string, s: number, e: number) => Edit }[] = [
+    { label: "H1", title: "Heading", fn: (v, s) => heading(v, s, 1) },
+    { label: "H2", title: "Subheading", fn: (v, s) => heading(v, s, 2) },
+    { label: "B", title: "Bold", cls: "font-extrabold", fn: (v, s, e) => wrap(v, s, e, "**", "**", "bold text") },
+    { label: "I", title: "Italic", cls: "italic", fn: (v, s, e) => wrap(v, s, e, "*", "*", "italic text") },
+    { label: "Link", title: "Insert link", fn: (v, s, e) => link(v, s, e, false, "link text") },
+    { label: "Button", title: "Insert call-to-action button", fn: (v, s, e) => link(v, s, e, true, "Button label") },
+    { label: "• List", title: "Bulleted list", fn: (v, s, e) => bulletList(v, s, e) },
+    { label: "―", title: "Divider", fn: (v, s, e) => rule(v, s, e) },
   ];
 
   return (
@@ -115,7 +117,7 @@ export function MarkdownToolbar({
           type="button"
           title={a.title}
           aria-label={a.title}
-          onClick={a.run}
+          onClick={() => apply(a.fn)}
           className={`${BTN} ${a.cls ?? ""}`}
         >
           {a.label}

@@ -456,7 +456,7 @@ export default function StyleGuidePage() {
                   <code className="font-mono text-xs">confirm</code> = fern (approve),{" "}
                   <code className="font-mono text-xs">danger</code> = poppy (blast / destructive),{" "}
                   <code className="font-mono text-xs">secondary</code> = light outline. Admin buttons use{" "}
-                  <code className="font-mono text-xs">size="sm"</code>.
+                  <code className="font-mono text-xs">{`size="sm"`}</code>.
                 </p>
               </div>
             </div>

@@ -13,6 +13,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    // Artist photos live on Vercel Blob; allow next/image to optimize them.
+    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listPublishedArtists } from "@/lib/artists-data";
-import { SafeImg } from "@/components/admin/safe-img";
+import { BlobImage } from "@/components/blob-image";
 import { Flower } from "@/components/brand";
 import { site } from "@/lib/site";
 import { categorizeMedium } from "@/lib/mediums";
@@ -49,12 +49,13 @@ export default async function ArtistsPage() {
           {artists.map((a) => (
             <li key={a.id}>
               <Link href={`/artists/${a.slug}`} className="group block">
-                <div className="overflow-hidden rounded-lg shadow-[var(--shadow-card)]">
-                  <SafeImg
+                <div className="relative aspect-square overflow-hidden rounded-lg shadow-[var(--shadow-card)]">
+                  <BlobImage
                     src={a.photos[0]?.url ?? null}
                     alt={`Work by ${a.name}`}
                     flowerSize={32}
-                    className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 33vw, 50vw"
+                    imgClassName="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
                 <h2 className="mt-3 font-display text-lg font-bold leading-tight group-hover:text-fern-deep">

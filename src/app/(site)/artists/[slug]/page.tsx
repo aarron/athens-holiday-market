@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArtistBySlug, allPublishedSlugs } from "@/lib/artists-data";
-import { SafeImg } from "@/components/admin/safe-img";
+import { BlobImage } from "@/components/blob-image";
 import { ArtistShareButtons } from "@/components/artist/artist-share-buttons";
 import { Flower } from "@/components/brand";
 import {
@@ -91,11 +91,16 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
           {artist.photos.slice(0, 6).map((p, i) => (
             <div
               key={p.id}
-              className={`overflow-hidden rounded-lg shadow-[var(--shadow-card)] ${
+              className={`relative overflow-hidden rounded-lg shadow-[var(--shadow-card)] ${
                 i === 0 ? "col-span-2 aspect-[4/3]" : "aspect-square"
               }`}
             >
-              <SafeImg src={p.url} alt={`Work by ${artist.name}`} flowerSize={36} className="h-full w-full object-cover" />
+              <BlobImage
+                src={p.url}
+                alt={`Work by ${artist.name}`}
+                flowerSize={36}
+                sizes={i === 0 ? "(min-width: 1024px) 55vw, 100vw" : "(min-width: 1024px) 27vw, 50vw"}
+              />
             </div>
           ))}
           {artist.photos.length === 0 && (

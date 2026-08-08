@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { BlobImage } from "@/components/blob-image";
 import { setProspectStatus } from "@/lib/prospect-actions";
-import { splitProspectName } from "@/lib/prospects";
+import { splitProspectName, athensProximity, webSearchUrl } from "@/lib/prospects";
 import type { ProspectCard } from "@/lib/prospect-data";
 import {
   ThumbsUpIcon,
@@ -15,14 +15,22 @@ import {
   GlobeIcon,
   InstagramIcon,
   MailIcon,
+  MapPinIcon,
+  ExternalIcon,
   CelebrateIcon,
 } from "@/components/icons";
 
+const PROX_TONE: Record<"local" | "near" | "far", string> = {
+  local: "bg-fern-soft text-fern-deeper",
+  near: "bg-sky-soft text-sky-deep",
+  far: "bg-poppy/10 text-poppy-deep",
+};
+
 type Decision = "shortlisted" | "maybe" | "passed";
 const DECISION = {
-  shortlisted: { label: "Shortlist", key: "Y", Icon: ThumbsUpIcon, hue: "var(--color-fern-deep)", soft: "bg-fern-soft", text: "text-fern-deeper" },
+  shortlisted: { label: "Invite", key: "Y", Icon: ThumbsUpIcon, hue: "var(--color-fern-deep)", soft: "bg-fern-soft", text: "text-fern-deeper" },
   maybe: { label: "Maybe", key: "M", Icon: MaybeIcon, hue: "var(--color-tangerine)", soft: "bg-tangerine-soft", text: "text-tangerine-deep" },
-  passed: { label: "Pass", key: "N", Icon: ThumbsDownIcon, hue: "var(--color-poppy)", soft: "bg-poppy/10", text: "text-poppy-deep" },
+  passed: { label: "Ignore", key: "N", Icon: ThumbsDownIcon, hue: "var(--color-poppy)", soft: "bg-poppy/10", text: "text-poppy-deep" },
 } as const;
 
 const SWIPE_THRESHOLD = 110;
@@ -282,32 +290,69 @@ export function ProspectDeck({ queue }: { queue: ProspectCard[] }) {
           <p className="text-sm text-ink-soft">
             {[current.medium, current.category].filter(Boolean).join(" · ")}
           </p>
-          {(current.city || current.region) && (
-            <p className="text-xs text-ink-soft">
-              {[current.city, current.state].filter(Boolean).join(", ")}
-              {current.region ? ` · ${current.region}` : ""}
-            </p>
-          )}
+          {/* Where they are + how far from Athens (can they make it?) */}
+          <div className="flex flex-wrap items-center gap-2">
+            {(current.city || current.state) && (
+              <span className="text-xs text-ink-soft">
+                {[current.city, current.state].filter(Boolean).join(", ")}
+              </span>
+            )}
+            {(() => {
+              const prox = athensProximity(current);
+              return (
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${PROX_TONE[prox.tone]}`}>
+                  <MapPinIcon size={12} aria-hidden /> {prox.label}
+                </span>
+              );
+            })()}
+          </div>
+
           {current.description && <p className="text-sm text-ink">{current.description}</p>}
           {current.notes && <p className="text-sm text-ink-soft">{current.notes}</p>}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm">
-            {current.website && (
-              <a href={current.website} target="_blank" rel="noopener noreferrer" className="link inline-flex items-center gap-1">
-                <GlobeIcon size={14} aria-hidden /> Website
+
+          {/* See the work — the primary action when there's no photo */}
+          <div className="flex flex-wrap gap-2 pt-1">
+            {current.website ? (
+              <a
+                href={current.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-sm font-display font-bold text-paper hover:bg-ink-soft"
+              >
+                <GlobeIcon size={15} aria-hidden /> Visit website <ExternalIcon size={13} aria-hidden />
+              </a>
+            ) : (
+              <a
+                href={webSearchUrl(business, [current.medium, current.city].filter(Boolean).join(" "))}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
+              >
+                <GlobeIcon size={15} aria-hidden /> Search the web <ExternalIcon size={13} aria-hidden />
               </a>
             )}
             {current.instagram && (
-              <a href={`https://instagram.com/${current.instagram}`} target="_blank" rel="noopener noreferrer" className="link inline-flex items-center gap-1">
-                <InstagramIcon size={14} aria-hidden /> @{current.instagram}
+              <a
+                href={`https://instagram.com/${current.instagram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
+              >
+                <InstagramIcon size={15} aria-hidden /> Instagram <ExternalIcon size={13} aria-hidden />
               </a>
             )}
-            {current.email && (
-              <a href={`mailto:${current.email}`} className="link inline-flex items-center gap-1">
-                <MailIcon size={14} aria-hidden /> Email
-              </a>
-            )}
-            {current.foundVia && <span className="text-ink-soft">via {current.foundVia}</span>}
           </div>
+
+          {/* Do we have their email? */}
+          {current.email ? (
+            <a href={`mailto:${current.email}`} className="link inline-flex items-center gap-1 text-sm">
+              <MailIcon size={14} aria-hidden /> {current.email}
+            </a>
+          ) : (
+            <p className="inline-flex items-center gap-1 text-xs text-ink-soft">
+              <MailIcon size={13} aria-hidden /> No email on file — you&rsquo;d need to track it down
+            </p>
+          )}
         </div>
       </div>
 

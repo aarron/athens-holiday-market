@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BlobImage } from "@/components/blob-image";
 import { setProspectStatus } from "@/lib/prospect-actions";
-import { splitProspectName } from "@/lib/prospects";
+import { splitProspectName, athensProximity, webSearchUrl } from "@/lib/prospects";
 import type { ProspectCard, ProspectStatus } from "@/lib/prospect-data";
 import {
   ThumbsUpIcon,
@@ -16,16 +16,33 @@ import {
   GlobeIcon,
   InstagramIcon,
   MailIcon,
+  MapPinIcon,
+  ExternalIcon,
 } from "@/components/icons";
+
+const PROX_TONE: Record<"local" | "near" | "far", string> = {
+  local: "bg-fern-soft text-fern-deeper",
+  near: "bg-sky-soft text-sky-deep",
+  far: "bg-poppy/10 text-poppy-deep",
+};
+
+function ProximityBadge({ card }: { card: ProspectCard }) {
+  const p = athensProximity(card);
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${PROX_TONE[p.tone]}`}>
+      <MapPinIcon size={12} aria-hidden /> {p.label}
+    </span>
+  );
+}
 
 type Decision = "shortlisted" | "maybe" | "passed";
 const DECISION: Record<
   Decision,
   { label: string; key: string; Icon: typeof ThumbsUpIcon; hue: string; soft: string; text: string }
 > = {
-  shortlisted: { label: "Yes", key: "Y", Icon: ThumbsUpIcon, hue: "var(--color-fern-deep)", soft: "bg-fern-soft", text: "text-fern-deeper" },
+  shortlisted: { label: "Invite", key: "Y", Icon: ThumbsUpIcon, hue: "var(--color-fern-deep)", soft: "bg-fern-soft", text: "text-fern-deeper" },
   maybe: { label: "Maybe", key: "M", Icon: MaybeIcon, hue: "var(--color-tangerine)", soft: "bg-tangerine-soft", text: "text-tangerine-deep" },
-  passed: { label: "No", key: "N", Icon: ThumbsDownIcon, hue: "var(--color-poppy)", soft: "bg-poppy/10", text: "text-poppy-deep" },
+  passed: { label: "Ignore", key: "N", Icon: ThumbsDownIcon, hue: "var(--color-poppy)", soft: "bg-poppy/10", text: "text-poppy-deep" },
 };
 
 const STATUS_CHIP: Record<ProspectStatus, string> = {
@@ -36,9 +53,9 @@ const STATUS_CHIP: Record<ProspectStatus, string> = {
 };
 const STATUS_LABEL: Record<ProspectStatus, string> = {
   new: "New",
-  shortlisted: "Shortlisted",
+  shortlisted: "Invite",
   maybe: "Maybe",
-  passed: "Passed",
+  passed: "Ignore",
 };
 
 /** The three Yes / Maybe / No buttons, reused on tiles and in the modal. */
@@ -85,7 +102,13 @@ function TriageButtons({
   );
 }
 
-export function ProspectGrid({ cards }: { cards: ProspectCard[] }) {
+export function ProspectGrid({
+  cards,
+  viewStatus = "all",
+}: {
+  cards: ProspectCard[];
+  viewStatus?: ProspectStatus | "all";
+}) {
   const router = useRouter();
   const [, start] = useTransition();
   const [statuses, setStatuses] = useState<Record<number, ProspectStatus>>({});
@@ -104,12 +127,27 @@ export function ProspectGrid({ cards }: { cards: ProspectCard[] }) {
     [router],
   );
 
+  // Inbox behavior: in a specific bucket (e.g. "To review"), a tile leaves the
+  // pile the moment its optimistic status no longer matches the view.
+  const visible =
+    viewStatus === "all" ? cards : cards.filter((c) => statusOf(c) === viewStatus);
+
   const open = cards.find((c) => c.id === openId) ?? null;
 
   return (
     <>
+      {viewStatus === "new" && visible.length > 0 && (
+        <p className="text-sm font-semibold text-ink-soft">
+          {visible.length} left to review
+        </p>
+      )}
+      {viewStatus === "new" && visible.length === 0 && (
+        <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
+          <p className="text-ink-soft">🎉 Inbox zero — you triaged everything in this pile.</p>
+        </div>
+      )}
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {cards.map((p) => {
+        {visible.map((p) => {
           const st = statusOf(p);
           const { business, maker } = splitProspectName(p.name);
           return (
@@ -148,45 +186,59 @@ export function ProspectGrid({ cards }: { cards: ProspectCard[] }) {
                   {maker && <p className="text-xs font-semibold text-ink-soft">{maker}</p>}
                 </button>
                 {p.medium && <p className="text-sm text-ink-soft">{p.medium}</p>}
-                <p className="text-xs text-ink-soft">
-                  {[p.city, p.state].filter(Boolean).join(", ")}
-                  {p.category ? ` · ${p.category}` : ""}
-                </p>
-                {(p.website || p.instagram || p.email) && (
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1 text-sm font-semibold">
-                    {p.website && (
-                      <a
-                        href={p.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="link inline-flex items-center gap-1"
-                      >
-                        <GlobeIcon size={14} aria-hidden /> Website
-                      </a>
-                    )}
-                    {p.instagram && (
-                      <a
-                        href={`https://instagram.com/${p.instagram}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="link inline-flex items-center gap-1"
-                      >
-                        <InstagramIcon size={14} aria-hidden /> @{p.instagram}
-                      </a>
-                    )}
-                    {p.email && (
-                      <a
-                        href={`mailto:${p.email}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="link inline-flex items-center gap-1"
-                      >
-                        <MailIcon size={14} aria-hidden /> Email
-                      </a>
-                    )}
-                  </div>
-                )}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-ink-soft">
+                    {[p.city, p.state].filter(Boolean).join(", ") || p.category}
+                  </span>
+                  <ProximityBadge card={p} />
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1 text-sm font-semibold">
+                  {p.website ? (
+                    <a
+                      href={p.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="link inline-flex items-center gap-1"
+                    >
+                      <GlobeIcon size={14} aria-hidden /> Website
+                    </a>
+                  ) : (
+                    <a
+                      href={webSearchUrl(splitProspectName(p.name).business, p.medium)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="link inline-flex items-center gap-1"
+                    >
+                      <GlobeIcon size={14} aria-hidden /> Search
+                    </a>
+                  )}
+                  {p.instagram && (
+                    <a
+                      href={`https://instagram.com/${p.instagram}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="link inline-flex items-center gap-1"
+                    >
+                      <InstagramIcon size={14} aria-hidden /> @{p.instagram}
+                    </a>
+                  )}
+                  {p.email ? (
+                    <a
+                      href={`mailto:${p.email}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="link inline-flex items-center gap-1"
+                    >
+                      <MailIcon size={14} aria-hidden /> Email
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-ink-soft/70">
+                      <MailIcon size={14} aria-hidden /> no email
+                    </span>
+                  )}
+                </div>
                 <div className="mt-auto pt-2">
                   <TriageButtons current={st} onPick={(s) => triage(p.id, s)} />
                 </div>
@@ -319,30 +371,60 @@ function ProspectModal({
           <p className="mt-1 text-sm text-ink-soft">
             {[card.medium, card.category].filter(Boolean).join(" · ")}
           </p>
-          {(card.city || card.region) && (
-            <p className="text-xs text-ink-soft">
-              {[card.city, card.state].filter(Boolean).join(", ")}
-              {card.region ? ` · ${card.region}` : ""}
-            </p>
-          )}
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {(card.city || card.state) && (
+              <span className="text-xs text-ink-soft">
+                {[card.city, card.state].filter(Boolean).join(", ")}
+              </span>
+            )}
+            <ProximityBadge card={card} />
+          </div>
           {card.description && <p className="mt-3 text-sm text-ink">{card.description}</p>}
           {card.notes && <p className="mt-2 text-sm text-ink-soft">{card.notes}</p>}
 
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-            {card.website && (
-              <a href={card.website} target="_blank" rel="noopener noreferrer" className="link inline-flex items-center gap-1">
-                <GlobeIcon size={14} aria-hidden /> Website
+          {/* See the work */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {card.website ? (
+              <a
+                href={card.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-sm font-display font-bold text-paper hover:bg-ink-soft"
+              >
+                <GlobeIcon size={15} aria-hidden /> Visit website <ExternalIcon size={13} aria-hidden />
+              </a>
+            ) : (
+              <a
+                href={webSearchUrl(business, card.medium)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
+              >
+                <GlobeIcon size={15} aria-hidden /> Search the web <ExternalIcon size={13} aria-hidden />
               </a>
             )}
             {card.instagram && (
-              <a href={`https://instagram.com/${card.instagram}`} target="_blank" rel="noopener noreferrer" className="link inline-flex items-center gap-1">
-                <InstagramIcon size={14} aria-hidden /> @{card.instagram}
+              <a
+                href={`https://instagram.com/${card.instagram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
+              >
+                <InstagramIcon size={15} aria-hidden /> Instagram <ExternalIcon size={13} aria-hidden />
               </a>
             )}
-            {card.email && (
+          </div>
+
+          {/* Email on file? */}
+          <div className="mt-2 text-sm">
+            {card.email ? (
               <a href={`mailto:${card.email}`} className="link inline-flex items-center gap-1">
                 <MailIcon size={14} aria-hidden /> {card.email}
               </a>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs text-ink-soft">
+                <MailIcon size={13} aria-hidden /> No email on file — you&rsquo;d need to track it down
+              </span>
             )}
           </div>
 

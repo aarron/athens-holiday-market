@@ -113,24 +113,16 @@ export async function getParticipationHistory(
 
 /** The cycle currently being judged: the one with the most applications. */
 /** The active (current) cycle, falling back to the most recent with applications. */
+/**
+ * The single source of truth for "the current cycle": the one flagged
+ * `isActive`, matching the strict `findFirst({ isActive })` used by every send
+ * path (decisions, broadcasts, SMS, apply). Returns null if none is active —
+ * callers must NOT fall back to another year, or a send could hit the wrong
+ * cohort. (Archive browsing on the dashboard resolves its own display cycle.)
+ */
 export async function getActiveCycle() {
   const list = await getCyclesWithCounts();
-  return list.find((c) => c.isActive) ?? list.find((c) => c.count > 0) ?? list[0] ?? null;
-}
-
-export async function getJudgingCycle() {
-  const rows = await db
-    .select({
-      id: cycles.id,
-      year: cycles.year,
-      name: cycles.name,
-      count: sql<number>`count(${applications.id})::int`,
-    })
-    .from(cycles)
-    .leftJoin(applications, eq(applications.cycleId, cycles.id))
-    .groupBy(cycles.id)
-    .orderBy(desc(sql`count(${applications.id})`), desc(cycles.year));
-  return rows[0] ?? null;
+  return list.find((c) => c.isActive) ?? null;
 }
 
 export async function listApplications(cycleId: number) {

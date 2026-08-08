@@ -120,6 +120,13 @@
       "when": 1786201041871,
       "tag": "0016_low_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786207233957,
+      "tag": "0017_hesitant_silver_sable",
+      "breakpoints": true
     }
   ]
 }

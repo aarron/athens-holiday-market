@@ -32,6 +32,37 @@ export const subscriberStatusEnum = pgEnum("subscriber_status", [
   "unsubscribed",
 ]);
 
+/* Artist scouting — prospects the market may invite to apply. */
+
+/** Triage decision as an admin swipes through the prospect deck. Invite +
+ *  funnel state live in separate columns so a shortlisted prospect keeps that
+ *  label after being invited. */
+export const prospectStatusEnum = pgEnum("prospect_status", [
+  "new", // untriaged
+  "shortlisted", // yes — worth inviting
+  "maybe", // revisit
+  "passed", // no
+]);
+
+/** How a prospect entered the pool. */
+export const prospectSourceEnum = pgEnum("prospect_source", [
+  "import", // seeded from the research spreadsheet
+  "auto_scout", // found by the research agent
+  "manual", // added by hand in the admin
+]);
+
+/** Delivery lifecycle of a prospect's invitation email, mirrored from the
+ *  Resend webhook — same vocabulary as broadcast recipients. */
+export const prospectEmailStatusEnum = pgEnum("prospect_email_status", [
+  "sent",
+  "delivered",
+  "opened",
+  "clicked",
+  "bounced",
+  "complained",
+  "failed",
+]);
+
 /* ----------------------------------------------------------------- cycles */
 /** One market season per year. Drives the apply window and event details. */
 export const cycles = pgTable("cycles", {
@@ -356,9 +387,124 @@ export const adminEvents = pgTable(
   (t) => [index("admin_events_created_idx").on(t.createdAt)],
 );
 
+/* --------------------------------------------------------- prospect batches */
+/** One research run or import. Auto-scout jobs are queued here and processed by
+ *  the research cron; imports land as a single "complete" batch. */
+export const prospectBatches = pgTable("prospect_batches", {
+  id: serial("id").primaryKey(),
+  cycleId: integer("cycle_id")
+    .notNull()
+    .references(() => cycles.id),
+  source: prospectSourceEnum("source").notNull(),
+  label: text("label").notNull(), // e.g. "Spreadsheet import — Aug 2026"
+  status: text("status").notNull().default("complete"), // queued | running | complete | failed
+  params: jsonb("params"), // research params: { regions, mediums, targetCount, sources }
+  stats: jsonb("stats"), // { found, added, skipped }
+  note: text("note"),
+  createdBy: text("created_by"), // actor email
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+/* --------------------------------------------------------------- prospects */
+/** A potential artist to invite. Admin-only — never exposed publicly, since the
+ *  research (images, notes, contact) is scraped, not artist-submitted. */
+export const prospects = pgTable(
+  "prospects",
+  {
+    id: serial("id").primaryKey(),
+    cycleId: integer("cycle_id")
+      .notNull()
+      .references(() => cycles.id),
+    batchId: integer("batch_id").references(() => prospectBatches.id),
+    source: prospectSourceEnum("source").notNull().default("import"),
+    name: text("name").notNull(),
+    medium: text("medium"),
+    category: text("category"), // categorizeMedium() bucket
+    city: text("city"),
+    state: text("state"),
+    region: text("region"),
+    website: text("website"),
+    instagram: text("instagram"),
+    email: text("email"),
+    contact: text("contact"), // raw contact string from research (may be a form URL, etc.)
+    description: text("description"), // short blurb for the deck
+    notes: text("notes"), // research notes
+    foundVia: text("found_via"), // sourcing hub / how it was found
+    status: prospectStatusEnum("status").notNull().default("new"),
+    triagedAt: timestamp("triaged_at", { withTimezone: true }),
+    triagedBy: text("triaged_by"),
+    // Dedupe within a cycle so re-imports and auto-scout don't create twins.
+    dedupeKey: text("dedupe_key").notNull(),
+    // Invitation tracking.
+    invitedAt: timestamp("invited_at", { withTimezone: true }),
+    invitedResendId: text("invited_resend_id"),
+    inviteEmailStatus: prospectEmailStatusEnum("invite_email_status"),
+    inviteToken: text("invite_token").unique(), // opt-out + tracking link
+    // Funnel: set when this prospect's email later shows up as an application.
+    appliedApplicationId: integer("applied_application_id").references(() => applications.id),
+    raw: jsonb("raw"), // original import row / research payload
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("prospects_cycle_dedupe_idx").on(t.cycleId, t.dedupeKey),
+    index("prospects_cycle_status_idx").on(t.cycleId, t.status),
+    index("prospects_lower_email_idx").on(sql`lower(${t.email})`),
+  ],
+);
+
+/* ---------------------------------------------------------- prospect images */
+/** Reference images for a prospect. `sourceUrl` is the scraped origin; `blobUrl`
+ *  is our cached copy (populated by the image-cache pass) so the deck never
+ *  stutters on a broken hotlink. */
+export const prospectImages = pgTable(
+  "prospect_images",
+  {
+    id: serial("id").primaryKey(),
+    prospectId: integer("prospect_id")
+      .notNull()
+      .references(() => prospects.id, { onDelete: "cascade" }),
+    sourceUrl: text("source_url").notNull(),
+    blobUrl: text("blob_url"),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("prospect_images_prospect_idx").on(t.prospectId, t.position)],
+);
+
+/* ------------------------------------------------------- prospect opt-outs */
+/** Suppression list for cold outreach: an email here is never invited again,
+ *  independent of the subscriber list. Populated by the invite opt-out link. */
+export const prospectOptOuts = pgTable(
+  "prospect_opt_outs",
+  {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull(), // stored lowercased
+    reason: text("reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("prospect_opt_outs_email_idx").on(sql`lower(${t.email})`)],
+);
+
 /* -------------------------------------------------------------- relations */
 export const cyclesRelations = relations(cycles, ({ many }) => ({
   applications: many(applications),
+}));
+
+export const prospectBatchesRelations = relations(prospectBatches, ({ one, many }) => ({
+  cycle: one(cycles, { fields: [prospectBatches.cycleId], references: [cycles.id] }),
+  prospects: many(prospects),
+}));
+
+export const prospectsRelations = relations(prospects, ({ one, many }) => ({
+  cycle: one(cycles, { fields: [prospects.cycleId], references: [cycles.id] }),
+  batch: one(prospectBatches, { fields: [prospects.batchId], references: [prospectBatches.id] }),
+  images: many(prospectImages),
+}));
+
+export const prospectImagesRelations = relations(prospectImages, ({ one }) => ({
+  prospect: one(prospects, { fields: [prospectImages.prospectId], references: [prospects.id] }),
 }));
 
 export const applicationsRelations = relations(applications, ({ one, many }) => ({

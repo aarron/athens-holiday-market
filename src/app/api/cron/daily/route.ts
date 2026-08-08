@@ -4,9 +4,12 @@ import { runEventReminders } from "@/lib/event-reminders";
 import { runNprFlagpoleReminder } from "@/lib/npr-flagpole-reminder";
 import { runScheduledBroadcasts } from "@/lib/broadcast-send";
 import { runBoothFeeReminders } from "@/lib/booth-fee";
+import { runProspectScoutingCron } from "@/lib/prospect-research";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Prospect auto-scout advances within its own time budget; give the cron room.
+export const maxDuration = 300;
 
 /**
  * Single daily cron (see vercel.json). Runs each scheduled task; most no-op on
@@ -26,6 +29,7 @@ export async function GET(req: Request) {
     ["nprFlagpole", runNprFlagpoleReminder],
     ["scheduledBroadcasts", runScheduledBroadcasts],
     ["boothFeeReminders", runBoothFeeReminders],
+    ["prospectScouting", runProspectScoutingCron],
   ] as const;
 
   const results: Record<string, unknown> = {};

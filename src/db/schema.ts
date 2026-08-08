@@ -10,7 +10,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 /* ------------------------------------------------------------------ enums */
 
@@ -95,7 +95,13 @@ export const applications = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("applications_cycle_email_idx").on(t.cycleId, t.email)],
+  (t) => [
+    index("applications_cycle_email_idx").on(t.cycleId, t.email),
+    index("applications_cycle_status_idx").on(t.cycleId, t.status),
+    index("applications_decision_resend_idx").on(t.decisionResendId),
+    index("applications_paypal_invoice_idx").on(t.paypalInvoiceId),
+    index("applications_lower_email_idx").on(sql`lower(${t.email})`),
+  ],
 );
 
 export const applicationPhotos = pgTable("application_photos", {
@@ -185,7 +191,10 @@ export const artists = pgTable("artists", {
   submittedAt: timestamp("submitted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("artists_published_idx").on(t.published),
+  index("artists_application_idx").on(t.applicationId),
+]);
 
 /* ---------------------------------------------------- login tokens (magic) */
 export const loginTokens = pgTable("login_tokens", {
@@ -279,7 +288,10 @@ export const broadcastRecipients = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("broadcast_recipients_resend_idx").on(t.resendId)],
+  (t) => [
+    index("broadcast_recipients_resend_idx").on(t.resendId),
+    index("broadcast_recipients_lower_email_idx").on(sql`lower(${t.email})`),
+  ],
 );
 
 export const broadcastsRelations = relations(broadcasts, ({ many }) => ({

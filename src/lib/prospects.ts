@@ -10,11 +10,30 @@ export function cleanWebsite(raw: string | null | undefined): string | null {
   const withProto = /^https?:\/\//i.test(s) ? s : `https://${s}`;
   try {
     const u = new URL(withProto);
-    if (!u.hostname.includes(".")) return null;
+    const host = u.hostname;
+    if (!host.includes(".")) return null;
+    // Reject IP-like hosts (a bare number like "83" parses to 0.0.0.83) and any
+    // host without a real alphabetic TLD — these come from stray spreadsheet
+    // values (follower counts, etc.), not real sites.
+    if (/^[\d.]+$/.test(host)) return null;
+    const tld = host.split(".").pop() ?? "";
+    if (!/^[a-z]{2,}$/i.test(tld)) return null;
     return u.toString().replace(/\/$/, "");
   } catch {
     return null;
   }
+}
+
+/**
+ * A live screenshot of a prospect's website via WordPress mShots (free, no key).
+ * Used as a visual fallback when we can't extract real photos from a site, so a
+ * reviewer still sees *something* and can click through. Returns null if the
+ * website isn't usable.
+ */
+export function siteScreenshotUrl(website: string | null | undefined, w = 1200): string | null {
+  const url = cleanWebsite(website);
+  if (!url) return null;
+  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=${w}`;
 }
 
 /** Bare hostname (no www.) for dedup/display, or null. */
@@ -69,6 +88,33 @@ export function cleanEmail(raw: string | null | undefined): string | null {
   const s = (raw ?? "").trim().toLowerCase();
   if (!s || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s)) return null;
   return s;
+}
+
+// Generic business words that don't distinguish one maker from another.
+const NAME_STOPWORDS = new Set([
+  "studio", "studios", "the", "and", "co", "company", "llc", "inc", "shop", "shoppe",
+  "gallery", "handmade", "made", "works", "workshop", "ceramics", "pottery", "clay",
+  "art", "arts", "artist", "designs", "design", "jewelry", "glass", "candle", "candles",
+  "soap", "goods", "paper", "press", "prints", "print", "fine", "creations", "shoppe",
+]);
+
+/**
+ * A loose identity key for near-duplicate detection: lowercased, punctuation and
+ * generic business words stripped, remaining tokens sorted. "R. Wood Studio" and
+ * "R. Wood Studio Ceramics Studio & Shoppe" both collapse to "r wood". Returns ""
+ * if nothing distinctive remains.
+ */
+export function looseNameKey(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w && !NAME_STOPWORDS.has(w))
+    .sort()
+    .join(" ");
 }
 
 /**

@@ -8,25 +8,11 @@ import {
   listResearchBatches,
   type ProspectStatus,
 } from "@/lib/prospect-data";
-import { splitProspectName } from "@/lib/prospects";
-import { BlobImage } from "@/components/blob-image";
 import { ResearchPanel } from "@/components/admin/research-panel";
+import { ProspectGrid } from "@/components/admin/prospect-grid";
 
 export const metadata: Metadata = { title: "Scouting", robots: { index: false } };
 export const dynamic = "force-dynamic";
-
-const STATUS_CHIP: Record<ProspectStatus, string> = {
-  new: "bg-cream text-ink-soft",
-  shortlisted: "bg-fern-soft text-fern-deeper",
-  maybe: "bg-tangerine-soft text-tangerine-deep",
-  passed: "bg-poppy/10 text-poppy-deep",
-};
-const STATUS_LABEL: Record<ProspectStatus, string> = {
-  new: "New",
-  shortlisted: "Shortlisted",
-  maybe: "Maybe",
-  passed: "Passed",
-};
 
 function Stat({ label, value, tone = "" }: { label: string; value: number; tone?: string }) {
   return (
@@ -129,69 +115,7 @@ export default async function ProspectsPage({
           <p className="text-ink-soft">No prospects in this view.</p>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {cards.map((p) => (
-            <li
-              key={p.id}
-              className="flex flex-col overflow-hidden rounded-xl bg-white shadow-[var(--shadow-card)]"
-            >
-              <div className="relative aspect-[4/3] bg-cream">
-                <BlobImage
-                  src={p.images[0] ?? null}
-                  alt={p.name}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
-                />
-                <span
-                  className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-xs font-bold ${STATUS_CHIP[p.status]}`}
-                >
-                  {STATUS_LABEL[p.status]}
-                </span>
-                {p.images.length > 1 && (
-                  <span className="absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-xs font-semibold text-paper">
-                    {p.images.length} photos
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-1.5 p-4">
-                {(() => {
-                  const { business, maker } = splitProspectName(p.name);
-                  return (
-                    <div>
-                      <h2 className="font-display text-lg font-bold leading-tight">{business}</h2>
-                      {maker && <p className="text-xs font-semibold text-ink-soft">{maker}</p>}
-                    </div>
-                  );
-                })()}
-                {p.medium && <p className="text-sm text-ink-soft">{p.medium}</p>}
-                <p className="text-xs text-ink-soft">
-                  {[p.city, p.state].filter(Boolean).join(", ")}
-                  {p.category ? ` · ${p.category}` : ""}
-                </p>
-                {p.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-ink">{p.description}</p>
-                )}
-                <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-2 text-sm">
-                  {p.website && (
-                    <a href={p.website} target="_blank" rel="noopener noreferrer" className="link">
-                      Website
-                    </a>
-                  )}
-                  {p.instagram && (
-                    <a
-                      href={`https://instagram.com/${p.instagram}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link"
-                    >
-                      @{p.instagram}
-                    </a>
-                  )}
-                  {p.email && <span className="text-ink-soft">{p.email}</span>}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <ProspectGrid cards={cards} />
       )}
     </div>
   );

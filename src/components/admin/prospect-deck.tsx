@@ -75,7 +75,14 @@ export function ProspectDeck({ queue }: { queue: ProspectCard[] }) {
     startTransition(() => void setProspectStatus({ id: last.id, status: "new" }));
   }, [exit, history, startTransition]);
 
-  const images = current?.images ?? [];
+  // Fall back to a live website screenshot when a prospect has no real photos.
+  const images = current
+    ? current.images.length
+      ? current.images
+      : current.sitePreview
+        ? [current.sitePreview]
+        : []
+    : [];
   const stepImg = useCallback(
     (delta: number) => {
       if (images.length < 2) return;

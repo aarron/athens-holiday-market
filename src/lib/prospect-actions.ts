@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { cycles, prospects } from "@/db/schema";
+import { cycles, prospects, prospectImages } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAdminEvent } from "@/lib/audit";
+import { cleanEmail, cleanWebsite, cleanInstagram } from "@/lib/prospects";
 import { createResearchBatch, runProspectResearch } from "@/lib/prospect-research";
+import { enrichProspectImages } from "@/lib/prospect-images";
 
 const statusSchema = z.object({
   id: z.number(),
@@ -39,6 +41,53 @@ export async function setProspectStatus(input: z.input<typeof statusSchema>) {
 
   revalidatePath("/admin/prospects");
   return { ok: true as const };
+}
+
+const contactSchema = z.object({
+  id: z.number().int(),
+  email: z.string().trim().max(200),
+  website: z.string().trim().max(300),
+  instagram: z.string().trim().max(200),
+});
+
+/**
+ * Manually set a prospect's contact details (email, website, Instagram) — e.g.
+ * after tracking them down. Values are normalized the same way imports are.
+ * Adding a website with no photos yet kicks off a background image enrichment.
+ */
+export async function updateProspectContact(input: z.input<typeof contactSchema>) {
+  await requireAdmin();
+  const parsed = contactSchema.safeParse(input);
+  if (!parsed.success) return { error: "Check the details." };
+  const { id, email, website, instagram } = parsed.data;
+
+  const values = {
+    email: cleanEmail(email),
+    website: cleanWebsite(website),
+    instagram: cleanInstagram(instagram),
+    updatedAt: new Date(),
+  };
+  await db.update(prospects).set(values).where(eq(prospects.id, id));
+
+  // If they just added a website and the card has no photos, try to fill some.
+  if (values.website) {
+    const hasImage = await db.query.prospectImages.findFirst({
+      where: eq(prospectImages.prospectId, id),
+      columns: { id: true },
+    });
+    if (!hasImage) {
+      after(async () => {
+        try {
+          await enrichProspectImages(id, values.website!, 4);
+        } catch (e) {
+          console.error("[prospect] enrich-on-edit failed:", e);
+        }
+      });
+    }
+  }
+
+  revalidatePath("/admin/prospects");
+  return { ok: true as const, email: values.email, website: values.website, instagram: values.instagram };
 }
 
 const researchSchema = z.object({

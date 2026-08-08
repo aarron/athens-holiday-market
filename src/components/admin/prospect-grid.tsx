@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BlobImage } from "@/components/blob-image";
-import { setProspectStatus } from "@/lib/prospect-actions";
+import { setProspectStatus, updateProspectContact } from "@/lib/prospect-actions";
 import { splitProspectName, athensProximity, webSearchUrl } from "@/lib/prospects";
 import type { ProspectCard, ProspectStatus } from "@/lib/prospect-data";
 import {
@@ -271,17 +271,46 @@ function ProspectModal({
   onTriage: (s: Decision) => void;
   onClose: () => void;
 }) {
+  const router = useRouter();
+  const [, startSave] = useTransition();
   const [idx, setIdx] = useState(0);
   const { business, maker } = splitProspectName(card.name);
   const imgs = card.images;
+
+  // Manual contact editing (email / website / Instagram).
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    email: card.email ?? "",
+    website: card.website ?? "",
+    instagram: card.instagram ?? "",
+  });
+  const [saveMsg, setSaveMsg] = useState("");
 
   const step = useCallback(
     (d: number) => imgs.length > 1 && setIdx((n) => (n + d + imgs.length) % imgs.length),
     [imgs.length],
   );
 
+  function saveContact() {
+    setSaveMsg("");
+    startSave(async () => {
+      const r = await updateProspectContact({ id: card.id, ...form });
+      if (r && "ok" in r && r.ok) {
+        setEditing(false);
+        router.refresh(); // reflect the saved values (and any new photos)
+      } else {
+        setSaveMsg(r?.error ?? "Couldn't save.");
+      }
+    });
+  }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Don't hijack typing while editing contact fields.
+      if (editing) {
+        if (e.key === "Escape") setEditing(false);
+        return;
+      }
       const k = e.key.toLowerCase();
       if (e.key === "Escape") return onClose();
       if (e.key === "ArrowRight") return step(1);
@@ -292,7 +321,7 @@ function ProspectModal({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [step, onTriage, onClose]);
+  }, [step, onTriage, onClose, editing]);
 
   return (
     <div
@@ -360,11 +389,26 @@ function ProspectModal({
 
         {/* Info + triage */}
         <div className="flex flex-1 flex-col overflow-y-auto p-6">
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STATUS_CHIP[status]}`}>
-              {STATUS_LABEL[status]}
-            </span>
-            {card.foundVia && <span className="text-xs text-ink-soft">via {card.foundVia}</span>}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STATUS_CHIP[status]}`}>
+                {STATUS_LABEL[status]}
+              </span>
+              {card.foundVia && <span className="text-xs text-ink-soft">via {card.foundVia}</span>}
+            </div>
+            {!editing && (
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({ email: card.email ?? "", website: card.website ?? "", instagram: card.instagram ?? "" });
+                  setSaveMsg("");
+                  setEditing(true);
+                }}
+                className="link text-sm font-semibold"
+              >
+                Edit details
+              </button>
+            )}
           </div>
           <h2 className="mt-2 font-display text-2xl font-extrabold leading-tight">{business}</h2>
           {maker && <p className="text-sm font-semibold text-ink-soft">{maker}</p>}
@@ -382,51 +426,91 @@ function ProspectModal({
           {card.description && <p className="mt-3 text-sm text-ink">{card.description}</p>}
           {card.notes && <p className="mt-2 text-sm text-ink-soft">{card.notes}</p>}
 
-          {/* See the work */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {card.website ? (
-              <a
-                href={card.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-sm font-display font-bold text-paper hover:bg-ink-soft"
-              >
-                <GlobeIcon size={15} aria-hidden /> Visit website <ExternalIcon size={13} aria-hidden />
-              </a>
-            ) : (
-              <a
-                href={webSearchUrl(business, card.medium)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
-              >
-                <GlobeIcon size={15} aria-hidden /> Search the web <ExternalIcon size={13} aria-hidden />
-              </a>
-            )}
-            {card.instagram && (
-              <a
-                href={`https://instagram.com/${card.instagram}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
-              >
-                <InstagramIcon size={15} aria-hidden /> Instagram <ExternalIcon size={13} aria-hidden />
-              </a>
-            )}
-          </div>
+          {editing ? (
+            /* Manual contact edit */
+            <div className="mt-3 space-y-2">
+              {(["website", "instagram", "email"] as const).map((f) => (
+                <label key={f} className="block">
+                  <span className="mb-0.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                    {f === "instagram" ? "Instagram (handle or URL)" : f}
+                  </span>
+                  <input
+                    value={form[f]}
+                    onChange={(e) => setForm((m) => ({ ...m, [f]: e.target.value }))}
+                    placeholder={
+                      f === "email" ? "artist@email.com" : f === "website" ? "https://…" : "@handle"
+                    }
+                    className="h-9 w-full rounded-lg border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
+                  />
+                </label>
+              ))}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={saveContact}
+                  className="rounded-lg bg-fern-deep px-4 py-2 text-sm font-display font-bold text-white hover:bg-fern-deeper"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-cream"
+                >
+                  Cancel
+                </button>
+                {saveMsg && <span className="text-xs text-poppy-deep">{saveMsg}</span>}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* See the work */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {card.website ? (
+                  <a
+                    href={card.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-sm font-display font-bold text-paper hover:bg-ink-soft"
+                  >
+                    <GlobeIcon size={15} aria-hidden /> Visit website <ExternalIcon size={13} aria-hidden />
+                  </a>
+                ) : (
+                  <a
+                    href={webSearchUrl(business, card.medium)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
+                  >
+                    <GlobeIcon size={15} aria-hidden /> Search the web <ExternalIcon size={13} aria-hidden />
+                  </a>
+                )}
+                {card.instagram && (
+                  <a
+                    href={`https://instagram.com/${card.instagram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm font-semibold text-ink hover:bg-cream"
+                  >
+                    <InstagramIcon size={15} aria-hidden /> Instagram <ExternalIcon size={13} aria-hidden />
+                  </a>
+                )}
+              </div>
 
-          {/* Email on file? */}
-          <div className="mt-2 text-sm">
-            {card.email ? (
-              <a href={`mailto:${card.email}`} className="link inline-flex items-center gap-1">
-                <MailIcon size={14} aria-hidden /> {card.email}
-              </a>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-xs text-ink-soft">
-                <MailIcon size={13} aria-hidden /> No email on file — you&rsquo;d need to track it down
-              </span>
-            )}
-          </div>
+              {/* Email on file? */}
+              <div className="mt-2 text-sm">
+                {card.email ? (
+                  <a href={`mailto:${card.email}`} className="link inline-flex items-center gap-1">
+                    <MailIcon size={14} aria-hidden /> {card.email}
+                  </a>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs text-ink-soft">
+                    <MailIcon size={13} aria-hidden /> No email on file — you&rsquo;d need to track it down
+                  </span>
+                )}
+              </div>
+            </>
+          )}
 
           <div className="mt-auto pt-6">
             <TriageButtons current={status} onPick={onTriage} size="lg" />

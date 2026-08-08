@@ -13,7 +13,12 @@ export type SubRow = {
   status: string;
   source: string | null;
   createdAt: string;
+  subscribedAt: string;
 };
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
 
 const STATUS_STYLES: Record<string, string> = {
   subscribed: "bg-fern-soft text-fern-deep",
@@ -145,6 +150,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
               <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
                 <th className="px-5 py-4 font-semibold">Subscriber</th>
                 <th className="px-5 py-4 font-semibold">Status</th>
+                <th className="px-5 py-4 font-semibold">Subscribed</th>
                 <th className="px-5 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
@@ -165,6 +171,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
                       {r.status}
                     </span>
                   </td>
+                  <td className="whitespace-nowrap px-5 py-4 text-ink-soft">{fmtDate(r.subscribedAt)}</td>
                   <td className="px-5 py-4">
                     <div className="flex justify-end gap-2">
                       {r.status === "unsubscribed" ? (

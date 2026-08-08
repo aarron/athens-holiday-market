@@ -42,7 +42,7 @@ export function ScheduledSends({ data }: { data: Data }) {
   return (
     <section>
       <div className="mb-4">
-        <h2 className="font-display text-xl font-extrabold">Scheduled &amp; automated sends</h2>
+        <h2 className="font-display text-xl font-extrabold">Automations</h2>
         <p className="mt-1 text-sm text-ink-soft">
           Everything that can go out on its own, so nothing sends without your awareness. {cronSchedule}
           {" "}— most days nothing is due. Everything else on this page only sends when you press a button.

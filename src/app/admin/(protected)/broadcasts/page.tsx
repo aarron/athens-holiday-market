@@ -225,7 +225,7 @@ export default async function EmailHubPage() {
       : []),
     { id: "email", label: "Email", content: emailPanel },
     { id: "text", label: "Text", content: textPanel },
-    { id: "scheduled", label: "Scheduled", content: <ScheduledSends data={scheduled} /> },
+    { id: "scheduled", label: "Automations", content: <ScheduledSends data={scheduled} /> },
   ];
 
   return (

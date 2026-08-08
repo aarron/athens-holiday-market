@@ -7,7 +7,7 @@ import type { ComponentProps } from "react";
  * that used to be hand-rolled inline. All variants share the berry focus ring
  * and disabled treatment.
  */
-type Variant = "primary" | "ink" | "outline" | "ghost" | "create" | "confirm" | "danger";
+type Variant = "primary" | "ink" | "outline" | "ghost" | "secondary" | "create" | "confirm" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -19,6 +19,8 @@ const variants: Record<Variant, string> = {
   ink: "bg-ink text-paper hover:bg-ink-soft hover:-translate-y-0.5",
   outline: "border-2 border-ink text-ink bg-transparent hover:bg-ink hover:text-paper",
   ghost: "text-ink hover:bg-cream",
+  // Light admin outline (Send test, Save draft, cancel-ish).
+  secondary: "border-2 border-ink/15 text-ink hover:bg-cream",
   // Flat admin fills.
   create: "bg-fuchsia text-white hover:opacity-90",
   confirm: "bg-fern-deep text-white hover:opacity-90",

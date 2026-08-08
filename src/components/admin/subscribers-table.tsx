@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addSubscriber, setSubscriberStatus, removeSubscriber } from "@/lib/subscriber-actions";
+import { Input } from "@/components/ui/field";
 
 export type SubRow = {
   id: number;
@@ -84,22 +85,17 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex-1">
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-soft">Email</label>
-            <input
+            <Input
               required
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="person@email.com"
-              className="h-10 w-full rounded-lg border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
             />
           </div>
           <div className="flex-1">
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-soft">Name (optional)</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-10 w-full rounded-lg border-2 border-ink/15 bg-paper px-3 text-sm outline-none focus:border-fern-deep"
-            />
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <label className="flex h-10 items-center gap-2 text-sm font-semibold text-ink-soft">
             <input type="checkbox" checked={isArtist} onChange={(e) => setIsArtist(e.target.checked)} className="h-4 w-4 accent-fern-deep" />

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { listArtistsForAdmin, getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
 import { SafeImg } from "@/components/admin/safe-img";
 import { EmailLogisticsButton } from "@/components/admin/email-logistics-button";
+import { AddArtistForm } from "@/components/admin/add-artist-form";
 
 export const metadata: Metadata = { title: "Artists", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -30,7 +31,11 @@ export default async function AdminArtists() {
         </p>
       </div>
 
-      <EmailLogisticsButton count={acceptedCount} />
+      <div className="flex flex-wrap items-center gap-3">
+        <EmailLogisticsButton count={acceptedCount} />
+      </div>
+
+      <AddArtistForm />
 
       {artists.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">

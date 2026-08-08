@@ -58,6 +58,10 @@ export const applications = pgTable(
       .notNull()
       .references(() => cycles.id, { onDelete: "cascade" }),
     status: applicationStatusEnum("status").notNull().default("submitted"),
+    // Added directly by an admin (dropout replacement) or a judge who also
+    // exhibits — i.e. never went through the public jury flow. Kept out of jury
+    // stats/vote views, but still a real accepted artist + participation record.
+    directAdd: boolean("direct_add").notNull().default(false),
     name: text("name").notNull(),
     email: text("email").notNull(),
     phone: text("phone"),

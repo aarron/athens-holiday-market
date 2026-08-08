@@ -35,14 +35,45 @@ const field =
 const label = "block font-display text-sm font-bold text-ink";
 const errCls = "mt-1 text-sm font-medium text-poppy-deep";
 
-export function ApplicationForm() {
+export type ApplicationFormPayload = {
+  name: string;
+  email: string;
+  phone: string;
+  website?: string;
+  medium: string;
+  mediumCategory: string;
+  description: string;
+  bio?: string;
+  shareBooth: boolean;
+  shareBoothWith?: string;
+  smsConsent?: boolean;
+  socials: { instagram?: string; facebook?: string; tiktok?: string };
+  photoUrls: string[];
+};
+
+export function ApplicationForm({
+  mode = "apply",
+  initialValues,
+  uploadEndpoint = "/api/apply/upload",
+  onSubmit: onSubmitProp,
+}: {
+  mode?: "apply" | "finish";
+  initialValues?: Partial<Values>;
+  uploadEndpoint?: string;
+  /** When provided, replaces the default POST /api/apply (e.g. the completion
+   *  server action). Return `{ ok }` on success or `{ error }` to show a message. */
+  onSubmit?: (payload: ApplicationFormPayload) => Promise<{ ok?: boolean; error?: string }>;
+} = {}) {
   const {
     register,
     handleSubmit,
     watch,
     control,
     formState: { errors },
-  } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { shareBooth: "no" } });
+  } = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { shareBooth: "no", ...initialValues },
+  });
 
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoError, setPhotoError] = useState("");
@@ -82,27 +113,37 @@ export function ApplicationForm() {
       for (const file of photos) {
         const blob = await upload(file.name, file, {
           access: "public",
-          handleUploadUrl: "/api/apply/upload",
+          handleUploadUrl: uploadEndpoint,
         });
         photoUrls.push(blob.url);
       }
       // 2) Submit the application with the photo URLs.
       const { instagram, facebook, tiktok, ...rest } = values;
-      const res = await fetch("/api/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...rest,
-          shareBooth: values.shareBooth === "yes",
-          socials: { instagram, facebook, tiktok },
-          photoUrls,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setServerError(data.error ?? "Something went wrong. Please try again.");
-        setStatus("error");
-        return;
+      const payload: ApplicationFormPayload = {
+        ...rest,
+        shareBooth: values.shareBooth === "yes",
+        socials: { instagram, facebook, tiktok },
+        photoUrls,
+      };
+      if (onSubmitProp) {
+        const r = await onSubmitProp(payload);
+        if (r?.error) {
+          setServerError(r.error);
+          setStatus("error");
+          return;
+        }
+      } else {
+        const res = await fetch("/api/apply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setServerError(data.error ?? "Something went wrong. Please try again.");
+          setStatus("error");
+          return;
+        }
       }
       setStatus("done");
     } catch {
@@ -117,11 +158,21 @@ export function ApplicationForm() {
         <Flower size={56} color="var(--color-fuchsia)" spin className="mx-auto" />
         <h2 className="mt-5 flex items-center justify-center gap-2.5 text-3xl font-extrabold">
           <CelebrateIcon size={30} className="text-fuchsia-deep" aria-hidden />
-          Application received!
+          {mode === "finish" ? "Profile submitted!" : "Application received!"}
         </h2>
         <p className="mx-auto mt-3 max-w-md text-lg text-ink-soft">
-          Thank you for applying to the {site.event.year} {site.name}. We&apos;ve emailed you a
-          confirmation, and the jury will be in touch on {site.applications.decisionLabel}.
+          {mode === "finish" ? (
+            <>
+              Thanks! We have everything we need to build your artist page for the {site.event.year}{" "}
+              {site.name}. An organizer will review it and get it live shortly — you&apos;ll get an
+              email when it&apos;s published.
+            </>
+          ) : (
+            <>
+              Thank you for applying to the {site.event.year} {site.name}. We&apos;ve emailed you a
+              confirmation, and the jury will be in touch on {site.applications.decisionLabel}.
+            </>
+          )}
         </p>
       </div>
     );
@@ -350,7 +401,11 @@ export function ApplicationForm() {
       )}
 
       <Button type="submit" size="lg" disabled={status === "submitting"} className="w-full sm:w-auto">
-        {status === "submitting" ? "Submitting…" : "Submit application"}
+        {status === "submitting"
+          ? "Submitting…"
+          : mode === "finish"
+            ? "Submit my profile"
+            : "Submit application"}
       </Button>
     </form>
   );

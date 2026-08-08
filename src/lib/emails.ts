@@ -279,6 +279,31 @@ export async function sendMagicLink(to: string, url: string) {
   }
 }
 
+/** Invite a directly-added artist to complete their profile via a magic link. */
+export async function sendArtistInvite(to: string, name: string, url: string) {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`\n🔗 Artist invite for ${to}:\n${url}\n`);
+  }
+  if (!resend) return { skipped: true as const };
+  const first = (name || "").trim().split(/\s+/)[0] || "there";
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:24px">You're in the ${site.event.year} ${site.name}!</h1>
+    <p style="margin:0 0 16px;line-height:1.6">Hi ${escapeHtml(first)} — we've added you to this year's market. The last step is to complete your artist profile so we can build your public page. It takes a few minutes and this link works once, expiring in 30 minutes.</p>
+    <p style="margin:0 0 20px"><a href="${url}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Complete my profile</a></p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6;word-break:break-all">Or paste this link into your browser:<br/>${url}</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Complete your ${site.name} artist profile`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send artist invite:", e);
+    return { error: true as const };
+  }
+}
+
 type Decision = "accepted" | "waitlisted" | "rejected";
 
 const DECISION_COPY: Record<Decision, { subject: string; heading: string; body: string }> = {

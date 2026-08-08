@@ -229,7 +229,8 @@ export async function getDecisionGroups(cycleId: number) {
   const apps = await db
     .select({ status: applications.status, sent: applications.decisionSentAt })
     .from(applications)
-    .where(eq(applications.cycleId, cycleId));
+    // Direct-adds got a personal invite, not a jury decision — keep them out.
+    .where(and(eq(applications.cycleId, cycleId), eq(applications.directAdd, false)));
   const build = (g: DecisionGroup) => {
     const set = apps.filter((a) => GROUP_STATUSES[g].includes(a.status));
     return { total: set.length, notified: set.filter((a) => a.sent).length };
@@ -241,6 +242,7 @@ export async function getDecisionRecipients(cycleId: number, group: DecisionGrou
   const apps = await db.query.applications.findMany({
     where: and(
       eq(applications.cycleId, cycleId),
+      eq(applications.directAdd, false),
       inArray(applications.status, GROUP_STATUSES[group] as ("accepted" | "waitlisted" | "rejected")[]),
     ),
     with: { votes: { columns: { value: true } } },

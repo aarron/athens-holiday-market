@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { getCyclesWithCounts, listApplications, tally } from "@/lib/admin-data";
+import { getSessionUser } from "@/lib/admin-auth";
+import { acceptedApplicationIdForEmail } from "@/lib/magic";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
 import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
 import { CycleSelector } from "@/components/admin/cycle-selector";
+import { ExhibitCard } from "@/components/admin/exhibit-card";
 import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
@@ -27,6 +30,10 @@ export default async function AdminDashboard({
   const { year } = await searchParams;
   const cyclesList = await getCyclesWithCounts();
 
+  // Self-serve "I'm exhibiting" entry for staff (usually a judge who also sells).
+  const me = await getSessionUser();
+  const myApplicationId = me ? await acceptedApplicationIdForEmail(me.email) : null;
+
   if (cyclesList.length === 0) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
@@ -44,7 +51,11 @@ export default async function AdminDashboard({
     cyclesList[0];
 
   const isArchive = !current.isActive;
-  const apps = current.count > 0 ? await listApplications(current.id) : [];
+  // Direct-adds (dropout replacements / exhibiting judges) never went through
+  // the jury, so they stay out of the review table, stats, and medium blend.
+  const apps = (current.count > 0 ? await listApplications(current.id) : []).filter(
+    (a) => !a.directAdd,
+  );
 
   const stats = {
     total: apps.length,
@@ -97,6 +108,8 @@ export default async function AdminDashboard({
           current={current.year}
         />
       </div>
+
+      {current.isActive && <ExhibitCard hasPage={myApplicationId != null} />}
 
       {apps.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">

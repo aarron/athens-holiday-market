@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
-import { requireArtist } from "@/lib/admin-auth";
+import { requireArtistAccess } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { artists } from "@/db/schema";
 import { site } from "@/lib/site";
@@ -12,9 +12,9 @@ export const metadata: Metadata = { title: "Your page", robots: { index: false }
 export const dynamic = "force-dynamic";
 
 export default async function ArtistPortalPage() {
-  const user = await requireArtist();
+  const { artist: base } = await requireArtistAccess();
   const artist = await db.query.artists.findFirst({
-    where: eq(artists.id, user.artistId!),
+    where: eq(artists.id, base.id),
     with: { photos: { orderBy: (p, { asc }) => [asc(p.position)] } },
   });
 

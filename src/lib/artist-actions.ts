@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { artists, users } from "@/db/schema";
-import { requireArtist } from "@/lib/admin-auth";
+import { requireArtistAccess } from "@/lib/admin-auth";
 import { sendArtistReviewAlert } from "@/lib/emails";
 
 const schema = z.object({
@@ -21,8 +21,7 @@ export type ArtistDraftInput = z.input<typeof schema>;
 
 /** Save the artist's edits as a pending draft for admin review. */
 export async function submitArtistDraft(input: ArtistDraftInput) {
-  const user = await requireArtist();
-  if (!user.artistId) return { error: "No artist profile found." };
+  const { user, artist: base } = await requireArtistAccess();
 
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: "Please double-check your entries." };
@@ -39,17 +38,13 @@ export async function submitArtistDraft(input: ArtistDraftInput) {
       submittedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(artists.id, user.artistId));
+    .where(eq(artists.id, base.id));
 
   // Alert admins so a pending review doesn't slip by.
-  const [artist] = await db
-    .select({ name: artists.name })
-    .from(artists)
-    .where(eq(artists.id, user.artistId));
   const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, "admin"));
   await sendArtistReviewAlert(
     admins.map((a) => a.email),
-    artist?.name ?? user.name ?? "An artist",
+    base.name ?? user.name ?? "An artist",
   );
 
   revalidatePath("/artist");

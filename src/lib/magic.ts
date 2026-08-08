@@ -8,6 +8,22 @@ import type { AppRole } from "@/lib/roles";
 
 export type Identity = { role: AppRole; applicationId?: number };
 
+/**
+ * The most recent accepted application for an email, regardless of any staff
+ * role. `resolveIdentity` resolves a single role staff-first, so a judge who
+ * also exhibits never resolves to "artist"; this lets the artist portal grant
+ * page access by email independently of the primary role (dual role).
+ */
+export async function acceptedApplicationIdForEmail(email: string): Promise<number | null> {
+  const addr = email.toLowerCase().trim();
+  const app = await db.query.applications.findFirst({
+    where: and(eq(applications.email, addr), eq(applications.status, "accepted")),
+    orderBy: [desc(applications.createdAt)],
+    columns: { id: true },
+  });
+  return app?.id ?? null;
+}
+
 /** Map an email to a role, or null if it has no access. */
 export async function resolveIdentity(email: string): Promise<Identity | null> {
   const addr = email.toLowerCase().trim();
@@ -74,22 +90,30 @@ export async function ensureArtistForApplication(applicationId: number) {
   let i = 1;
   while (await db.query.artists.findFirst({ where: eq(artists.slug, slug) })) slug = `${base}-${++i}`;
 
-  const [created] = await db
-    .insert(artists)
-    .values({
-      applicationId,
-      slug,
-      name: app.name,
-      medium: app.medium,
-      // The application captures both up front: statement (about the work),
-      // bio (about the artist). Seed both so the page is nearly done.
-      statement: app.description,
-      bio: app.bio ?? null,
-      website: app.website || null,
-      socials: (app.socials as Record<string, string>) ?? {},
-      published: false,
-    })
-    .returning();
+  const values = {
+    applicationId,
+    name: app.name,
+    medium: app.medium,
+    // The application captures both up front: statement (about the work),
+    // bio (about the artist). Seed both so the page is nearly done.
+    statement: app.description,
+    bio: app.bio ?? null,
+    website: app.website || null,
+    socials: (app.socials as Record<string, string>) ?? {},
+    published: false,
+  };
+
+  let created;
+  try {
+    [created] = await db.insert(artists).values({ ...values, slug }).returning();
+  } catch {
+    // The portal layout and page both call this concurrently, so a check-then-
+    // insert can lose the slug race. The winner created this application's row —
+    // return it. Otherwise a genuine slug clash: retry once with a unique suffix.
+    const raced = await db.query.artists.findFirst({ where: eq(artists.applicationId, applicationId) });
+    if (raced) return raced;
+    [created] = await db.insert(artists).values({ ...values, slug: `${base}-${applicationId}` }).returning();
+  }
 
   // Give the artist a head start: copy their application photos into the draft.
   const photos = await db.query.applicationPhotos.findMany({

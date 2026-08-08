@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getSession } from "@/lib/session";
+import { acceptedApplicationIdForEmail, ensureArtistForApplication } from "@/lib/magic";
 import type { AppRole } from "@/lib/roles";
 
 export type SessionUser = {
@@ -51,6 +52,22 @@ export async function requireArtist(): Promise<SessionUser> {
   const user = await getSessionUser();
   if (!user || user.role !== "artist") redirect("/artist/login");
   return user;
+}
+
+/**
+ * Grant artist-portal access to the current user by email, regardless of role.
+ * A normal artist qualifies via their accepted application; a judge/admin who
+ * also exhibits qualifies the same way (dual role) without changing their staff
+ * role. Ensures the artist draft exists and returns it.
+ */
+export async function requireArtistAccess() {
+  const user = await getSessionUser();
+  if (!user) redirect("/artist/login");
+  const applicationId = await acceptedApplicationIdForEmail(user.email);
+  if (!applicationId) redirect(user.role === "artist" ? "/artist/login" : "/admin");
+  const artist = await ensureArtistForApplication(applicationId);
+  if (!artist) redirect(user.role === "artist" ? "/artist/login" : "/admin");
+  return { user, artist, applicationId };
 }
 
 /** Find-or-create the DB user row for the current staff session (votes/comments). */

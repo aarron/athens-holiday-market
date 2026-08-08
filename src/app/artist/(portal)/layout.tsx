@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { requireArtist } from "@/lib/admin-auth";
+import { requireArtistAccess } from "@/lib/admin-auth";
 import { signOutAction } from "@/lib/auth-actions";
 import { Flower } from "@/components/brand";
 
 export default async function ArtistPortalLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireArtist();
+  // Access by email, not role — so a judge who also exhibits reaches the portal.
+  const { user } = await requireArtistAccess();
   return (
     <div className="min-h-screen bg-paper">
       <a

@@ -1,0 +1,1 @@
+ALTER TABLE "applications" ADD COLUMN "direct_add" boolean DEFAULT false NOT NULL;

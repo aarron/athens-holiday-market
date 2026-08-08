@@ -26,6 +26,10 @@ export async function GET(req: NextRequest) {
 
   await createSession({ email, role: identity.role, artistId });
 
-  const dest = identity.role === "artist" ? "/artist" : "/admin";
+  // Honor a safe internal `next` (e.g. invited artists → /artist/finish).
+  // Only same-origin absolute paths are allowed, never external URLs.
+  const next = req.nextUrl.searchParams.get("next");
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const dest = safeNext ?? (identity.role === "artist" ? "/artist" : "/admin");
   return NextResponse.redirect(new URL(dest, req.url));
 }

@@ -1,6 +1,8 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { applicationWindow } from "@/lib/applications";
+import { getSessionUser } from "@/lib/admin-auth";
+import { acceptedApplicationIdForEmail } from "@/lib/magic";
 import { site } from "@/lib/site";
 
 export const runtime = "nodejs";
@@ -8,10 +10,17 @@ export const runtime = "nodejs";
 /**
  * Authorizes client-side photo uploads to Vercel Blob (avoids the 4.5MB
  * serverless body limit). Requires BLOB_READ_WRITE_TOKEN in the environment.
+ *
+ * Allowed when the public window is open, OR for a signed-in invited artist
+ * completing their profile after being added directly (window is closed then).
  */
 export async function POST(req: Request): Promise<NextResponse> {
   if (applicationWindow() !== "open") {
-    return NextResponse.json({ error: "Applications are not open." }, { status: 403 });
+    const user = await getSessionUser();
+    const invited = user ? await acceptedApplicationIdForEmail(user.email) : null;
+    if (!invited) {
+      return NextResponse.json({ error: "Applications are not open." }, { status: 403 });
+    }
   }
 
   const body = (await req.json()) as HandleUploadBody;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { getSessionUser } from "@/lib/admin-auth";
+import { acceptedApplicationIdForEmail, ensureArtistForApplication } from "@/lib/magic";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,8 +9,11 @@ export const dynamic = "force-dynamic";
 const MAX = 10 * 1024 * 1024;
 
 export async function POST(req: Request) {
+  // Access by email (any role) so a judge who also exhibits can upload too.
   const user = await getSessionUser();
-  if (!user || user.role !== "artist" || !user.artistId) {
+  const applicationId = user ? await acceptedApplicationIdForEmail(user.email) : null;
+  const artist = applicationId ? await ensureArtistForApplication(applicationId) : null;
+  if (!artist) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -27,7 +31,7 @@ export async function POST(req: Request) {
   }
 
   const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const blob = await put(`artists/${user.artistId}/${safe}`, file, {
+  const blob = await put(`artists/${artist.id}/${safe}`, file, {
     access: "public",
     addRandomSuffix: true,
   });

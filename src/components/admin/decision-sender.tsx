@@ -45,6 +45,7 @@ export function DecisionSender({
   const [checked, setChecked] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [resendAll, setResendAll] = useState(false);
   const [pending, start] = useTransition();
   const [error, setError] = useState("");
 
@@ -52,6 +53,9 @@ export function DecisionSender({
   const withEmail = recipients.filter((r) => r.hasEmail);
   const missing = recipients.length - withEmail.length;
   const alreadyNotified = recipients.filter((r) => r.decisionSentAt).length;
+  // Default target: people with an email who haven't been notified yet.
+  const notYetNotified = withEmail.filter((r) => !r.decisionSentAt);
+  const targetCount = resendAll ? withEmail.length : notYetNotified.length;
 
   const previewHtml = useMemo(
     () =>
@@ -64,12 +68,12 @@ export function DecisionSender({
   );
 
   const canSend =
-    checked && confirmText.trim().toUpperCase() === "SEND" && withEmail.length > 0 && !pending;
+    checked && confirmText.trim().toUpperCase() === "SEND" && targetCount > 0 && !pending;
 
   function onSend() {
     setError("");
     start(async () => {
-      const r = await sendDecisionBatch({ cycleId, group, subject, body });
+      const r = await sendDecisionBatch({ cycleId, group, subject, body, resendAll });
       if (r && "ok" in r && r.ok) router.push("/admin/decisions");
       else setError(r?.error ?? "Couldn't send.");
     });
@@ -80,13 +84,16 @@ export function DecisionSender({
       {/* High-stakes banner */}
       <div className={`rounded-xl ${copy.tone} p-5`}>
         <p className="font-display text-lg font-extrabold">
-          You&apos;re about to email <span style={{ color: copy.accent }}>{withEmail.length}</span>{" "}
-          {withEmail.length === 1 ? "person" : "people"} that they&apos;ve been {copy.verb} the market.
+          You&apos;re about to email <span style={{ color: copy.accent }}>{targetCount}</span>{" "}
+          {targetCount === 1 ? "person" : "people"} that they&apos;ve been {copy.verb} the market.
         </p>
         <p className="mt-1 text-sm text-ink-soft">
           Review every recipient and their votes below. This can&apos;t be undone.
           {missing > 0 && ` ${missing} applicant(s) have no email on file and will be skipped.`}
-          {alreadyNotified > 0 && ` ${alreadyNotified} have already been notified and will be re-sent.`}
+          {alreadyNotified > 0 &&
+            (resendAll
+              ? ` ${alreadyNotified} already notified — they'll be emailed again.`
+              : ` ${alreadyNotified} already notified and will be skipped.`)}
         </p>
       </div>
 
@@ -156,6 +163,20 @@ export function DecisionSender({
 
       {/* Confirm gate */}
       <div className="rounded-xl border-2 border-ink/15 bg-white p-5">
+        {alreadyNotified > 0 && (
+          <label className="mb-3 flex items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={resendAll}
+              onChange={(e) => setResendAll(e.target.checked)}
+              className="mt-0.5 h-4.5 w-4.5 accent-tangerine"
+            />
+            <span>
+              Re-send to the <strong>{alreadyNotified}</strong> already notified too (normally
+              skipped, so you can safely notify late additions without re-emailing everyone).
+            </span>
+          </label>
+        )}
         <label className="flex items-start gap-2.5 text-sm">
           <input
             type="checkbox"
@@ -164,7 +185,7 @@ export function DecisionSender({
             className="mt-0.5 h-4.5 w-4.5 accent-fern-deep"
           />
           <span>
-            I&apos;ve reviewed all {withEmail.length} recipients and their votes, and confirm this{" "}
+            I&apos;ve reviewed all {targetCount} recipients and their votes, and confirm this{" "}
             <strong>{group === "accepted" ? "acceptance" : "waitlist"}</strong> email should go to
             them.
           </span>
@@ -188,7 +209,7 @@ export function DecisionSender({
             onClick={onSend}
             style={{ backgroundColor: copy.accent }}
           >
-            {`Send ${withEmail.length} ${group === "accepted" ? "acceptance" : "waitlist"} emails`}
+            {`Send ${targetCount} ${group === "accepted" ? "acceptance" : "waitlist"} email${targetCount === 1 ? "" : "s"}`}
           </Button>
         </div>
         {error && <StatusMessage tone="error" className="mt-2">{error}</StatusMessage>}

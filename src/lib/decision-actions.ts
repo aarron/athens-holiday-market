@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { applications } from "@/db/schema";
@@ -15,6 +15,10 @@ const schema = z.object({
   group: z.enum(["accepted", "waitlist"]),
   subject: z.string().trim().min(1).max(200),
   body: z.string().trim().min(1).max(20000),
+  // Off by default: only email applicants who haven't been notified yet, so a
+  // repeat click or a late addition never re-emails the whole cohort. Opt in to
+  // deliberately re-send to everyone (including already-notified).
+  resendAll: z.boolean().optional().default(false),
 });
 
 const GROUP_STATUSES: Record<string, ("accepted" | "waitlisted" | "rejected")[]> = {
@@ -41,14 +45,24 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
   if (!parsed.success) return { error: "Please add a subject and message." };
   if (!resend) return { error: "Email isn't configured." };
 
-  const { cycleId, group, subject, body } = parsed.data;
+  const { cycleId, group, subject, body, resendAll } = parsed.data;
+  const conds = [eq(applications.cycleId, cycleId), inArray(applications.status, GROUP_STATUSES[group])];
+  // Default: skip anyone already notified. `decisionSentAt` is only set on a
+  // successful send (see failure branch below), so failed sends are retried.
+  if (!resendAll) conds.push(isNull(applications.decisionSentAt));
   const apps = await db
     .select({ id: applications.id, name: applications.name, email: applications.email })
     .from(applications)
-    .where(and(eq(applications.cycleId, cycleId), inArray(applications.status, GROUP_STATUSES[group])));
+    .where(and(...conds));
 
   const valid = apps.filter((a) => a.email && !a.email.endsWith("@no-email.invalid"));
-  if (valid.length === 0) return { error: "No recipients with a valid email address." };
+  if (valid.length === 0) {
+    return {
+      error: resendAll
+        ? "No recipients with a valid email address."
+        : "Everyone in this group has already been notified. Turn on “re-send to already-notified” to email them again.",
+    };
+  }
 
   const now = new Date();
   let sent = 0;
@@ -76,10 +90,12 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
         sent++;
       }
     } catch {
+      // Leave decisionSentAt NULL on failure so the applicant is retried on the
+      // next send (the default query only skips successfully-notified people).
       for (const a of batch) {
         await db
           .update(applications)
-          .set({ decisionGroup: group, decisionEmailStatus: "failed", decisionSentAt: now })
+          .set({ decisionGroup: group, decisionEmailStatus: "failed" })
           .where(eq(applications.id, a.id));
       }
     }

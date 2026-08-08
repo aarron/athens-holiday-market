@@ -209,8 +209,11 @@ export async function getArtistForAdmin(id: number) {
 }
 
 export async function countPendingArtistReviews() {
-  const rows = await db.select({ id: artists.id }).from(artists).where(isNotNull(artists.submittedAt));
-  return rows.length;
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(artists)
+    .where(isNotNull(artists.submittedAt));
+  return row?.n ?? 0;
 }
 
 export type DecisionGroup = "accepted" | "waitlist";

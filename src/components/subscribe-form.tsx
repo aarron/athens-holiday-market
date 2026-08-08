@@ -99,7 +99,7 @@ export function SubscribeForm({ tone = "light" }: { tone?: "light" | "dark" }) {
       </label>
 
       {status === "error" && (
-        <p className="mt-2 text-sm font-medium text-poppy-deep">{message}</p>
+        <p role="alert" className="mt-2 text-sm font-medium text-poppy-deep">{message}</p>
       )}
     </form>
   );

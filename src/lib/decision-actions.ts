@@ -78,8 +78,9 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
       const res = await resend.batch.send(payload);
       const raw = (res as { data?: { data?: { id: string }[] } | { id: string }[] }).data;
       const ids = Array.isArray(raw) ? raw : (raw?.data ?? []);
-      for (let i = 0; i < batch.length; i++) {
-        await db
+      // One HTTP round-trip for the whole chunk instead of N sequential UPDATEs.
+      const updates = batch.map((a, i) =>
+        db
           .update(applications)
           .set({
             decisionGroup: group,
@@ -87,18 +88,20 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
             decisionEmailStatus: "sent",
             decisionSentAt: now,
           })
-          .where(eq(applications.id, batch[i].id));
-        sent++;
-      }
+          .where(eq(applications.id, a.id)),
+      );
+      if (updates.length) await db.batch(updates as [(typeof updates)[number], ...typeof updates]);
+      sent += batch.length;
     } catch {
       // Leave decisionSentAt NULL on failure so the applicant is retried on the
       // next send (the default query only skips successfully-notified people).
-      for (const a of batch) {
-        await db
+      const fails = batch.map((a) =>
+        db
           .update(applications)
           .set({ decisionGroup: group, decisionEmailStatus: "failed" })
-          .where(eq(applications.id, a.id));
-      }
+          .where(eq(applications.id, a.id)),
+      );
+      if (fails.length) await db.batch(fails as [(typeof fails)[number], ...typeof fails]);
     }
   }
 

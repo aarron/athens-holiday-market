@@ -60,7 +60,7 @@ export default function HomePage() {
               <div className="flex items-start gap-2.5">
                 <CalendarIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">When</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">When</div>
                   <div className="mt-1 font-display text-lg font-bold text-white">
                     Dec {new Date(site.event.days[0].date + "T00:00").getDate()}–
                     {new Date(site.event.days[1].date + "T00:00").getDate()}, {site.event.year}
@@ -70,14 +70,14 @@ export default function HomePage() {
               <div className="flex items-start gap-2.5">
                 <ClockIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">Time</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Time</div>
                   <div className="mt-1 font-display text-lg font-bold text-white">{site.event.timeLabel}</div>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <MapPinIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">Where</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Where</div>
                   <div className="mt-1 font-display text-lg font-bold text-white">{site.location.name}</div>
                 </div>
               </div>
@@ -94,7 +94,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/60">
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/80">
           <span className="text-xs uppercase tracking-[0.2em]">Scroll</span>
         </div>
       </section>

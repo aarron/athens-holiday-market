@@ -130,7 +130,7 @@ export function ContactForm() {
         Add me to the mailing list for market news and reminders.
       </label>
 
-      {status === "error" && <p className="text-sm font-medium text-poppy-deep">{errMsg}</p>}
+      {status === "error" && <p role="alert" className="text-sm font-medium text-poppy-deep">{errMsg}</p>}
 
       <Button type="submit" size="lg" disabled={status === "loading"}>
         {status === "loading" ? "Sending…" : "Send message"}

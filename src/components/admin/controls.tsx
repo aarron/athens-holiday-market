@@ -35,8 +35,12 @@ export function VoteButtons({ applicationId, myVote }: { applicationId: number; 
             key={v}
             disabled={pending}
             onClick={() => {
+              const prev = current;
               setCurrent(v);
-              start(() => castVote(applicationId, v));
+              start(async () => {
+                const r = await castVote(applicationId, v);
+                if (!(r && "ok" in r && r.ok)) setCurrent(prev);
+              });
             }}
             className={`inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border-2 font-display font-bold transition-all disabled:opacity-60 ${
               active ? "text-white" : "text-ink hover:bg-cream"
@@ -177,7 +181,10 @@ export function DecisionControls({
           onClick={() => {
             const next = !paid;
             setPaid(next);
-            start(() => setBoothFee(applicationId, next));
+            start(async () => {
+              const r = await setBoothFee(applicationId, next);
+              if (!(r && "ok" in r && r.ok)) setPaid(!next);
+            });
           }}
           className={`mt-2 h-11 w-full rounded-lg border-2 font-display text-sm font-bold transition-all disabled:opacity-50 ${
             paid ? "border-fern-deep bg-fern-soft text-fern-deep" : "border-ink/15 text-ink hover:bg-cream"

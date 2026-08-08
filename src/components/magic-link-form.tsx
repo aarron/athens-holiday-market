@@ -39,7 +39,7 @@ export function MagicLinkForm() {
       <Button type="submit" size="lg" variant="ink" className="w-full" disabled={pending}>
         {pending ? "Sending…" : "Email me a login link"}
       </Button>
-      {state.error && <p className="text-sm font-medium text-poppy-deep">{state.error}</p>}
+      {state.error && <p role="alert" className="text-sm font-medium text-poppy-deep">{state.error}</p>}
     </form>
   );
 }

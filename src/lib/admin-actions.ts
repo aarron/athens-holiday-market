@@ -35,6 +35,7 @@ export async function castVote(applicationId: number, value: VoteValue) {
     });
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/admin");
+  return { ok: true as const };
 }
 
 /** Post a note/comment on an application (any jury member or admin). */
@@ -78,6 +79,7 @@ export async function setBoothFee(applicationId: number, paid: boolean) {
     .where(eq(applications.id, applicationId));
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/admin");
+  return { ok: true as const };
 }
 
 /** Email the applicant their decision based on current status (admin only). */

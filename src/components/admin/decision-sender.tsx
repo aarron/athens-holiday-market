@@ -3,6 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { VoteTally, type Tally } from "@/components/admin/badges";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { StatusMessage } from "@/components/ui/status-message";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
 import { sendDecisionBatch } from "@/lib/decision-actions";
 
@@ -87,8 +91,8 @@ export function DecisionSender({
       </div>
 
       {/* Email editor */}
-      <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-        <div className="flex items-center justify-between">
+      <Card>
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">The email</h2>
           <button
             onClick={() => setShowPreview((v) => !v)}
@@ -97,27 +101,20 @@ export function DecisionSender({
             {showPreview ? "Hide preview" : "Preview"}
           </button>
         </div>
-        <label className="mt-3 block text-sm font-semibold text-ink-soft">Subject</label>
-        <input
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          className="mt-1 h-11 w-full rounded-lg border-2 border-ink/15 bg-white px-3 outline-none focus:border-fern-deep"
-        />
-        <label className="mt-3 block text-sm font-semibold text-ink-soft">
-          Message <span className="font-normal text-ink-soft/70">— {"{{first_name}}"} is personalized</span>
-        </label>
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={10}
-          className="mt-1 w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-fern-deep"
-        />
+        <Field label="Subject" className="mb-3">
+          <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+        </Field>
+        <Field
+          label={<>Message <span className="font-normal text-ink-soft/70">— {"{{first_name}}"} is personalized</span></>}
+        >
+          <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="font-mono" />
+        </Field>
         {showPreview && (
           <div className="mt-4 overflow-hidden rounded-lg border border-ink/10">
             <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Recipient list with votes */}
       <div className="rounded-xl bg-white shadow-[var(--shadow-card)]">
@@ -176,22 +173,25 @@ export function DecisionSender({
           <span className="text-sm text-ink-soft">
             Type <strong>SEND</strong> to confirm:
           </span>
-          <input
+          <Input
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder="SEND"
-            className="h-10 w-28 rounded-lg border-2 border-ink/15 px-3 text-sm uppercase outline-none focus:border-fern-deep"
+            aria-label="Type SEND to confirm"
+            className="!w-28 uppercase"
           />
-          <button
+          <Button
+            variant="confirm"
             disabled={!canSend}
+            loading={pending}
+            loadingLabel="Sending…"
             onClick={onSend}
-            className="rounded-lg px-6 py-2.5 font-display font-bold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             style={{ backgroundColor: copy.accent }}
           >
-            {pending ? "Sending…" : `Send ${withEmail.length} ${group === "accepted" ? "acceptance" : "waitlist"} emails`}
-          </button>
+            {`Send ${withEmail.length} ${group === "accepted" ? "acceptance" : "waitlist"} emails`}
+          </Button>
         </div>
-        {error && <p className="mt-2 text-sm font-medium text-poppy-deep">{error}</p>}
+        {error && <StatusMessage tone="error" className="mt-2">{error}</StatusMessage>}
       </div>
     </div>
   );

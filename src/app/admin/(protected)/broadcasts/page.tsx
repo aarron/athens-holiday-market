@@ -10,8 +10,7 @@ import { ScheduledSends } from "@/components/admin/scheduled-sends";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
 import { DeleteDraftButton } from "@/components/admin/delete-draft-button";
-import { AddRecipientButton } from "@/components/admin/add-recipient-button";
-import { EmailLogisticsButton } from "@/components/admin/email-logistics-button";
+import { SendToOthersButton } from "@/components/admin/send-to-others-button";
 import { ButtonLink } from "@/components/ui/button";
 import { ClockIcon, CheckCircleIcon, DraftIcon, SendingIcon } from "@/components/icons";
 import type { ComponentType } from "react";
@@ -173,7 +172,12 @@ export default async function EmailHubPage() {
               <tbody>
                 {broadcasts.map((b) => {
                   const st = STATUS_PILL[b.status] ?? STATUS_PILL.draft;
-                  const href = b.status === "draft" ? `/admin/broadcasts/new?draft=${b.id}` : `/admin/broadcasts/${b.id}`;
+                  const href =
+                    b.status === "draft"
+                      ? `/admin/broadcasts/new?draft=${b.id}`
+                      : b.status === "scheduled"
+                        ? `/admin/broadcasts/new?edit=${b.id}`
+                        : `/admin/broadcasts/${b.id}`;
                   const when =
                     b.status === "scheduled" && b.scheduledFor
                       ? new Date(b.scheduledFor).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
@@ -217,9 +221,16 @@ export default async function EmailHubPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        {b.status === "scheduled" && <CancelBroadcastButton id={b.id} />}
+                        {b.status === "scheduled" && (
+                          <div className="flex items-center justify-end gap-3">
+                            <Link href={`/admin/broadcasts/new?edit=${b.id}`} className="link whitespace-nowrap text-sm font-semibold">
+                              Edit
+                            </Link>
+                            <CancelBroadcastButton id={b.id} />
+                          </div>
+                        )}
                         {b.status === "draft" && <DeleteDraftButton id={b.id} />}
-                        {b.status === "sent" && <AddRecipientButton broadcastId={b.id} />}
+                        {b.status === "sent" && <SendToOthersButton broadcastId={b.id} />}
                       </td>
                     </tr>
                   );
@@ -238,9 +249,6 @@ export default async function EmailHubPage() {
     <div className="space-y-8">
       {decisionsPanel}
       {emailTable}
-      {groups && groups.accepted.total > 0 && (
-        <EmailLogisticsButton count={groups.accepted.total} />
-      )}
     </div>
   );
 

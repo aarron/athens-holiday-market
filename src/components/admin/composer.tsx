@@ -34,20 +34,40 @@ const SEGMENT_GROUPS: { label: string; options: { value: Segment; label: string 
 const fmtWhen = (v: string) =>
   new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
+/** ISO (UTC) → a local `YYYY-MM-DDTHH:mm` value for a datetime-local input. */
+function isoToLocalInput(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function Composer({
   counts,
   draft,
 }: {
   counts: Record<Segment, number>;
-  draft?: { id: number; name: string | null; subject: string; body: string; segment: Segment };
+  draft?: {
+    id: number;
+    name: string | null;
+    subject: string;
+    body: string;
+    segment: Segment;
+    status?: string;
+    scheduledForIso?: string;
+  };
 }) {
   const router = useRouter();
   const [name, setName] = useState(draft?.name ?? "");
   const [subject, setSubject] = useState(draft?.subject ?? "");
   const [body, setBody] = useState(draft?.body ?? "");
   const [segment, setSegment] = useState<Segment>(draft?.segment ?? "all");
-  const [mode, setMode] = useState<"now" | "schedule">("now");
-  const [scheduledFor, setScheduledFor] = useState("");
+  // Editing a scheduled email opens in "schedule" mode with its time pre-filled.
+  const [mode, setMode] = useState<"now" | "schedule">(
+    draft?.status === "scheduled" ? "schedule" : "now",
+  );
+  const [scheduledFor, setScheduledFor] = useState(isoToLocalInput(draft?.scheduledForIso));
   const [testTo, setTestTo] = useState("");
   const [draftId, setDraftId] = useState<number | undefined>(draft?.id);
   const bodyRef = useRef<HTMLTextAreaElement>(null);

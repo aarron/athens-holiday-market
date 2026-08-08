@@ -130,6 +130,11 @@
     color: var(--color-fern);
   }
 
+  /* FAQ accordion: rotate the chevron when its <details> is open. */
+  details[open] > summary .faq-chevron {
+    transform: rotate(180deg);
+  }
+
   /* Tailwind v4 no longer defaults buttons to a pointer cursor; restore it
      for all enabled buttons and button-role controls. */
   button:not(:disabled),

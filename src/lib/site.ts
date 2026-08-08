@@ -79,6 +79,7 @@ export const site = {
     { href: "/", label: "Home" },
     { href: "/artists", label: "Artists" },
     { href: "/venue", label: "Venue" },
+    { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
     { href: "/artist", label: "Artist Login" },
   ],

@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
 import { getBroadcastTemplates } from "@/lib/email-templates";
-import { sendTestEmail, sendBroadcast, scheduleBroadcast } from "@/lib/broadcast-actions";
+import { sendTestEmail, sendBroadcast, scheduleBroadcast, saveDraft } from "@/lib/broadcast-actions";
 import { MarkdownToolbar } from "@/components/admin/markdown-toolbar";
 import { ArrowRightIcon, ClockIcon } from "@/components/icons";
 
@@ -31,18 +31,38 @@ const SEGMENT_GROUPS: { label: string; options: { value: Segment; label: string 
 const fmtWhen = (v: string) =>
   new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
-export function Composer({ counts }: { counts: Record<Segment, number> }) {
+export function Composer({
+  counts,
+  draft,
+}: {
+  counts: Record<Segment, number>;
+  draft?: { id: number; subject: string; body: string; segment: Segment };
+}) {
   const router = useRouter();
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [segment, setSegment] = useState<Segment>("all");
+  const [subject, setSubject] = useState(draft?.subject ?? "");
+  const [body, setBody] = useState(draft?.body ?? "");
+  const [segment, setSegment] = useState<Segment>(draft?.segment ?? "all");
   const [mode, setMode] = useState<"now" | "schedule">("now");
   const [scheduledFor, setScheduledFor] = useState("");
   const [testTo, setTestTo] = useState("");
+  const [draftId, setDraftId] = useState<number | undefined>(draft?.id);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState("");
   const [confirming, setConfirming] = useState(false);
+
+  function onSaveDraft() {
+    setMsg("");
+    start(async () => {
+      const r = await saveDraft({ id: draftId, subject, body, segment });
+      if (r && "ok" in r && r.ok) {
+        setDraftId(r.id);
+        setMsg("Draft saved ✓");
+      } else {
+        setMsg(r?.error ?? "Couldn't save the draft.");
+      }
+    });
+  }
 
   const recipientCount = counts[segment] ?? 0;
   const scheduleReady = mode === "schedule" ? !!scheduledFor : true;
@@ -67,8 +87,8 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
     start(async () => {
       const r =
         mode === "schedule"
-          ? await scheduleBroadcast({ subject, body, segment, scheduledFor })
-          : await sendBroadcast({ subject, body, segment });
+          ? await scheduleBroadcast({ subject, body, segment, scheduledFor, draftId })
+          : await sendBroadcast({ subject, body, segment, draftId });
       if (r && "ok" in r && r.ok) {
         router.push("/admin/broadcasts");
       } else {
@@ -214,14 +234,23 @@ export function Composer({ counts }: { counts: Record<Segment, number> }) {
                 {pending ? "Working…" : "Send test"}
               </button>
             </div>
-            <button
-              disabled={pending || !subject || !body || recipientCount === 0 || !scheduleReady}
-              onClick={() => setConfirming(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
-            >
-              {mode === "schedule" ? "Schedule email" : "Send email"}
-              {mode === "schedule" ? <ClockIcon size={16} aria-hidden /> : <ArrowRightIcon size={16} aria-hidden />}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                disabled={pending || !subject || !body || recipientCount === 0 || !scheduleReady}
+                onClick={() => setConfirming(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-fuchsia px-5 py-2.5 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {mode === "schedule" ? "Schedule email" : "Send email"}
+                {mode === "schedule" ? <ClockIcon size={16} aria-hidden /> : <ArrowRightIcon size={16} aria-hidden />}
+              </button>
+              <button
+                disabled={pending || (!subject && !body)}
+                onClick={onSaveDraft}
+                className="rounded-lg border-2 border-ink/15 px-4 py-2.5 text-sm font-display font-semibold hover:bg-cream disabled:opacity-50"
+              >
+                {draftId ? "Update draft" : "Save draft"}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="rounded-xl border-2 border-fuchsia/40 bg-fuchsia/5 p-4">

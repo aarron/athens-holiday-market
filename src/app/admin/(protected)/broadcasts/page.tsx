@@ -9,6 +9,7 @@ import { TextArtists } from "@/components/admin/text-artists";
 import { ScheduledSends } from "@/components/admin/scheduled-sends";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
+import { DeleteDraftButton } from "@/components/admin/delete-draft-button";
 
 export const metadata: Metadata = { title: "Email", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -136,13 +137,15 @@ export default async function EmailHubPage() {
           {broadcasts.map((b) => (
             <li key={b.id} className="flex items-stretch gap-2">
               <Link
-                href={`/admin/broadcasts/${b.id}`}
+                href={b.status === "draft" ? `/admin/broadcasts/new?draft=${b.id}` : `/admin/broadcasts/${b.id}`}
                 className="flex flex-1 flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
               >
                 <div>
-                  <p className="font-display text-lg font-bold">{b.subject}</p>
+                  <p className="font-display text-lg font-bold">{b.subject || "Untitled draft"}</p>
                   <p className="text-sm text-ink-soft">
-                    {SEGMENT_LABEL[b.segment] ?? b.segment} · {b.recipientCount} recipients
+                    {b.status === "draft"
+                      ? `${SEGMENT_LABEL[b.segment] ?? b.segment} · not sent yet`
+                      : `${SEGMENT_LABEL[b.segment] ?? b.segment} · ${b.recipientCount} recipients`}
                     {b.status === "scheduled" && b.scheduledFor
                       ? ` · sends ${new Date(b.scheduledFor).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`
                       : b.sentAt && ` · ${new Date(b.sentAt).toLocaleDateString()}`}
@@ -177,6 +180,11 @@ export default async function EmailHubPage() {
               {b.status === "scheduled" && (
                 <div className="flex items-center">
                   <CancelBroadcastButton id={b.id} />
+                </div>
+              )}
+              {b.status === "draft" && (
+                <div className="flex items-center">
+                  <DeleteDraftButton id={b.id} />
                 </div>
               )}
             </li>

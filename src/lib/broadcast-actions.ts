@@ -17,10 +17,20 @@ const composeSchema = z.object({
   subject: z.string().trim().min(1, "Add a subject.").max(200),
   body: z.string().trim().min(1, "Write a message.").max(20000),
   segment: z.enum(SEGMENT_VALUES),
+  // When set, send/schedule reuses this draft's row instead of creating a new one.
+  draftId: z.number().int().optional(),
 });
 
 const scheduleSchema = composeSchema.extend({
   scheduledFor: z.string().min(1, "Pick a date and time."),
+});
+
+// Draft save is lenient — the point is to not lose work in progress.
+const draftSchema = z.object({
+  id: z.number().int().optional(),
+  subject: z.string().trim().max(200).default(""),
+  body: z.string().trim().max(20000).default(""),
+  segment: z.enum(SEGMENT_VALUES),
 });
 
 const testSchema = z.object({
@@ -67,14 +77,22 @@ export async function sendBroadcast(input: z.input<typeof composeSchema>) {
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
   if (!resend) return { error: "Email isn't configured." };
 
-  const { subject, body, segment } = parsed.data;
+  const { subject, body, segment, draftId } = parsed.data;
   const recipients = await segmentRecipients(segment);
   if (recipients.length === 0) return { error: "No active recipients in that segment." };
 
-  const [bc] = await db
-    .insert(broadcasts)
-    .values({ subject, body, segment, status: "sending", recipientCount: recipients.length })
-    .returning({ id: broadcasts.id });
+  // Reuse the draft's row when sending from a saved draft; otherwise insert.
+  const bc = draftId
+    ? (await db
+        .update(broadcasts)
+        .set({ subject, body, segment, status: "sending", recipientCount: recipients.length })
+        .where(and(eq(broadcasts.id, draftId), eq(broadcasts.status, "draft")))
+        .returning({ id: broadcasts.id }))[0]
+    : (await db
+        .insert(broadcasts)
+        .values({ subject, body, segment, status: "sending", recipientCount: recipients.length })
+        .returning({ id: broadcasts.id }))[0];
+  if (!bc) return { error: "That draft is no longer available." };
 
   const r = await deliverBroadcast({ id: bc.id, subject, body, segment });
   revalidatePath("/admin/broadcasts");
@@ -88,16 +106,21 @@ export async function scheduleBroadcast(input: z.input<typeof scheduleSchema>) {
   const parsed = scheduleSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
 
-  const { subject, body, segment, scheduledFor } = parsed.data;
+  const { subject, body, segment, scheduledFor, draftId } = parsed.data;
   const when = new Date(scheduledFor);
   if (isNaN(when.getTime())) return { error: "That date didn't parse." };
   if (when.getTime() < Date.now() - 60_000) return { error: "Pick a time in the future." };
 
   const recipients = await segmentRecipients(segment);
-  const [bc] = await db
-    .insert(broadcasts)
-    .values({ subject, body, segment, status: "scheduled", scheduledFor: when, recipientCount: recipients.length })
-    .returning({ id: broadcasts.id });
+  const values = { subject, body, segment, status: "scheduled" as const, scheduledFor: when, recipientCount: recipients.length };
+  const bc = draftId
+    ? (await db
+        .update(broadcasts)
+        .set(values)
+        .where(and(eq(broadcasts.id, draftId), eq(broadcasts.status, "draft")))
+        .returning({ id: broadcasts.id }))[0]
+    : (await db.insert(broadcasts).values(values).returning({ id: broadcasts.id }))[0];
+  if (!bc) return { error: "That draft is no longer available." };
 
   revalidatePath("/admin/broadcasts");
   return { ok: true, id: bc.id, count: recipients.length, scheduledFor: when.toISOString() };
@@ -107,6 +130,41 @@ export async function scheduleBroadcast(input: z.input<typeof scheduleSchema>) {
 export async function cancelScheduledBroadcast(id: number) {
   await requireAdmin();
   await db.delete(broadcasts).where(and(eq(broadcasts.id, id), eq(broadcasts.status, "scheduled")));
+  revalidatePath("/admin/broadcasts");
+  return { ok: true };
+}
+
+/** Save (create or update) an email draft without sending. Lenient by design. */
+export async function saveDraft(input: z.input<typeof draftSchema>) {
+  await requireAdmin();
+  const parsed = draftSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
+  const { id, subject, body, segment } = parsed.data;
+  if (!subject && !body) return { error: "Add a subject or a message before saving." };
+
+  if (id) {
+    const [row] = await db
+      .update(broadcasts)
+      .set({ subject, body, segment })
+      .where(and(eq(broadcasts.id, id), eq(broadcasts.status, "draft")))
+      .returning({ id: broadcasts.id });
+    if (!row) return { error: "That draft can no longer be edited." };
+    revalidatePath("/admin/broadcasts");
+    return { ok: true, id: row.id };
+  }
+
+  const [row] = await db
+    .insert(broadcasts)
+    .values({ subject, body, segment, status: "draft", recipientCount: 0 })
+    .returning({ id: broadcasts.id });
+  revalidatePath("/admin/broadcasts");
+  return { ok: true, id: row.id };
+}
+
+/** Delete a draft (only while still a draft). */
+export async function deleteDraft(id: number) {
+  await requireAdmin();
+  await db.delete(broadcasts).where(and(eq(broadcasts.id, id), eq(broadcasts.status, "draft")));
   revalidatePath("/admin/broadcasts");
   return { ok: true };
 }

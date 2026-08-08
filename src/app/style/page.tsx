@@ -4,6 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { site } from "@/lib/site";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input, Select, Textarea, Field } from "@/components/ui/field";
+import { StatusMessage } from "@/components/ui/status-message";
+import { SectionTabs } from "@/components/admin/section-tabs";
+import { APPLICATION_STATUS, SEND_STATUS, BOOTH_FEE_STATUS, ARTIST_STATUS } from "@/components/ui/status";
 import { Flower, ColorWord } from "@/components/brand";
 import { CopyToken } from "@/components/style/copy-token";
 import {
@@ -91,9 +97,10 @@ const ASSETS = [
 
 const SECTIONS = [
   ["assets", "Brand assets"], ["color", "Color"], ["type", "Typography"], ["radii", "Radii & shadows"],
-  ["buttons", "Buttons"], ["forms", "Forms"], ["pills", "Pills & tags"], ["icons", "Icons"],
-  ["nav", "Navigation"], ["tables", "Tables"], ["layout", "Layout & grid"], ["motion", "Motion"],
-  ["a11y", "Accessibility"], ["social", "Social"],
+  ["buttons", "Buttons"], ["forms", "Forms"], ["status", "Status & badges"], ["cards", "Cards & surfaces"],
+  ["feedback", "Feedback & confirmation"], ["tabs", "Tabs"], ["icons", "Icons"], ["nav", "Navigation"],
+  ["tables", "Tables"], ["layout", "Layout & grid"], ["motion", "Motion"], ["a11y", "Accessibility"],
+  ["social", "Social"],
 ] as const;
 
 /* ─────────────────────────── helpers ─────────────────────────── */
@@ -109,6 +116,27 @@ function Section({ id, title, kicker, children }: { id: string; title: string; k
       </div>
       {children}
     </section>
+  );
+}
+
+function StatusMap({ title, map }: { title: string; map: Record<string, { label: string; cls: string }> }) {
+  return (
+    <div className="overflow-hidden rounded-xl bg-white shadow-[var(--shadow-card)]">
+      <div className="border-b border-ink/10 px-5 py-3">
+        <h3 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">{title}</h3>
+      </div>
+      <table className="w-full text-left text-sm">
+        <tbody>
+          {Object.entries(map).map(([key, s]) => (
+            <tr key={key} className="border-b border-ink/5 last:border-0">
+              <td className="px-5 py-3"><Badge style={s} /></td>
+              <td className="px-5 py-3 font-mono text-xs text-ink-soft">{key}</td>
+              <td className="px-5 py-3 font-mono text-xs text-ink-soft">{s.cls}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -144,8 +172,6 @@ function Spec({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-const inputCls =
-  "h-12 w-full rounded-lg border-2 border-ink/15 bg-white px-3 outline-none transition-colors focus:border-fern-deep";
 
 /* ─────────────────────────── page ─────────────────────────── */
 
@@ -351,38 +377,46 @@ export default function StyleGuidePage() {
           <Section id="buttons" title="Buttons" kicker="Components">
             <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="mb-5 text-sm text-ink-soft">
-                Shared <CopyToken value="<Button>" /> / <CopyToken value="<ButtonLink>" /> — variants{" "}
-                <code className="font-mono text-xs">primary · ink · outline · ghost</code>, sizes{" "}
-                <code className="font-mono text-xs">md · lg</code>. Primary carries the signature raised ledge.
+                One shared <CopyToken value="<Button>" /> / <CopyToken value="<ButtonLink>" /> — every example
+                below is the real component. Sizes <code className="font-mono text-xs">sm · md · lg</code>;
+                <code className="font-mono text-xs"> loading</code> swaps the label and disables. Every variant
+                carries the 3px berry focus ring and <code className="font-mono text-xs">disabled:opacity-50</code>.
               </p>
+              <h3 className="mb-2 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                Marketing
+              </h3>
               <div className="flex flex-wrap items-center gap-3">
                 <Button variant="primary">Primary</Button>
                 <Button variant="ink">Ink</Button>
                 <Button variant="outline">Outline</Button>
                 <Button variant="ghost">Ghost</Button>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Button size="md">Medium · h-11</Button>
-                <Button size="lg">Large · h-14</Button>
-                <ButtonLink href="#buttons" variant="primary" className="inline-flex items-center gap-1.5">
-                  With icon <ArrowRightIcon size={16} />
+                <ButtonLink href="#buttons" variant="primary">
+                  With icon <ArrowRightIcon size={16} aria-hidden />
                 </ButtonLink>
               </div>
+              <p className="mt-2 text-xs text-ink-soft">
+                <code className="font-mono text-xs">primary</code> carries the signature raised ledge — reserve it
+                for the one hero action on marketing pages.
+              </p>
               <div className="mt-6 border-t border-ink/10 pt-5">
-                <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
-                  Admin action buttons
+                <h3 className="mb-2 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                  Admin — semantic fills &amp; states
                 </h3>
-                <p className="mb-3 text-sm text-ink-soft">
-                  Flat, semantic fills used inside the admin: <code className="font-mono text-xs">bg-fern-deep</code>{" "}
-                  (confirm), <code className="font-mono text-xs">bg-fuchsia</code> (create),{" "}
-                  <code className="font-mono text-xs">bg-poppy</code> (send / destructive).
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <span className="rounded-lg bg-fern-deep px-5 py-2.5 font-display font-bold text-white">Confirm</span>
-                  <span className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white">+ Create</span>
-                  <span className="rounded-lg bg-poppy px-5 py-2.5 font-display font-bold text-white">Send</span>
-                  <span className="rounded-lg border-2 border-ink/15 px-5 py-2.5 font-display font-bold text-ink">Secondary</span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button variant="create" size="sm">+ Create</Button>
+                  <Button variant="confirm" size="sm">Confirm</Button>
+                  <Button variant="danger" size="sm">Send / delete</Button>
+                  <Button variant="secondary" size="sm">Secondary</Button>
+                  <Button variant="confirm" size="sm" loading loadingLabel="Sending…">Send</Button>
+                  <Button variant="create" size="sm" disabled>Disabled</Button>
                 </div>
+                <p className="mt-2 text-xs text-ink-soft">
+                  <code className="font-mono text-xs">create</code> = fuchsia (new/primary send),{" "}
+                  <code className="font-mono text-xs">confirm</code> = fern (approve),{" "}
+                  <code className="font-mono text-xs">danger</code> = poppy (blast / destructive),{" "}
+                  <code className="font-mono text-xs">secondary</code> = light outline. Admin buttons use{" "}
+                  <code className="font-mono text-xs">size="sm"</code>.
+                </p>
               </div>
             </div>
           </Section>
@@ -390,54 +424,165 @@ export default function StyleGuidePage() {
           {/* ── Forms ── */}
           <Section id="forms" title="Forms" kicker="Components">
             <div className="grid gap-5 rounded-xl bg-white p-6 shadow-[var(--shadow-card)] sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-1 block text-sm font-semibold text-ink-soft">Text input</span>
-                <input className={inputCls} placeholder="you@email.com" defaultValue="" />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm font-semibold text-ink-soft">Select</span>
-                <div className="relative">
-                  <select className={`${inputCls} appearance-none pr-10`} defaultValue="">
-                    <option value="">Choose a medium…</option>
-                    <option>Ceramics</option>
-                    <option>Jewelry</option>
-                  </select>
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft">
-                    <ChevronDownIcon size={18} />
-                  </span>
-                </div>
-              </label>
-              <label className="block sm:col-span-2">
-                <span className="mb-1 block text-sm font-semibold text-ink-soft">Textarea</span>
-                <textarea className="min-h-24 w-full resize-none rounded-lg border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep" placeholder="How can we help?" />
-              </label>
+              <Field label="Text input" htmlFor="ds-email">
+                <Input id="ds-email" type="email" autoComplete="email" placeholder="you@email.com" />
+              </Field>
+              <Field label="Select" htmlFor="ds-medium">
+                <Select id="ds-medium" defaultValue="">
+                  <option value="">Choose a medium…</option>
+                  <option>Ceramics</option>
+                  <option>Jewelry</option>
+                </Select>
+              </Field>
+              <Field label="Textarea" htmlFor="ds-note" className="sm:col-span-2">
+                <Textarea id="ds-note" rows={3} placeholder="How can we help?" />
+              </Field>
+              <Field label="With an error" htmlFor="ds-err" error="This field is required." className="sm:col-span-2">
+                <Input id="ds-err" aria-invalid aria-describedby="ds-err-error" defaultValue="" />
+              </Field>
               <label className="flex items-start gap-2.5 text-sm text-ink-soft sm:col-span-2">
                 <input type="checkbox" defaultChecked className="mt-0.5 h-4 w-4 accent-fern-deep" />
                 Checkbox — <code className="font-mono text-xs">accent-fern-deep</code>
               </label>
               <p className="text-xs text-ink-soft sm:col-span-2">
-                Inputs: <CopyToken value="h-12 rounded-lg border-2 border-ink/15 focus:border-fern-deep" />. Always
-                pair with a visible <code className="font-mono text-xs">&lt;label&gt;</code> and set{" "}
+                Every field is the shared <CopyToken value="<Field>" /> + <CopyToken value="<Input>/<Select>/<Textarea>" />{" "}
+                (<code className="font-mono text-xs">h-11 rounded-lg border-2 border-ink/15 focus:border-fern-deep</code>).
+                Field renders the error with a stable <code className="font-mono text-xs">{"{htmlFor}-error"}</code> id;
+                point the control&apos;s <code className="font-mono text-xs">aria-describedby</code> at it, and set{" "}
                 <code className="font-mono text-xs">autoComplete</code>.
               </p>
             </div>
           </Section>
 
-          {/* ── Pills & tags ── */}
-          <Section id="pills" title="Pills & tags" kicker="Components">
-            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-              <p className="mb-4 text-sm text-ink-soft">
-                Status chips: <CopyToken value="rounded-full px-2.5 py-0.5 text-xs font-bold" /> with a tinted
-                surface + matching accent text.
-              </p>
+          {/* ── Status & badges ── */}
+          <Section id="status" title="Status & badges" kicker="Single source of truth">
+            <p className="-mt-2 mb-6 max-w-2xl text-ink-soft">
+              Every status color comes from one map — <CopyToken value="src/components/ui/status.ts" /> — rendered
+              by the shared <CopyToken value="<Badge>" />. Never hand-roll a status color. Text is always the AA-safe
+              &ldquo;deep&rdquo; sibling on the matching soft tint.
+            </p>
+            <div className="space-y-6">
+              <StatusMap title="Application lifecycle" map={APPLICATION_STATUS} />
+              <StatusMap title="Email / broadcast send" map={SEND_STATUS} />
+              <StatusMap title="Booth fee" map={BOOTH_FEE_STATUS} />
+              <StatusMap title="Artist-page publication" map={ARTIST_STATUS} />
+            </div>
+            <div className="mt-6 rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+              <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                Counts &amp; filter pills
+              </h3>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-fern-soft px-2.5 py-0.5 text-xs font-bold text-fern-deep">Live</span>
-                <span className="rounded-full bg-tangerine-soft px-2.5 py-0.5 text-xs font-bold text-tangerine-deep">Needs review</span>
-                <span className="rounded-full bg-cream px-2.5 py-0.5 text-xs font-bold text-ink-soft">Draft</span>
-                <span className="rounded-full bg-fuchsia/10 px-2.5 py-0.5 text-xs font-bold text-fuchsia-deep">Artist</span>
                 <span className="rounded-full bg-tangerine px-3 py-1 text-sm font-bold text-white">2 to notify</span>
-                <span className="ml-1 inline-flex rounded-full border-2 border-ink/15 px-3 py-1 text-sm font-semibold text-ink-soft">Filter pill</span>
+                <span className="inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-ink">
+                  Applications
+                  <span className="ml-1.5 rounded-full bg-tangerine px-1.5 py-0.5 text-xs font-bold text-white">3</span>
+                </span>
+                <span className="rounded-md bg-cream px-2 py-0.5 text-xs font-semibold text-ink-soft">Channel tag</span>
               </div>
+              <p className="mt-3 text-xs text-ink-soft">
+                A <strong>label</strong> (filled tag, <code className="font-mono text-xs">rounded-md bg-cream</code>)
+                must never look like a <strong>button</strong>. Row actions are tertiary text links, not bordered pills.
+              </p>
+            </div>
+          </Section>
+
+          {/* ── Cards & surfaces ── */}
+          <Section id="cards" title="Cards & surfaces" kicker="Components">
+            <p className="-mt-2 mb-6 max-w-2xl text-ink-soft">
+              The shared <CopyToken value="<Card>" /> is the one white surface —{" "}
+              <code className="font-mono text-xs">rounded-xl bg-white p-5 shadow-card</code>. Optional{" "}
+              <code className="font-mono text-xs">title</code>/<code className="font-mono text-xs">hint</code>{" "}
+              render the header; <code className="font-mono text-xs">titleSize</code> picks the dense admin label or
+              the friendly portal heading.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card title="Admin card" hint="titleSize=&quot;sm&quot; — dense uppercase label.">
+                <p className="text-sm text-ink-soft">Body content sits under the header.</p>
+              </Card>
+              <Card title="Portal card" titleSize="lg" hint="titleSize=&quot;lg&quot; — friendly heading.">
+                <p className="text-sm text-ink-soft">Same surface, larger heading for artist-facing screens.</p>
+              </Card>
+            </div>
+          </Section>
+
+          {/* ── Feedback & confirmation ── */}
+          <Section id="feedback" title="Feedback & confirmation" kicker="Patterns">
+            <div className="space-y-4">
+              <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+                <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                  Inline status message
+                </h3>
+                <p className="mb-3 text-sm text-ink-soft">
+                  <CopyToken value="<StatusMessage>" /> — a polite live region (SR-announced). Tone sets color; no
+                  toast/portal.
+                </p>
+                <div className="space-y-1">
+                  <StatusMessage tone="success">Draft saved ✓</StatusMessage>
+                  <StatusMessage tone="error">That doesn&apos;t look like an email address.</StatusMessage>
+                  <StatusMessage>Working…</StatusMessage>
+                </div>
+              </div>
+              <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+                <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+                  Confirmation — two sanctioned tiers
+                </h3>
+                <p className="mb-4 text-sm text-ink-soft">
+                  The app deliberately uses <strong>inline confirmation</strong>, never modals. Two tiers by stakes:
+                </p>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">
+                      Tier 1 · inline arm → confirm
+                    </p>
+                    <div className="rounded-lg border-2 border-fuchsia/40 bg-fuchsia/5 p-4">
+                      <p className="font-display font-bold">Send to 504 people now?</p>
+                      <p className="mt-1 text-sm text-ink-soft">This can&apos;t be undone.</p>
+                      <div className="mt-3 flex gap-3">
+                        <Button variant="create" size="sm">Yes, send to 504</Button>
+                        <Button variant="ghost" size="sm">Cancel</Button>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-ink-soft">Everyday reversible-ish actions (send, publish).</p>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">
+                      Tier 2 · high-stakes &ldquo;type SEND&rdquo; gate
+                    </p>
+                    <div className="rounded-lg border-2 border-ink/15 bg-white p-4">
+                      <label className="flex items-start gap-2.5 text-sm">
+                        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-fern-deep" />
+                        I&apos;ve reviewed all 45 recipients and their votes.
+                      </label>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-ink-soft">Type <strong>SEND</strong>:</span>
+                        <Input className="!w-28 uppercase" placeholder="SEND" aria-label="Type SEND to confirm" />
+                        <Button variant="confirm" size="sm" disabled>Send 45 emails</Button>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-ink-soft">
+                      Irreversible fan-outs to real people (decision emails, event-day SMS blast).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* ── Tabs ── */}
+          <Section id="tabs" title="Tabs" kicker="Components">
+            <p className="-mt-2 mb-6 max-w-2xl text-ink-soft">
+              <CopyToken value="<SectionTabs>" /> — underline affordance, roving arrow-key navigation
+              (←/→/Home/End), and full <code className="font-mono text-xs">role=tab/tabpanel</code> wiring. Only the
+              active panel renders.
+            </p>
+            <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+              <SectionTabs
+                tabs={[
+                  { id: "one", label: "Decisions", badge: 2, content: <p className="text-sm text-ink-soft">Panel one.</p> },
+                  { id: "two", label: "Email", content: <p className="text-sm text-ink-soft">Panel two.</p> },
+                  { id: "three", label: "Automations", content: <p className="text-sm text-ink-soft">Panel three.</p> },
+                ]}
+              />
             </div>
           </Section>
 

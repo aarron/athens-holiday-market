@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
-import { listBroadcasts, broadcastReceiptSummaries } from "@/lib/broadcast-data";
+import { listBroadcasts, broadcastReceiptSummaries, listTextSends } from "@/lib/broadcast-data";
 import { getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
-import { getTextAudience } from "@/lib/sms-actions";
 import { getScheduledSends } from "@/lib/scheduled-sends";
-import { TextArtists } from "@/components/admin/text-artists";
 import { ScheduledSends } from "@/components/admin/scheduled-sends";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
@@ -94,10 +92,10 @@ function DecisionCard({
 
 export default async function EmailHubPage() {
   await requireAdmin();
-  const [broadcasts, cycle, textAudience, scheduled, receipts] = await Promise.all([
+  const [broadcasts, cycle, textSends, scheduled, receipts] = await Promise.all([
     listBroadcasts(),
     getActiveCycle(),
-    getTextAudience(),
+    listTextSends(),
     getScheduledSends(),
     broadcastReceiptSummaries(),
   ]);
@@ -254,13 +252,59 @@ export default async function EmailHubPage() {
 
   const textPanel = (
     <section>
-      <div className="mb-4">
-        <h2 className="font-display text-xl font-extrabold">Text messages</h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          Event-day heads-ups (load-in time, weather, reminders) sent straight to phones via SMS.
-        </p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-extrabold">Text messages</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Event-day heads-ups (load-in time, weather, reminders) sent straight to phones via SMS.
+          </p>
+        </div>
+        <ButtonLink href="/admin/broadcasts/text/new" variant="create" size="sm">
+          + New text
+        </ButtonLink>
       </div>
-      <TextArtists audience={textAudience} />
+
+      {textSends.length === 0 ? (
+        <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
+          <p className="text-ink-soft">No texts sent yet.</p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl bg-white shadow-[var(--shadow-card)]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
+                  <th className="px-5 py-4 font-semibold">Message</th>
+                  <th className="px-5 py-4 font-semibold">Recipients</th>
+                  <th className="px-5 py-4 font-semibold">When</th>
+                  <th className="px-5 py-4 font-semibold">Delivered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {textSends.map((t) => (
+                  <tr key={t.id} className="border-b border-ink/5 align-top last:border-0">
+                    <td className="px-5 py-4">
+                      <p className="line-clamp-2 max-w-md font-display font-bold">{t.message}</p>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-ink-soft">
+                      {t.recipientCount} {t.recipientCount === 1 ? "phone" : "phones"}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-ink-soft">
+                      {new Date(t.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4">
+                      <span className="font-semibold text-fern-deep">{t.sentCount} sent</span>
+                      {t.failedCount > 0 && (
+                        <span className="ml-2 text-tangerine-deep">{t.failedCount} failed</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </section>
   );
 

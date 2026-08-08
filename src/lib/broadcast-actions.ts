@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { broadcasts, broadcastRecipients, subscribers } from "@/db/schema";
@@ -91,12 +91,13 @@ export async function sendBroadcast(input: z.input<typeof composeSchema>) {
   const recipients = await segmentRecipients(segment);
   if (recipients.length === 0) return { error: "No active recipients in that segment." };
 
-  // Reuse the draft's row when sending from a saved draft; otherwise insert.
+  // Reuse the row when sending from a saved draft or a scheduled email (editing
+  // a scheduled campaign and choosing "send now"); otherwise insert.
   const bc = draftId
     ? (await db
         .update(broadcasts)
-        .set({ name, subject, body, segment, status: "sending", recipientCount: recipients.length })
-        .where(and(eq(broadcasts.id, draftId), eq(broadcasts.status, "draft")))
+        .set({ name, subject, body, segment, status: "sending", scheduledFor: null, recipientCount: recipients.length })
+        .where(and(eq(broadcasts.id, draftId), inArray(broadcasts.status, ["draft", "scheduled"])))
         .returning({ id: broadcasts.id }))[0]
     : (await db
         .insert(broadcasts)
@@ -131,11 +132,13 @@ export async function scheduleBroadcast(input: z.input<typeof scheduleSchema>) {
 
   const recipients = await segmentRecipients(segment);
   const values = { name, subject, body, segment, status: "scheduled" as const, scheduledFor: when, recipientCount: recipients.length };
+  // Reuse the row when scheduling from a draft OR re-scheduling an already
+  // scheduled email (editing its time/content).
   const bc = draftId
     ? (await db
         .update(broadcasts)
         .set(values)
-        .where(and(eq(broadcasts.id, draftId), eq(broadcasts.status, "draft")))
+        .where(and(eq(broadcasts.id, draftId), inArray(broadcasts.status, ["draft", "scheduled"])))
         .returning({ id: broadcasts.id }))[0]
     : (await db.insert(broadcasts).values(values).returning({ id: broadcasts.id }))[0];
   if (!bc) return { error: "That draft is no longer available." };
@@ -167,12 +170,14 @@ export async function saveDraft(input: z.input<typeof draftSchema>) {
   if (!subject && !body) return { error: "Add a subject or a message before saving." };
 
   if (id) {
+    // Editing a draft, or converting a scheduled email back to a draft
+    // (unscheduling it) — both land here as a plain draft save.
     const [row] = await db
       .update(broadcasts)
-      .set({ name, subject, body, segment })
-      .where(and(eq(broadcasts.id, id), eq(broadcasts.status, "draft")))
+      .set({ name, subject, body, segment, status: "draft", scheduledFor: null })
+      .where(and(eq(broadcasts.id, id), inArray(broadcasts.status, ["draft", "scheduled"])))
       .returning({ id: broadcasts.id });
-    if (!row) return { error: "That draft can no longer be edited." };
+    if (!row) return { error: "That email can no longer be edited." };
     revalidatePath("/admin/broadcasts");
     return { ok: true, id: row.id };
   }
@@ -236,6 +241,98 @@ export async function resendBroadcastToOne(input: z.input<typeof resendOneSchema
   } catch {
     return { error: "Couldn't send to that address." };
   }
+}
+
+const resendManySchema = z.object({
+  broadcastId: z.number().int(),
+  emails: z.string().min(1, "Add at least one email address."),
+});
+
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/**
+ * Send an already-sent broadcast to a free-form list of additional addresses
+ * (comma / space / newline separated) — for ad-hoc additions to the market.
+ * Each new recipient rolls into the original campaign's report; anyone already
+ * on it is skipped.
+ */
+export async function resendBroadcastToMany(input: z.input<typeof resendManySchema>) {
+  await requireAdmin();
+  const parsed = resendManySchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the addresses." };
+  if (!resend) return { error: "Email isn't configured." };
+
+  const { broadcastId, emails } = parsed.data;
+  const bc = await db.query.broadcasts.findFirst({ where: eq(broadcasts.id, broadcastId) });
+  if (!bc) return { error: "That email no longer exists." };
+  if (bc.status !== "sent") return { error: "You can only send to others from an email that already went out." };
+
+  const parsedList = [...new Set(emails.split(/[\s,;]+/).map((e) => e.trim().toLowerCase()).filter(Boolean))];
+  const valid = parsedList.filter((e) => EMAIL_RE.test(e));
+  const invalid = parsedList.filter((e) => !EMAIL_RE.test(e));
+  if (valid.length === 0) return { error: "No valid email addresses found." };
+
+  // Don't double-send to anyone already on this campaign's report.
+  const already = new Set(
+    (
+      await db
+        .select({ email: broadcastRecipients.email })
+        .from(broadcastRecipients)
+        .where(eq(broadcastRecipients.broadcastId, broadcastId))
+    ).map((r) => r.email.toLowerCase()),
+  );
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+  const rows: { broadcastId: number; email: string; resendId: string | null; status: string }[] = [];
+  for (const email of valid) {
+    if (already.has(email)) {
+      skipped++;
+      continue;
+    }
+    const sub = await db.query.subscribers.findFirst({
+      where: eq(sql`lower(${subscribers.email})`, email),
+    });
+    const token = sub?.unsubscribeToken ?? "preview";
+    const html = emailShell(renderMarkdown(personalize(bc.body, sub?.name ?? null)), {
+      unsubscribeUrl: unsubUrl(token),
+    });
+    try {
+      const res = await resend.emails.send({
+        from: EMAIL_FROM,
+        to: email,
+        subject: bc.subject,
+        html,
+        headers: sub
+          ? {
+              "List-Unsubscribe": `<${unsubApi(token)}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
+          : undefined,
+      });
+      rows.push({ broadcastId, email, resendId: (res as { data?: { id?: string } })?.data?.id ?? null, status: "sent" });
+      sent++;
+    } catch {
+      failed++;
+    }
+  }
+
+  if (rows.length) {
+    await db.insert(broadcastRecipients).values(rows);
+    await db
+      .update(broadcasts)
+      .set({ recipientCount: sql`${broadcasts.recipientCount} + ${rows.length}` })
+      .where(eq(broadcasts.id, broadcastId));
+    await logAdminEvent({
+      action: "broadcast.send",
+      targetType: "broadcast",
+      targetId: broadcastId,
+      summary: `Sent "${bc.name || bc.subject}" to ${sent} more (ad-hoc)`,
+    });
+    revalidatePath("/admin/broadcasts");
+  }
+  return { ok: true as const, sent, failed, skipped, invalid };
 }
 
 /** Delete a draft (only while still a draft). */

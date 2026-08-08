@@ -12,6 +12,9 @@ export { IconCalendar1 as CalendarIcon } from "@central-icons-react/round-outlin
 export { IconClock as ClockIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconClock";
 export { IconPause as PauseIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconPause";
 export { IconPlay as PlayIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconPlay";
+export { IconCircleCheck as CheckCircleIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconCircleCheck";
+export { IconDraftSimple as DraftIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconDraftSimple";
+export { IconPaperPlane as SendingIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconPaperPlane";
 export { IconMapPin as MapPinIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconMapPin";
 export { IconEmail1 as MailIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconEmail1";
 export { IconNote1 as MusicIcon } from "@central-icons-react/round-outlined-radius-1-stroke-2/IconNote1";

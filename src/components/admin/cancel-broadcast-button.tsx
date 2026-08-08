@@ -18,7 +18,7 @@ export function CancelBroadcastButton({ id }: { id: number }) {
           router.refresh();
         })
       }
-      className="shrink-0 rounded-full border-2 border-ink/15 px-3 py-1 text-xs font-bold text-ink-soft transition-colors hover:border-poppy hover:text-poppy-deep disabled:opacity-50"
+      className="text-xs font-semibold text-ink-soft underline-offset-2 transition-colors hover:text-poppy-deep hover:underline disabled:opacity-50"
     >
       {pending ? "…" : "Cancel"}
     </button>

@@ -10,6 +10,8 @@ import { ScheduledSends } from "@/components/admin/scheduled-sends";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
 import { DeleteDraftButton } from "@/components/admin/delete-draft-button";
+import { ClockIcon, CheckCircleIcon, DraftIcon, SendingIcon } from "@/components/icons";
+import type { ComponentType } from "react";
 
 export const metadata: Metadata = { title: "Email", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -21,6 +23,13 @@ const SEGMENT_LABEL: Record<string, string> = {
   accepted: "Accepted artists",
   waitlisted: "Waitlisted",
   applicants: "All applicants",
+};
+
+const STATUS_PILL: Record<string, { cls: string; label: string; Icon: ComponentType<{ size?: number; "aria-hidden"?: boolean }> }> = {
+  draft: { cls: "bg-cream text-ink-soft", label: "Draft", Icon: DraftIcon },
+  scheduled: { cls: "bg-sky-soft text-sky-deep", label: "Scheduled", Icon: ClockIcon },
+  sending: { cls: "bg-cream text-ink-soft", label: "Sending", Icon: SendingIcon },
+  sent: { cls: "bg-fern-soft text-fern-deep", label: "Sent", Icon: CheckCircleIcon },
 };
 
 function DecisionCard({
@@ -116,10 +125,7 @@ export default async function EmailHubPage() {
   const emailPanel = (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="font-display text-xl font-extrabold">Email</h2>
-          <p className="mt-1 text-sm text-ink-soft">Email announcements to your list.</p>
-        </div>
+        <h2 className="font-display text-xl font-extrabold">Email</h2>
         <Link
           href="/admin/broadcasts/new"
           className="rounded-lg bg-fuchsia px-5 py-2.5 font-display font-bold text-white transition-opacity hover:opacity-90"
@@ -133,63 +139,71 @@ export default async function EmailHubPage() {
           <p className="text-ink-soft">No emails yet. Compose your first announcement.</p>
         </div>
       ) : (
-        <ul className="space-y-3">
-          {broadcasts.map((b) => (
-            <li key={b.id} className="flex items-stretch gap-2">
-              <Link
-                href={b.status === "draft" ? `/admin/broadcasts/new?draft=${b.id}` : `/admin/broadcasts/${b.id}`}
-                className="flex flex-1 flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
-              >
-                <div>
-                  <p className="font-display text-lg font-bold">{b.subject || "Untitled draft"}</p>
-                  <p className="text-sm text-ink-soft">
-                    {b.status === "draft"
-                      ? `${SEGMENT_LABEL[b.segment] ?? b.segment} · not sent yet`
-                      : `${SEGMENT_LABEL[b.segment] ?? b.segment} · ${b.recipientCount} recipients`}
-                    {b.status === "scheduled" && b.scheduledFor
-                      ? ` · sends ${new Date(b.scheduledFor).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`
-                      : b.sentAt && ` · ${new Date(b.sentAt).toLocaleDateString()}`}
-                    {b.status === "sent" && receipts[b.id]?.openRate != null && (
-                      <>
-                        {" · "}
-                        <span className="font-semibold text-fern-deep">
-                          {receipts[b.id].openRate}% opened
-                        </span>
-                        {receipts[b.id].clickRate != null && (
-                          <span className="font-semibold text-teal-deep">
-                            {" · "}
-                            {receipts[b.id].clickRate}% clicked
+        <div className="overflow-hidden rounded-xl bg-white shadow-[var(--shadow-card)]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
+                  <th className="px-5 py-4 font-semibold">Subject</th>
+                  <th className="px-5 py-4 font-semibold">To whom</th>
+                  <th className="px-5 py-4 font-semibold">When</th>
+                  <th className="px-5 py-4 font-semibold">Status</th>
+                  <th className="px-5 py-4 font-semibold sr-only">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {broadcasts.map((b) => {
+                  const st = STATUS_PILL[b.status] ?? STATUS_PILL.draft;
+                  const href = b.status === "draft" ? `/admin/broadcasts/new?draft=${b.id}` : `/admin/broadcasts/${b.id}`;
+                  const when =
+                    b.status === "scheduled" && b.scheduledFor
+                      ? new Date(b.scheduledFor).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
+                      : b.sentAt
+                        ? new Date(b.sentAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                        : "—";
+                  const rate = receipts[b.id];
+                  return (
+                    <tr key={b.id} className="border-b border-ink/5 align-top last:border-0">
+                      <td className="px-5 py-4">
+                        <Link href={href} className="font-display font-bold hover:text-fern-deep">
+                          {b.subject || "Untitled draft"}
+                        </Link>
+                        {b.status === "sent" && rate?.openRate != null && (
+                          <span className="mt-0.5 block text-xs text-ink-soft">
+                            <span className="font-semibold text-fern-deep">{rate.openRate}% opened</span>
+                            {rate.clickRate != null && (
+                              <>
+                                {" · "}
+                                <span className="font-semibold text-teal-deep">{rate.clickRate}% clicked</span>
+                              </>
+                            )}
                           </span>
                         )}
-                      </>
-                    )}
-                  </p>
-                </div>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                    b.status === "sent"
-                      ? "bg-fern-soft text-fern-deep"
-                      : b.status === "scheduled"
-                        ? "bg-sky-soft text-sky-deep"
-                        : "bg-cream text-ink-soft"
-                  }`}
-                >
-                  {b.status}
-                </span>
-              </Link>
-              {b.status === "scheduled" && (
-                <div className="flex items-center">
-                  <CancelBroadcastButton id={b.id} />
-                </div>
-              )}
-              {b.status === "draft" && (
-                <div className="flex items-center">
-                  <DeleteDraftButton id={b.id} />
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+                      </td>
+                      <td className="px-5 py-4 text-ink-soft">
+                        {SEGMENT_LABEL[b.segment] ?? b.segment}
+                        {b.status !== "draft" && (
+                          <span className="block text-xs">{b.recipientCount} recipients</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-ink-soft">{when}</td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold ${st.cls}`}>
+                          <st.Icon size={12} aria-hidden />
+                          {st.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        {b.status === "scheduled" && <CancelBroadcastButton id={b.id} />}
+                        {b.status === "draft" && <DeleteDraftButton id={b.id} />}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </section>
   );

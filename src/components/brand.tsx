@@ -57,7 +57,7 @@ export function ColorWord({
   className?: string;
 }) {
   return (
-    <span className={className} aria-label={word}>
+    <span className={className} role="img" aria-label={word}>
       {word.split("").map((ch, i) => (
         <span key={i} aria-hidden style={{ color: HOLIDAY_COLORS[i % HOLIDAY_COLORS.length] }}>
           {ch}

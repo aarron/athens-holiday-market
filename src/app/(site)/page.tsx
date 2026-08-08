@@ -54,43 +54,34 @@ export default function HomePage() {
               the twinkling courtyard lights at the {site.host.name}.
             </p>
 
-            {/* Event quick-facts */}
-            <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
+            {/* Event quick-facts (plain divs — an icon+label+value layout isn't a
+                valid <dl> grouping, and list semantics aren't needed here) */}
+            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
               <div className="flex items-start gap-2.5">
                 <CalendarIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-                    When
-                  </dt>
-                  <dd className="mt-1 font-display text-lg font-bold text-white">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">When</div>
+                  <div className="mt-1 font-display text-lg font-bold text-white">
                     Dec {new Date(site.event.days[0].date + "T00:00").getDate()}–
                     {new Date(site.event.days[1].date + "T00:00").getDate()}, {site.event.year}
-                  </dd>
+                  </div>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <ClockIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-                    Time
-                  </dt>
-                  <dd className="mt-1 font-display text-lg font-bold text-white">
-                    {site.event.timeLabel}
-                  </dd>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">Time</div>
+                  <div className="mt-1 font-display text-lg font-bold text-white">{site.event.timeLabel}</div>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <MapPinIcon size={22} className="mt-0.5 shrink-0 text-chartreuse" aria-hidden />
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-                    Where
-                  </dt>
-                  <dd className="mt-1 font-display text-lg font-bold text-white">
-                    {site.location.name}
-                  </dd>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">Where</div>
+                  <div className="mt-1 font-display text-lg font-bold text-white">{site.location.name}</div>
                 </div>
               </div>
-            </dl>
+            </div>
 
             <div className="mt-9 flex flex-wrap gap-3">
               <ButtonLink href="/artists" size="lg">
@@ -365,7 +356,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
               Do you make something wonderful? Come sell it with us.
             </h2>
-            <p className="mt-2 text-lg text-white/85">
+            <p className="mt-2 text-lg text-white/95">
               Applications for {site.event.year} open on Labor Day. Applicants are curated by a
               5-person jury.
             </p>

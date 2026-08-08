@@ -57,7 +57,7 @@ export default async function ApplyPage({
       {window === "before" && (
         <div className="mt-8">
           <div className="rounded-xl bg-fern-deep px-6 py-7 text-center text-white shadow-[var(--shadow-card)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white/70">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white/95">
               Applications open
             </p>
             <p className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">

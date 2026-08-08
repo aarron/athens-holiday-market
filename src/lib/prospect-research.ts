@@ -6,7 +6,6 @@ import {
   cycles,
   settings,
   prospects,
-  prospectImages,
   prospectBatches,
   prospectOptOuts,
 } from "@/db/schema";
@@ -19,8 +18,11 @@ import {
   websiteHost,
   looseNameKey,
 } from "@/lib/prospects";
-import { extractSiteImages } from "@/lib/site-images";
-import { cachePendingProspectImages, enrichProspectImagesFromSites } from "@/lib/prospect-images";
+import {
+  cachePendingProspectImages,
+  enrichProspectImages,
+  enrichProspectImagesFromSites,
+} from "@/lib/prospect-images";
 import { perplexityChat, hasPerplexity } from "@/lib/perplexity";
 
 /**
@@ -344,17 +346,13 @@ export async function runProspectResearch(
       .where(eq(prospectBatches.id, batchId));
   }
 
-  // Enrich newly-added prospects with real site images (within remaining budget).
+  // Enrich newly-added prospects with real, quality-checked site images (within
+  // the remaining budget). enrichProspectImages downloads, measures, and caches.
   for (const id of addedIds) {
     if (Date.now() - startedAt > budget) break;
     const p = await db.query.prospects.findFirst({ where: eq(prospects.id, id) });
     if (!p?.website) continue;
-    const urls = await extractSiteImages(p.website, 4);
-    if (urls.length) {
-      await db
-        .insert(prospectImages)
-        .values(urls.map((sourceUrl, position) => ({ prospectId: id, sourceUrl, position })));
-    }
+    await enrichProspectImages(id, p.website, 4);
   }
 
   const complete = params.cursor >= params.plan.length || stats.added >= params.targetCount;

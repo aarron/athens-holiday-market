@@ -2,18 +2,19 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin-auth";
 import { listSubscribers, subscriberStats } from "@/lib/broadcast-data";
 import { SubscribersTable, type SubRow } from "@/components/admin/subscribers-table";
+import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Subscribers", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 function Tile({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
-    <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+    <Card>
       <div className="font-display text-4xl font-extrabold tabular-nums" style={{ color: accent }}>
         {value}
       </div>
       <div className="mt-1 text-sm font-medium text-ink-soft">{label}</div>
-    </div>
+    </Card>
   );
 }
 

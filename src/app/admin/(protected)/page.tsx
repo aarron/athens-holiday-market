@@ -3,18 +3,19 @@ import { getCyclesWithCounts, listApplications, tally } from "@/lib/admin-data";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
 import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
 import { CycleSelector } from "@/components/admin/cycle-selector";
+import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 function StatTile({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
-    <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+    <Card>
       <div className="font-display text-4xl font-extrabold tabular-nums" style={{ color: accent }}>
         {value}
       </div>
       <div className="mt-1 text-sm font-medium text-ink-soft">{label}</div>
-    </div>
+    </Card>
   );
 }
 

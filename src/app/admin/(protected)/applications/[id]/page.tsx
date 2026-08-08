@@ -22,6 +22,7 @@ import {
 } from "@/components/admin/controls";
 import { PhotoGallery } from "@/components/admin/photo-gallery";
 import { BoothFeeInvoice } from "@/components/admin/booth-fee-invoice";
+import { Card } from "@/components/ui/card";
 import { paypalConfigured } from "@/lib/paypal";
 import { BackIcon, ExternalIcon, ArrowRightIcon } from "@/components/icons";
 
@@ -242,14 +243,11 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
         {/* Sidebar */}
         <aside className="space-y-6">
-          <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-            <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Your vote</h2>
-            <div className="mt-3">
-              <VoteButtons applicationId={app.id} myVote={myVote} />
-            </div>
-          </div>
+          <Card title="Your vote">
+            <VoteButtons applicationId={app.id} myVote={myVote} />
+          </Card>
 
-          <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+          <Card>
             <div className="flex items-center justify-between">
               <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Jury votes</h2>
               <VoteTally tally={tally(app.votes)} />
@@ -272,10 +270,10 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                 );
               })}
             </ul>
-          </div>
+          </Card>
 
           {isAdmin && (
-            <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+            <Card>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Manage</h2>
                 <BoothFeeBadge paid={app.boothFeePaid} status={app.status} />
@@ -292,14 +290,11 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                   configured={paypalConfigured()}
                 />
               </div>
-            </div>
+            </Card>
           )}
 
           {isAdmin && (
-            <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-              <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
-                Email history
-              </h2>
+            <Card title="Email history">
               {comms.length === 0 ? (
                 <p className="mt-2 text-sm text-ink-soft">
                   No emails sent yet. Decisions and broadcasts go out from{" "}
@@ -333,21 +328,18 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
               <p className="mt-3 border-t border-ink/5 pt-2 text-[0.7rem] text-ink-soft/70">
                 Delivery status from Resend — confirm important emails were received &amp; opened.
               </p>
-            </div>
+            </Card>
           )}
 
           {isAdmin && app.status === "accepted" && (
             <>
-              <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-                <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
-                  Artist page
-                </h2>
+              <Card title="Artist page">
                 <SendArtistLinkButton email={app.email} />
                 <p className="mt-2 text-xs text-ink-soft/70">
                   Sends a magic link so the artist builds their own page — you review before it goes
                   live. Or publish directly from their application:
                 </p>
-              </div>
+              </Card>
               <PublishControls
                 applicationId={app.id}
                 published={artistProfile?.published ?? false}
@@ -357,12 +349,12 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           )}
 
           {isAdmin && (
-            <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
+            <Card>
               <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-poppy-deep">
                 Danger zone
               </h2>
               <DeleteApplicationButton applicationId={app.id} name={app.name} />
-            </div>
+            </Card>
           )}
         </aside>
       </div>

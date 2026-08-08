@@ -17,7 +17,7 @@ export type SubRow = {
 const STATUS_STYLES: Record<string, string> = {
   subscribed: "bg-fern-soft text-fern-deep",
   pending: "bg-sky-soft text-sky-deep",
-  unsubscribed: "bg-[#fde7e6] text-poppy-deep",
+  unsubscribed: "bg-poppy-soft text-poppy-deep",
 };
 
 const FILTERS = ["active", "subscribed", "pending", "unsubscribed", "all"] as const;
@@ -193,7 +193,7 @@ export function SubscribersTable({ rows }: { rows: SubRow[] }) {
                         onClick={() => {
                           if (confirm(`Permanently remove ${r.email}?`)) act(() => removeSubscriber(r.id));
                         }}
-                        className="rounded-lg px-2.5 py-1 text-xs font-semibold text-poppy-deep hover:bg-[#fde7e6] disabled:opacity-60"
+                        className="rounded-lg px-2.5 py-1 text-xs font-semibold text-poppy-deep hover:bg-poppy-soft disabled:opacity-60"
                       >
                         Remove
                       </button>

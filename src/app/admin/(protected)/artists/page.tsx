@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Artists", robots: { index: false } }
 export const dynamic = "force-dynamic";
 
 function stateOf(a: { submittedAt: Date | null; published: boolean }) {
-  if (a.submittedAt) return { label: "Needs review", cls: "bg-[#fdf0e0] text-tangerine-deep" };
+  if (a.submittedAt) return { label: "Needs review", cls: "bg-tangerine-soft text-tangerine-deep" };
   if (a.published) return { label: "Live", cls: "bg-fern-soft text-fern-deeper" };
   return { label: "Draft", cls: "bg-cream text-ink-soft" };
 }

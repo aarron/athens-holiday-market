@@ -41,6 +41,8 @@
   --color-fern-soft: #eaf3e1;
   --color-sky-soft: #e2f4fc;
   --color-cream-soft: #f8f1e2;
+  --color-tangerine-soft: #fdf0e0; /* "needs review" / warning surfaces — pairs with tangerine-deep text */
+  --color-poppy-soft: #fde7e6; /* error / alert surfaces — pairs with poppy-deep text */
 
   /* type */
   --font-display: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;

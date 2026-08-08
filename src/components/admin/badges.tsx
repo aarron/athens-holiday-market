@@ -2,8 +2,8 @@ const STATUS_STYLES: Record<string, { label: string; cls: string }> = {
   submitted: { label: "Submitted", cls: "bg-cream text-ink-soft" },
   under_review: { label: "Under review", cls: "bg-sky-soft text-sky-deep" },
   accepted: { label: "Accepted", cls: "bg-fern-soft text-fern-deeper" },
-  waitlisted: { label: "Waitlisted", cls: "bg-[#fdf0e0] text-tangerine-deep" },
-  rejected: { label: "Rejected", cls: "bg-[#fde7e6] text-poppy-deep" },
+  waitlisted: { label: "Waitlisted", cls: "bg-tangerine-soft text-tangerine-deep" },
+  rejected: { label: "Rejected", cls: "bg-poppy-soft text-poppy-deep" },
 };
 
 export function StatusBadge({ status }: { status: string }) {
@@ -22,7 +22,7 @@ export function BoothFeeBadge({ paid, status }: { paid: boolean; status: string 
       Paid
     </span>
   ) : (
-    <span className="inline-block rounded-full bg-[#fdf0e0] px-2.5 py-0.5 text-xs font-bold text-tangerine-deep">
+    <span className="inline-block rounded-full bg-tangerine-soft px-2.5 py-0.5 text-xs font-bold text-tangerine-deep">
       Unpaid
     </span>
   );

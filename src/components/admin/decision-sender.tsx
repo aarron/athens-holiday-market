@@ -19,7 +19,7 @@ type Recipient = {
 
 const GROUP_COPY = {
   accepted: { verb: "accepted into", accent: "var(--color-fern-deep)", tone: "bg-fern-soft" },
-  waitlist: { verb: "placed on the waitlist for", accent: "var(--color-tangerine)", tone: "bg-[#fdf0e0]" },
+  waitlist: { verb: "placed on the waitlist for", accent: "var(--color-tangerine)", tone: "bg-tangerine-soft" },
 } as const;
 
 export function DecisionSender({

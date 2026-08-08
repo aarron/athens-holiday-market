@@ -432,7 +432,7 @@ export default function StyleGuidePage() {
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-fern-soft px-2.5 py-0.5 text-xs font-bold text-fern-deep">Live</span>
-                <span className="rounded-full bg-[#fdf0e0] px-2.5 py-0.5 text-xs font-bold text-tangerine-deep">Needs review</span>
+                <span className="rounded-full bg-tangerine-soft px-2.5 py-0.5 text-xs font-bold text-tangerine-deep">Needs review</span>
                 <span className="rounded-full bg-cream px-2.5 py-0.5 text-xs font-bold text-ink-soft">Draft</span>
                 <span className="rounded-full bg-fuchsia/10 px-2.5 py-0.5 text-xs font-bold text-fuchsia-deep">Artist</span>
                 <span className="rounded-full bg-tangerine px-3 py-1 text-sm font-bold text-white">2 to notify</span>
@@ -507,7 +507,7 @@ export default function StyleGuidePage() {
                 <tbody>
                   {[
                     ["Barbara Odil", "Wood Sculpture", "Live", "bg-fern-soft text-fern-deep"],
-                    ["Tex McCallister", "Ceramics", "Needs review", "bg-[#fdf0e0] text-tangerine-deep"],
+                    ["Tex McCallister", "Ceramics", "Needs review", "bg-tangerine-soft text-tangerine-deep"],
                     ["Jamie Rowe", "Textiles", "Draft", "bg-cream text-ink-soft"],
                   ].map(([n, m, s, cls]) => (
                     <tr key={n} className="border-b border-ink/5 last:border-0 hover:bg-cream-soft">

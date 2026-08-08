@@ -271,7 +271,8 @@ export function ArtistEditor({
         {saved && <p className="mt-2 text-sm font-semibold text-chartreuse">Submitted! We&apos;ll review it soon. ✓</p>}
       </div>
 
-      <style>{`.input{height:2.75rem;width:100%;border-radius:0.375rem;border:2px solid rgba(23,22,27,0.15);background:#fff;padding:0 0.75rem;outline:none}.input:focus{border-color:var(--color-fern-deep)}`}</style>
+      {/* Matches the documented input recipe (rounded-lg = 8px, not 6px). */}
+      <style>{`.input{height:2.75rem;width:100%;border-radius:0.5rem;border:2px solid rgba(23,22,27,0.15);background:#fff;padding:0 0.75rem;outline:none}.input:focus{border-color:var(--color-fern-deep)}`}</style>
     </div>
   );
 }
@@ -279,7 +280,7 @@ export function ArtistEditor({
 function StatusBanner({ status, slug, published }: { status: string; slug: string; published: boolean }) {
   const map: Record<string, { cls: string; text: string }> = {
     draft: { cls: "bg-sky-soft text-sky-deep", text: "Draft — not yet submitted. Fill this in and submit for review." },
-    pending: { cls: "bg-[#fdf0e0] text-tangerine-deep", text: "In review — our team is reviewing your submission. We'll email you when it's live." },
+    pending: { cls: "bg-tangerine-soft text-tangerine-deep", text: "In review — our team is reviewing your submission. We'll email you when it's live." },
     published: { cls: "bg-fern-soft text-fern-deep", text: "Live on the site." },
   };
   const s = map[status] ?? map.draft;

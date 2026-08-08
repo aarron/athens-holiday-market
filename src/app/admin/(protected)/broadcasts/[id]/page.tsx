@@ -4,7 +4,7 @@ import { BackIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getBroadcast, broadcastReceipts } from "@/lib/broadcast-data";
-import { renderMarkdown } from "@/lib/email-template";
+import { renderMarkdown } from "@/lib/email-shell";
 
 export const metadata: Metadata = { title: "Email", robots: { index: false } };
 export const dynamic = "force-dynamic";

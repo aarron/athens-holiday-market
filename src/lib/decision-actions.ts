@@ -6,10 +6,11 @@ import { z } from "zod";
 import { db } from "@/db";
 import { applications } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-auth";
-import { resend, EMAIL_FROM } from "@/lib/resend";
-import { emailShell, renderMarkdown } from "@/lib/email-template";
+import { resend, EMAIL_FROM } from "@/lib/resend-client";
+import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { invoiceAcceptedWithoutInvoice } from "@/lib/booth-fee";
 import { logAdminEvent } from "@/lib/audit";
+import { chunk, personalize } from "@/lib/send-util";
 
 const schema = z.object({
   cycleId: z.number(),
@@ -27,18 +28,6 @@ const GROUP_STATUSES: Record<string, ("accepted" | "waitlisted" | "rejected")[]>
   waitlist: ["waitlisted", "rejected"],
 };
 
-function chunk<T>(arr: T[], n: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
-  return out;
-}
-
-function personalize(body: string, name: string) {
-  const first = (name || "").trim().split(/\s+/)[0] || "there";
-  return body
-    .replace(/\{\{\s*first_name\s*\}\}/gi, first)
-    .replace(/\{\{\s*name\s*\}\}/gi, name || "there");
-}
 
 export async function sendDecisionBatch(input: z.input<typeof schema>) {
   await requireAdmin();

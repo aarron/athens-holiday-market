@@ -2,8 +2,8 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { emailShell, renderMarkdown } from "@/lib/email-template";
-import { getBroadcastTemplates } from "@/lib/email-templates";
+import { emailShell, renderMarkdown } from "@/lib/email-shell";
+import { getBroadcastTemplates } from "@/lib/broadcast-templates";
 import { sendTestEmail, sendBroadcast, scheduleBroadcast, saveDraft } from "@/lib/broadcast-actions";
 import { MarkdownToolbar } from "@/components/admin/markdown-toolbar";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";

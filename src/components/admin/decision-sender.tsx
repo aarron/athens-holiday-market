@@ -7,7 +7,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusMessage } from "@/components/ui/status-message";
-import { emailShell, renderMarkdown } from "@/lib/email-template";
+import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { sendDecisionBatch } from "@/lib/decision-actions";
 
 type Recipient = {

@@ -2,26 +2,17 @@ import "server-only";
 import { and, eq, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { broadcasts, broadcastRecipients } from "@/db/schema";
-import { resend, EMAIL_FROM } from "@/lib/resend";
-import { emailShell, renderMarkdown } from "@/lib/email-template";
+import { resend, EMAIL_FROM } from "@/lib/resend-client";
+import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { segmentRecipients } from "@/lib/broadcast-data";
 import { publicEnv } from "@/lib/env";
+import { chunk, personalize } from "@/lib/send-util";
 
 export const unsubUrl = (token: string) => `${publicEnv.siteUrl}/unsubscribe?token=${token}`;
 export const unsubApi = (token: string) => `${publicEnv.siteUrl}/api/unsubscribe?token=${token}`;
 
-export function personalize(body: string, name: string | null) {
-  const first = (name || "").trim().split(/\s+/)[0] || "there";
-  return body
-    .replace(/\{\{\s*first_name\s*\}\}/gi, first)
-    .replace(/\{\{\s*name\s*\}\}/gi, name || "there");
-}
-
-function chunk<T>(arr: T[], n: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
-  return out;
-}
+// Re-exported for broadcast-actions, which shares this personalizer.
+export { personalize };
 
 /** Send an existing broadcast row to its segment and mark it sent. Shared by
  *  the immediate "Send now" action and the scheduled-broadcast cron. */

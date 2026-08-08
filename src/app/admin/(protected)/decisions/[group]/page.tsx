@@ -4,7 +4,7 @@ import { BackIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getCyclesWithCounts, getDecisionRecipients } from "@/lib/admin-data";
-import { getBroadcastTemplates } from "@/lib/email-templates";
+import { getBroadcastTemplates } from "@/lib/broadcast-templates";
 import { DecisionSender } from "@/components/admin/decision-sender";
 
 export const metadata: Metadata = { title: "Send decisions", robots: { index: false } };

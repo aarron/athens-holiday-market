@@ -1,6 +1,6 @@
-import { resend, EMAIL_FROM } from "@/lib/resend";
+import { resend, EMAIL_FROM } from "@/lib/resend-client";
 import { site } from "@/lib/site";
-import { emailShell as wrap } from "@/lib/email-template";
+import { emailShell as wrap } from "@/lib/email-shell";
 
 /** Confirmation that an artist's application was received. Best-effort. */
 export async function sendApplicationReceived(to: string, name: string) {

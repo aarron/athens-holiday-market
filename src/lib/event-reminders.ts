@@ -2,8 +2,8 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { artists, settings } from "@/db/schema";
-import { resend, EMAIL_FROM } from "@/lib/resend";
-import { emailShell } from "@/lib/email-template";
+import { resend, EMAIL_FROM } from "@/lib/resend-client";
+import { emailShell } from "@/lib/email-shell";
 import { segmentRecipients } from "@/lib/broadcast-data";
 import { site, mapsHref } from "@/lib/site";
 

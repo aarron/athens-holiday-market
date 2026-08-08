@@ -30,6 +30,9 @@ export default async function SubscribersPage() {
     status: s.status,
     source: s.source,
     createdAt: s.createdAt.toISOString(),
+    // Real opt-in date — confirmedAt carries the historical MailChimp subscribe
+    // date; fall back to when the row was created.
+    subscribedAt: (s.confirmedAt ?? s.createdAt).toISOString(),
   }));
 
   return (

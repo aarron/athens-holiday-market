@@ -207,5 +207,9 @@ export async function subscriberStats() {
 }
 
 export async function listSubscribers() {
-  return db.query.subscribers.findMany({ orderBy: [desc(subscribers.createdAt)] });
+  // Newest subscribers first, by their real opt-in date (confirmedAt), falling
+  // back to when the row was created.
+  return db.query.subscribers.findMany({
+    orderBy: [desc(sql`coalesce(${subscribers.confirmedAt}, ${subscribers.createdAt})`)],
+  });
 }

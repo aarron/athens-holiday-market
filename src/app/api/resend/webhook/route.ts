@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { broadcastRecipients, subscribers, applications } from "@/db/schema";
+import { broadcastRecipients, subscribers, applications, prospects, prospectOptOuts } from "@/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -94,6 +94,18 @@ export async function POST(req: Request) {
       .where(eq(applications.id, app.id));
   }
 
+  // Per-prospect invitation receipts.
+  const prospect = await db.query.prospects.findFirst({
+    where: eq(prospects.invitedResendId, emailId),
+    columns: { id: true, inviteEmailStatus: true },
+  });
+  if (prospect && (RANK[status] ?? 0) >= (RANK[prospect.inviteEmailStatus ?? "sent"] ?? 0)) {
+    await db
+      .update(prospects)
+      .set({ inviteEmailStatus: status as typeof prospect.inviteEmailStatus })
+      .where(eq(prospects.id, prospect.id));
+  }
+
   // Suppress bounced / complained addresses from future sends.
   if (status === "bounced" || status === "complained") {
     const to = Array.isArray(event.data?.to) ? event.data?.to[0] : event.data?.to;
@@ -103,6 +115,8 @@ export async function POST(req: Request) {
         .update(subscribers)
         .set({ status: "unsubscribed" })
         .where(eq(subscribers.email, email));
+      // Also keep cold-outreach off this address.
+      await db.insert(prospectOptOuts).values({ email, reason: status }).onConflictDoNothing();
     }
   }
 

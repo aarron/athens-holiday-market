@@ -11,6 +11,7 @@ import { logAdminEvent } from "@/lib/audit";
 import { cleanEmail, cleanWebsite, cleanInstagram } from "@/lib/prospects";
 import { createResearchBatch, runProspectResearch } from "@/lib/prospect-research";
 import { enrichProspectImages } from "@/lib/prospect-images";
+import { listInvitableProspects, deliverProspectInvites } from "@/lib/prospect-invite";
 
 const statusSchema = z.object({
   id: z.number(),
@@ -88,6 +89,45 @@ export async function updateProspectContact(input: z.input<typeof contactSchema>
 
   revalidatePath("/admin/prospects");
   return { ok: true as const, email: values.email, website: values.website, instagram: values.instagram };
+}
+
+const inviteSchema = z.object({
+  // Off by default: only email shortlisted prospects not yet invited. Opt in to
+  // re-send to everyone shortlisted (including already-invited).
+  resendAll: z.boolean().optional().default(false),
+  // A guard against accidental sends — the UI requires typing "send".
+  confirm: z.string().optional(),
+});
+
+/**
+ * Email an invitation-to-apply to every shortlisted prospect who has a valid
+ * address, isn't already invited (unless resendAll), and isn't suppressed.
+ * Outward-facing + irreversible, so it's audit-logged and gated by the UI's
+ * type-"send" confirm.
+ */
+export async function sendProspectInvites(input: z.input<typeof inviteSchema>) {
+  const admin = await requireAdmin();
+  const parsed = inviteSchema.safeParse(input);
+  if (!parsed.success) return { error: "Invalid request." };
+  if (parsed.data.confirm !== "send") return { error: 'Type "send" to confirm.' };
+
+  const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
+  if (!cycle) return { error: "Set an active cycle first." };
+
+  const recipients = await listInvitableProspects(cycle.id, { resendAll: parsed.data.resendAll });
+  if (recipients.length === 0) {
+    return { error: "No shortlisted prospects with an email are awaiting an invite." };
+  }
+
+  const r = await deliverProspectInvites(recipients);
+  await logAdminEvent({
+    action: "prospect.invite",
+    targetType: "cycle",
+    targetId: cycle.id,
+    summary: `Invited ${r.sent} prospect${r.sent === 1 ? "" : "s"} to apply${r.failed ? ` (${r.failed} failed)` : ""} — by ${admin.email}`,
+  });
+  revalidatePath("/admin/prospects");
+  return { ok: true as const, sent: r.sent, failed: r.failed };
 }
 
 const researchSchema = z.object({

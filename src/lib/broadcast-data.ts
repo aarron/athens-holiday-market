@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { subscribers, broadcasts, broadcastRecipients, applications, cycles } from "@/db/schema";
+import { subscribers, broadcasts, broadcastRecipients, applications, cycles, textSends } from "@/db/schema";
 
 export type Segment =
   | "all"
@@ -92,6 +92,11 @@ export async function segmentCounts() {
 
 export async function listBroadcasts() {
   return db.query.broadcasts.findMany({ orderBy: [desc(broadcasts.createdAt)] });
+}
+
+/** Past SMS blasts (the text_sends audit table), newest first. */
+export async function listTextSends() {
+  return db.query.textSends.findMany({ orderBy: [desc(textSends.createdAt)], limit: 100 });
 }
 
 export async function getBroadcast(id: number) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { sendEventText, type TextAudience } from "@/lib/sms-actions";
 import { normalizePhone } from "@/lib/phone";
 import { Card } from "@/components/ui/card";
@@ -8,7 +9,14 @@ import { Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { StatusMessage } from "@/components/ui/status-message";
 
-export function TextArtists({ audience }: { audience: TextAudience }) {
+export function TextArtists({
+  audience,
+  redirectTo,
+}: {
+  audience: TextAudience;
+  redirectTo?: string;
+}) {
+  const router = useRouter();
   const { configured, year, artistCount, artistNoPhone, judgeCount } = audience;
 
   const [msg, setMsg] = useState("");
@@ -64,6 +72,12 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
         setConfirming(false);
         setMsg("");
         setOther("");
+        // On the dedicated compose page, return to the Text list so the new
+        // send shows in the table.
+        if (redirectTo) {
+          router.push(redirectTo);
+          router.refresh();
+        }
       } else {
         setResult(r.error);
         setConfirming(false);

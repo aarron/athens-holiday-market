@@ -89,6 +89,15 @@ export async function runScheduledBroadcasts(now: Date = new Date()) {
   });
   let sent = 0;
   for (const bc of due) {
+    // Atomically claim the row: only proceed if THIS run flipped it out of
+    // "scheduled". A concurrent cron run gets no row back and skips it, so a
+    // scheduled broadcast can never be delivered twice.
+    const [claimed] = await db
+      .update(broadcasts)
+      .set({ status: "sending" })
+      .where(and(eq(broadcasts.id, bc.id), eq(broadcasts.status, "scheduled")))
+      .returning({ id: broadcasts.id });
+    if (!claimed) continue;
     try {
       const r = await deliverBroadcast(bc);
       if ("ok" in r) sent++;

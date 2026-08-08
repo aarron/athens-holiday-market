@@ -128,14 +128,21 @@ export async function runEventReminders(now: Date = new Date()) {
   if (!kind) return { sent: 0, note: `no reminder due (${todayET})` };
 
   const flagKey = `event_reminder:${site.event.year}:${kind}`;
-  const existing = await db.query.settings.findFirst({ where: eq(settings.key, flagKey) });
-  if (existing?.value) return { sent: 0, note: `${kind} already sent` };
 
   // Admin canceled this send from the Email & Text page.
   const skip = await db.query.settings.findFirst({ where: eq(settings.key, `send_skip:${flagKey}`) });
   if (skip?.value) return { sent: 0, note: `${kind} canceled by admin` };
 
   if (!resend) return { sent: 0, note: "resend not configured" };
+
+  // Atomically claim this reminder before sending, so a concurrent/duplicate
+  // cron run can't double-send. If the row already exists we didn't claim it.
+  const [claimed] = await db
+    .insert(settings)
+    .values({ key: flagKey, value: true })
+    .onConflictDoNothing({ target: settings.key })
+    .returning({ key: settings.key });
+  if (!claimed) return { sent: 0, note: `${kind} already sent` };
 
   const list = await featuredArtists(9);
   const inner = buildInner(kind, list);
@@ -156,10 +163,11 @@ export async function runEventReminders(now: Date = new Date()) {
     }
   }
 
-  await db
-    .insert(settings)
-    .values({ key: flagKey, value: true })
-    .onConflictDoUpdate({ target: settings.key, set: { value: true, updatedAt: new Date() } });
+  // If nothing actually went out (e.g. a Resend outage), release the claim so
+  // the next run retries — instead of the reminder being marked sent forever.
+  if (sent === 0) {
+    await db.delete(settings).where(eq(settings.key, flagKey));
+  }
 
   return { kind, recipients: recipients.length, sent };
 }

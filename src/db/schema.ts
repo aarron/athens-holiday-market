@@ -299,6 +299,20 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/* ------------------------------------------------------------ rate limits */
+/** Per-IP (or ip+email) request buckets for throttling unauthenticated
+ *  endpoints. Rows older than their window are ignored and periodically pruned. */
+export const rateLimits = pgTable(
+  "rate_limits",
+  {
+    id: serial("id").primaryKey(),
+    bucket: text("bucket").notNull(), // "proofread" | "apply-upload" | "magic-link"
+    key: text("key").notNull(), // ip, or `${ip}|${email}`
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("rate_limits_lookup_idx").on(t.bucket, t.key, t.createdAt)],
+);
+
 /* -------------------------------------------------------------- text sends */
 /** One row per event-day SMS blast — the persistent record for audit + an
  *  idempotency claim (unique clientToken) so a double-submit can't re-blast. */

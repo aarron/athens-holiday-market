@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { applicationWindow } from "@/lib/applications";
 import { getSessionUser } from "@/lib/admin-auth";
 import { acceptedApplicationIdForEmail } from "@/lib/magic";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { site } from "@/lib/site";
 
 export const runtime = "nodejs";
@@ -21,6 +22,12 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (!invited) {
       return NextResponse.json({ error: "Applications are not open." }, { status: 403 });
     }
+  }
+
+  // Cap Blob upload-token issuance per IP so it can't be looped for storage abuse.
+  const ip = clientIp(req.headers);
+  if (!(await rateLimit("apply-upload", ip, 40, 10 * 60_000))) {
+    return NextResponse.json({ error: "Too many uploads — please slow down." }, { status: 429 });
   }
 
   const body = (await req.json()) as HandleUploadBody;

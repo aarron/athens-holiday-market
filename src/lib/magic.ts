@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash, randomBytes } from "crypto";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { loginTokens, applications, applicationPhotos, artistPhotos, users, artists } from "@/db/schema";
 import { bootstrapAdmins, bootstrapJudges } from "@/lib/env";
@@ -56,6 +56,8 @@ export async function createMagicToken(email: string, ttlMinutes = 30) {
     tokenHash: hashToken(raw),
     expiresAt: new Date(Date.now() + ttlMinutes * 60_000),
   });
+  // Opportunistically prune expired tokens so the table can't grow unbounded.
+  await db.delete(loginTokens).where(lt(loginTokens.expiresAt, new Date()));
   return raw;
 }
 

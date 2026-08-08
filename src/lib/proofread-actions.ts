@@ -1,6 +1,8 @@
 "use server";
 
 import Anthropic from "@anthropic-ai/sdk";
+import { headers } from "next/headers";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export type ProofreadMode = "grammar" | "polish";
 
@@ -27,6 +29,12 @@ export async function proofreadText(text: string, mode: ProofreadMode) {
   }
   if (mode !== "grammar" && mode !== "polish") {
     return { error: "Unknown option." };
+  }
+  // Public endpoint on the shared Anthropic key — throttle per IP so it can't
+  // be looped to burn quota. ~20 requests/minute is ample for a real writer.
+  const ip = clientIp(await headers());
+  if (!(await rateLimit("proofread", ip, 20, 60_000))) {
+    return { error: "You're going a bit fast — give it a moment and try again." };
   }
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn("[proofread] ANTHROPIC_API_KEY not set");

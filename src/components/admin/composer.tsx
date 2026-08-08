@@ -250,7 +250,7 @@ export function Composer({
                 className={mode === "schedule" ? "!border-fern-deep !bg-fern-soft !text-fern-deep" : ""}
               >
                 <ClockIcon size={16} aria-hidden />
-                Schedule send
+                Send later
               </Button>
               <Button variant="secondary" size="sm" disabled={pending || (!subject && !body)} onClick={onSaveDraft}>
                 {draftId ? "Update draft" : "Save draft"}

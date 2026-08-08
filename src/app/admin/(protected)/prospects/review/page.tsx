@@ -25,9 +25,9 @@ export default async function ReviewProspectsPage() {
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">Review prospects</h1>
         <p className="mt-1 text-ink-soft">
-          One card at a time. <kbd className="rounded bg-cream px-1 font-semibold">Y</kbd> shortlist,{" "}
+          One card at a time. <kbd className="rounded bg-cream px-1 font-semibold">Y</kbd> invite,{" "}
           <kbd className="rounded bg-cream px-1 font-semibold">M</kbd> maybe,{" "}
-          <kbd className="rounded bg-cream px-1 font-semibold">N</kbd> pass — or swipe.
+          <kbd className="rounded bg-cream px-1 font-semibold">N</kbd> ignore — or swipe.
         </p>
       </div>
       <ProspectDeck queue={queue} />

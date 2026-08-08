@@ -83,6 +83,39 @@ export function splitProspectName(name: string): { business: string; maker: stri
   return { business: name.trim(), maker: null };
 }
 
+/**
+ * Rough driving proximity to Athens, GA — the market is two evenings, so "could
+ * they realistically make it?" is a core triage question. Best-effort from
+ * region/city/state; labels are approximate on purpose.
+ */
+export function athensProximity(opts: {
+  city?: string | null;
+  state?: string | null;
+  region?: string | null;
+}): { label: string; tone: "local" | "near" | "far" } {
+  const r = (opts.region ?? "").toLowerCase();
+  const c = (opts.city ?? "").toLowerCase();
+  const s = (opts.state ?? "").toUpperCase();
+  const has = (...t: string[]) => t.some((x) => r.includes(x) || c.includes(x));
+
+  if (has("athens", "watkinsville", "bogart", "bishop", "winterville")) return { label: "Athens area", tone: "local" };
+  if (has("atlanta", "decatur", "marietta", "roswell", "alpharetta", "smyrna")) return { label: "~1½ hr (Atlanta)", tone: "near" };
+  if (has("augusta", "aiken", "evans", "martinez")) return { label: "~1½ hr (Augusta)", tone: "near" };
+  if (r.includes("north g") || r.includes("ne ga") || has("gainesville", "dahlonega", "commerce", "clarkesville", "ellijay", "jefferson", "braselton", "cornelia")) return { label: "~1½–2 hr (North GA)", tone: "near" };
+  if (r.includes("upstate") || has("greenville", "spartanburg", "clemson", "anderson", "greer")) return { label: "~2 hr (Upstate SC)", tone: "near" };
+  if (s === "GA") return { label: "Georgia · ~2 hr", tone: "near" };
+  if (s === "SC") return { label: "South Carolina · ~2–3 hr", tone: "far" };
+  if (s === "NC") return { label: "North Carolina · ~3+ hr", tone: "far" };
+  if (s) return { label: `${s} · far`, tone: "far" };
+  return { label: "Location unknown", tone: "far" };
+}
+
+/** A Google search URL to find an artist's work when we have no site on file. */
+export function webSearchUrl(name: string, extra?: string | null): string {
+  const q = [name, extra].filter(Boolean).join(" ");
+  return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+}
+
 /** Normalize an email to lowercase, or null if it isn't a plausible address. */
 export function cleanEmail(raw: string | null | undefined): string | null {
   const s = (raw ?? "").trim().toLowerCase();

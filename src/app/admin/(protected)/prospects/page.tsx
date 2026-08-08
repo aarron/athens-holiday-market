@@ -43,21 +43,25 @@ export default async function ProspectsPage({
     );
   }
 
-  const filterStatus = (["new", "shortlisted", "maybe", "passed"] as ProspectStatus[]).find(
-    (s) => s === status,
-  );
+  // Default view is the "To review" inbox — the pile of untriaged prospects that
+  // shrinks as you work. Explicit ?status=all shows everything.
+  const view: ProspectStatus | "all" =
+    status === "all"
+      ? "all"
+      : (["new", "shortlisted", "maybe", "passed"] as ProspectStatus[]).find((s) => s === status) ??
+        "new";
   const [summary, cards, batches] = await Promise.all([
     getProspectSummary(cycle.id),
-    listProspects(cycle.id, filterStatus ? { status: filterStatus } : {}),
+    listProspects(cycle.id, view === "all" ? {} : { status: view }),
     listResearchBatches(cycle.id),
   ]);
 
   const filters: { key: ProspectStatus | "all"; label: string; n: number }[] = [
-    { key: "all", label: "All", n: summary.total },
-    { key: "new", label: "New", n: summary.new },
-    { key: "shortlisted", label: "Shortlisted", n: summary.shortlisted },
+    { key: "new", label: "To review", n: summary.new },
+    { key: "shortlisted", label: "Invite", n: summary.shortlisted },
     { key: "maybe", label: "Maybe", n: summary.maybe },
-    { key: "passed", label: "Passed", n: summary.passed },
+    { key: "passed", label: "Ignore", n: summary.passed },
+    { key: "all", label: "All", n: summary.total },
   ];
 
   return (
@@ -82,23 +86,22 @@ export default async function ProspectsPage({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Total" value={summary.total} />
-        <Stat label="New" value={summary.new} />
-        <Stat label="Shortlisted" value={summary.shortlisted} tone="text-fern-deep" />
+        <Stat label="To review" value={summary.new} />
+        <Stat label="Invite" value={summary.shortlisted} tone="text-fern-deep" />
         <Stat label="Maybe" value={summary.maybe} tone="text-tangerine-deep" />
-        <Stat label="Passed" value={summary.passed} tone="text-ink-soft" />
-        <Stat label="Invited" value={summary.invited} tone="text-fuchsia-deep" />
+        <Stat label="Ignore" value={summary.passed} tone="text-ink-soft" />
+        <Stat label="Emailed" value={summary.invited} tone="text-fuchsia-deep" />
       </div>
 
       <ResearchPanel batches={batches} />
 
       <div className="flex flex-wrap gap-1.5">
         {filters.map((f) => {
-          const active = (f.key === "all" && !filterStatus) || f.key === filterStatus;
-          const href = f.key === "all" ? "/admin/prospects" : `/admin/prospects?status=${f.key}`;
+          const active = f.key === view;
           return (
             <Link
               key={f.key}
-              href={href}
+              href={`/admin/prospects?status=${f.key}`}
               aria-current={active ? "page" : undefined}
               className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                 active ? "bg-ink text-paper" : "bg-cream text-ink-soft hover:bg-cream/70"
@@ -112,10 +115,14 @@ export default async function ProspectsPage({
 
       {cards.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">
-          <p className="text-ink-soft">No prospects in this view.</p>
+          <p className="text-ink-soft">
+            {view === "new"
+              ? "🎉 Inbox zero — every prospect has been triaged."
+              : "No prospects in this view."}
+          </p>
         </div>
       ) : (
-        <ProspectGrid cards={cards} />
+        <ProspectGrid cards={cards} viewStatus={view} />
       )}
     </div>
   );

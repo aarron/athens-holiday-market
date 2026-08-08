@@ -299,6 +299,23 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/* ----------------------------------------------------------- admin events */
+/** Append-only audit log of outward/irreversible admin actions — who did what,
+ *  to which target, and when. Never updated or deleted. */
+export const adminEvents = pgTable(
+  "admin_events",
+  {
+    id: serial("id").primaryKey(),
+    actorEmail: text("actor_email").notNull(),
+    action: text("action").notNull(), // e.g. "decision.send", "sms.send", "status.change"
+    targetType: text("target_type"), // "application" | "artist" | "broadcast" | "cycle" | …
+    targetId: integer("target_id"),
+    summary: text("summary").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("admin_events_created_idx").on(t.createdAt)],
+);
+
 /* -------------------------------------------------------------- relations */
 export const cyclesRelations = relations(cycles, ({ many }) => ({
   applications: many(applications),

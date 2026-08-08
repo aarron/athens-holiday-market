@@ -9,6 +9,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
 import { invoiceAcceptedWithoutInvoice } from "@/lib/booth-fee";
+import { logAdminEvent } from "@/lib/audit";
 
 const schema = z.object({
   cycleId: z.number(),
@@ -115,5 +116,11 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
 
   revalidatePath("/admin/decisions");
   revalidatePath("/admin");
+  await logAdminEvent({
+    action: "decision.send",
+    targetType: "cycle",
+    targetId: cycleId,
+    summary: `Sent ${sent} ${group} decision email${sent === 1 ? "" : "s"}${resendAll ? " (incl. re-sends)" : ""}${invoiced ? `, invoiced ${invoiced}` : ""}`,
+  });
   return { ok: true, count: sent, invoiced };
 }

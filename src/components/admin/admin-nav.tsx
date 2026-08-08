@@ -19,6 +19,7 @@ function buildItems(role: string, pendingReviews: number): Item[] {
     { href: "/admin/broadcasts", label: "Email & Text", adminOnly: true, match: (p) => p.startsWith("/admin/broadcasts") || p.startsWith("/admin/decisions") },
     { href: "/admin/subscribers", label: "Subscribers", adminOnly: true, match: (p) => p.startsWith("/admin/subscribers") },
     { href: "/admin/social-kit", label: "Social kit", match: (p) => p.startsWith("/admin/social-kit") },
+    { href: "/admin/activity", label: "Activity", adminOnly: true, match: (p) => p.startsWith("/admin/activity") },
   ];
   return items.filter((i) => !i.adminOnly || role === "admin");
 }

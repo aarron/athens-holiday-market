@@ -98,6 +98,24 @@ export function DecisionControls({
   const [pending, start] = useTransition();
   const [cur, setCur] = useState(status);
   const [paid, setPaid] = useState(boothFeePaid);
+  // A decision change is armed here and only applied on explicit confirm — a
+  // stray click shouldn't grant portal login or queue someone for a blast.
+  const [confirmTo, setConfirmTo] = useState<string | null>(null);
+
+  // Optimistic, but reconciled: revert if the server write doesn't succeed.
+  function apply(next: string) {
+    const prev = cur;
+    setCur(next);
+    start(async () => {
+      const r = await setStatus(applicationId, next as never);
+      if (!(r && "ok" in r && r.ok)) setCur(prev);
+    });
+  }
+
+  const DECISION = new Set(["accepted", "waitlisted", "rejected"]);
+  const confirmLabel = confirmTo
+    ? STATUS_OPTS.find(([s]) => s === confirmTo)?.[1] ?? confirmTo
+    : "";
 
   return (
     <div className="space-y-5">
@@ -110,10 +128,7 @@ export function DecisionControls({
               <button
                 key={s}
                 disabled={pending}
-                onClick={() => {
-                  setCur(s);
-                  start(() => setStatus(applicationId, s as never));
-                }}
+                onClick={() => (DECISION.has(s) && s !== cur ? setConfirmTo(s) : apply(s))}
                 className="h-11 rounded-lg border-2 font-display text-sm font-bold transition-all disabled:opacity-60"
                 style={active ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: "rgba(23,22,27,0.15)" }}
               >
@@ -122,6 +137,37 @@ export function DecisionControls({
             );
           })}
         </div>
+
+        {confirmTo && (
+          <div className="mt-3 rounded-lg border-2 border-fuchsia/40 bg-fuchsia/5 p-3">
+            <p className="text-sm font-semibold">
+              Set decision to <strong>{confirmLabel}</strong>?
+            </p>
+            {confirmTo === "accepted" && (
+              <p className="mt-1 text-xs text-ink-soft">
+                Accepting grants this email portal login and includes them in accepted-artist
+                emails, texts, and logistics.
+              </p>
+            )}
+            <div className="mt-2.5 flex gap-2">
+              <Button
+                variant="confirm"
+                size="sm"
+                loading={pending}
+                onClick={() => {
+                  const next = confirmTo;
+                  setConfirmTo(null);
+                  apply(next);
+                }}
+              >
+                Yes, set to {confirmLabel}
+              </Button>
+              <Button variant="ghost" size="sm" disabled={pending} onClick={() => setConfirmTo(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div>

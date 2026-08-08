@@ -10,6 +10,7 @@ import { resend, EMAIL_FROM } from "@/lib/resend";
 import { emailShell, renderMarkdown } from "@/lib/email-template";
 import { segmentRecipients } from "@/lib/broadcast-data";
 import { deliverBroadcast, personalize, unsubUrl, unsubApi } from "@/lib/broadcast-send";
+import { logAdminEvent } from "@/lib/audit";
 
 const SEGMENT_VALUES = ["all", "artists", "non_artists", "accepted", "waitlisted", "applicants"] as const;
 
@@ -105,6 +106,14 @@ export async function sendBroadcast(input: z.input<typeof composeSchema>) {
 
   const r = await deliverBroadcast({ id: bc.id, subject, body, segment });
   revalidatePath("/admin/broadcasts");
+  if ("ok" in r) {
+    await logAdminEvent({
+      action: "broadcast.send",
+      targetType: "broadcast",
+      targetId: bc.id,
+      summary: `Sent "${name || subject}" to ${r.count} (${segment})`,
+    });
+  }
   return "ok" in r ? { ok: true, id: bc.id, count: r.count } : { error: r.error };
 }
 
@@ -132,6 +141,12 @@ export async function scheduleBroadcast(input: z.input<typeof scheduleSchema>) {
   if (!bc) return { error: "That draft is no longer available." };
 
   revalidatePath("/admin/broadcasts");
+  await logAdminEvent({
+    action: "broadcast.schedule",
+    targetType: "broadcast",
+    targetId: bc.id,
+    summary: `Scheduled "${name || subject}" for ${when.toLocaleString()} → ${recipients.length} (${segment})`,
+  });
   return { ok: true, id: bc.id, count: recipients.length, scheduledFor: when.toISOString() };
 }
 

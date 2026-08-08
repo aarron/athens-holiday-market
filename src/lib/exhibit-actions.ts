@@ -8,6 +8,7 @@ import { applications, applicationPhotos, artists, cycles, users } from "@/db/sc
 import { requireAdmin, requireStaff, getSessionUser } from "@/lib/admin-auth";
 import { acceptedApplicationIdForEmail, createMagicToken, ensureArtistForApplication } from "@/lib/magic";
 import { sendArtistInvite, sendArtistReviewAlert } from "@/lib/emails";
+import { logAdminEvent } from "@/lib/audit";
 import { publicEnv } from "@/lib/env";
 import { categorizeMedium } from "@/lib/mediums";
 import { site } from "@/lib/site";
@@ -67,6 +68,12 @@ export async function addDirectArtist(input: z.input<typeof addSchema>) {
 
   const raw = await createMagicToken(email);
   await sendArtistInvite(email, name, `${publicEnv.siteUrl}/auth/verify?token=${raw}&next=/artist/finish`);
+  await logAdminEvent({
+    action: "artist.invite",
+    targetType: "application",
+    targetId: app.id,
+    summary: `${created ? "Added" : "Re-invited"} artist ${name} <${email}>`,
+  });
   revalidatePath("/admin/artists");
   return { ok: true, applicationId: app.id, resent: !created };
 }

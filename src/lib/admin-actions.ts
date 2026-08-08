@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { applications, votes, comments, artists, artistPhotos, cycles } from "@/db/schema";
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
 import { cleanUrl, sanitizeSocials } from "@/lib/clean";
+import { logAdminEvent } from "@/lib/audit";
 import {
   sendDecisionEmail,
   sendArtistPageLive,
@@ -45,15 +46,27 @@ export async function addComment(applicationId: number, body: string) {
   revalidatePath(`/admin/applications/${applicationId}`);
 }
 
-/** Set an application's decision status (admin only). */
+/** Set an application's decision status (admin only). Returns `{ ok }` so the
+ *  UI can reconcile its optimistic state if the write fails. */
 export async function setStatus(applicationId: number, status: Status) {
   await requireAdmin();
+  const prev = await db.query.applications.findFirst({
+    where: eq(applications.id, applicationId),
+    columns: { status: true, name: true },
+  });
   await db
     .update(applications)
     .set({ status, updatedAt: sql`now()` })
     .where(eq(applications.id, applicationId));
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/admin");
+  await logAdminEvent({
+    action: "status.change",
+    targetType: "application",
+    targetId: applicationId,
+    summary: `${prev?.name ?? `Application #${applicationId}`}: ${prev?.status ?? "?"} → ${status}`,
+  });
+  return { ok: true as const };
 }
 
 /** Toggle whether the booth fee has been paid (admin only). */
@@ -76,6 +89,14 @@ export async function sendDecision(applicationId: number) {
     return { error: "Set a decision (accept / waitlist / reject) before emailing." };
   }
   const res = await sendDecisionEmail(app.email, app.name, app.status as "accepted" | "waitlisted" | "rejected");
+  if (res && "ok" in res && res.ok) {
+    await logAdminEvent({
+      action: "decision.send",
+      targetType: "application",
+      targetId: applicationId,
+      summary: `Emailed ${app.status} decision to ${app.name}`,
+    });
+  }
   return res;
 }
 
@@ -93,6 +114,7 @@ export async function publishArtist(applicationId: number) {
     await db.update(artists).set({ published: true }).where(eq(artists.id, existing.id));
     revalidatePath(`/admin/applications/${applicationId}`);
     revalidatePath("/artists");
+    await logAdminEvent({ action: "artist.publish", targetType: "artist", targetId: applicationId, summary: `Published artist page: ${app.name}` });
     return { ok: true, slug: existing.slug };
   }
 
@@ -134,6 +156,7 @@ export async function publishArtist(applicationId: number) {
       revalidatePath(`/admin/applications/${applicationId}`);
       revalidatePath("/artists");
       revalidatePath(`/artists/${samePerson.slug}`);
+      await logAdminEvent({ action: "artist.publish", targetType: "artist", targetId: applicationId, summary: `Published artist page (refreshed prior year): ${app.name}` });
       return { ok: true, slug: samePerson.slug, updatedExisting: true };
     }
   }
@@ -166,6 +189,7 @@ export async function publishArtist(applicationId: number) {
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/artists");
   await sendArtistPageLive(app.email, app.name, slug);
+  await logAdminEvent({ action: "artist.publish", targetType: "artist", targetId: applicationId, summary: `Published artist page: ${app.name}` });
   return { ok: true, slug };
 }
 
@@ -209,6 +233,12 @@ export async function unpublishArtist(applicationId: number) {
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/artists");
   if (row?.slug) revalidatePath(`/artists/${row.slug}`);
+  await logAdminEvent({
+    action: "artist.unpublish",
+    targetType: "artist",
+    targetId: applicationId,
+    summary: `Took down artist page${row?.slug ? ` /artists/${row.slug}` : ""}`,
+  });
   return { ok: true };
 }
 
@@ -219,7 +249,17 @@ export async function unpublishArtist(applicationId: number) {
  */
 export async function deleteApplication(applicationId: number) {
   await requireAdmin();
+  const app = await db.query.applications.findFirst({
+    where: eq(applications.id, applicationId),
+    columns: { name: true },
+  });
   await db.delete(applications).where(eq(applications.id, applicationId));
+  await logAdminEvent({
+    action: "application.delete",
+    targetType: "application",
+    targetId: applicationId,
+    summary: `Deleted application: ${app?.name ?? `#${applicationId}`} (and its photos, votes, comments, artist page)`,
+  });
   revalidatePath("/admin");
   revalidatePath("/admin/artists");
   revalidatePath("/artists");
@@ -270,6 +310,12 @@ export async function approveArtistSubmission(artistId: number) {
     });
     if (app?.email) await sendArtistPageLive(app.email, artist.name ?? app.name, artist.slug);
   }
+  await logAdminEvent({
+    action: firstPublish ? "artist.publish" : "artist.approve",
+    targetType: "artist",
+    targetId: artistId,
+    summary: `${firstPublish ? "Published" : "Approved update to"} artist page: ${artist.name ?? artist.slug}`,
+  });
   return { ok: true };
 }
 

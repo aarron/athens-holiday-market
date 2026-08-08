@@ -28,9 +28,10 @@ function StatusPill({ status, sentAt }: { status: SendStatus; sentAt: string | n
   );
 }
 
+/** A channel *label* (not an action) — filled tag so it never reads as a button. */
 function ChannelPill({ channel }: { channel: string }) {
   return (
-    <span className="inline-block whitespace-nowrap rounded-full border-2 border-ink/12 px-2 py-0.5 text-xs font-semibold text-ink-soft">
+    <span className="inline-block whitespace-nowrap rounded-md bg-cream px-2 py-0.5 text-xs font-semibold text-ink-soft">
       {channel}
     </span>
   );

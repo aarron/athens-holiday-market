@@ -2,6 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { sendEventText, sendTestText } from "@/lib/sms-actions";
+import { Card } from "@/components/ui/card";
+import { Input, Textarea } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { StatusMessage } from "@/components/ui/status-message";
 
 export function TextArtists({
   recipientCount,
@@ -25,65 +29,47 @@ export function TextArtists({
 
   if (!configured) {
     return (
-      <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+      <Card>
         <p className="text-sm text-ink-soft">
           Twilio isn&apos;t configured on this environment yet. Once the credentials are set,
           you&apos;ll be able to text accepted artists here.
         </p>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
-      <textarea
+    <Card>
+      <Textarea
         value={msg}
         onChange={(e) => setMsg(e.target.value)}
         rows={3}
         placeholder="e.g. Athens Holiday Market load-in starts at 3pm today at Big City Bread. See you there!"
-        className="w-full rounded-lg border-2 border-ink/15 px-3 py-2 text-sm outline-none focus:border-fern-deep"
       />
       <div className="mt-1 text-right text-xs text-ink-soft">
         {chars} chars · {segments} SMS {segments === 1 ? "segment" : "segments"} each
       </div>
 
-      {/* Test send */}
-      <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg bg-cream-soft p-3">
-        <span className="text-sm font-semibold">Send a test:</span>
-        <input
-          value={testTo}
-          onChange={(e) => setTestTo(e.target.value)}
-          placeholder="your mobile #"
-          className="w-40 rounded-lg border-2 border-ink/15 px-2 py-1 text-sm outline-none focus:border-fern-deep"
-        />
-        <button
-          disabled={pending || !testTo.trim() || chars === 0}
-          onClick={() =>
-            start(async () => {
-              const r = await sendTestText(testTo, msg);
-              setResult(r.ok ? `Test sent to ${r.to} ✓` : r.error);
-            })
-          }
-          className="rounded-lg border-2 border-ink/15 px-3 py-1 text-sm font-semibold hover:bg-white disabled:opacity-50"
-        >
-          Send test
-        </button>
-      </div>
-
-      {/* Blast with confirmation */}
+      {/* Send — primary blast first, then the optional test, so the main flow reads straight through. */}
       <div className="mt-4 border-t border-ink/10 pt-4">
-        <label className="text-sm font-semibold">
+        <label htmlFor="tx-confirm" className="text-sm font-semibold">
           Text all {recipientCount} accepted artists — type <span className="font-mono">SEND</span> to confirm
         </label>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <input
+          <Input
+            id="tx-confirm"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="SEND"
-            className="w-28 rounded-lg border-2 border-ink/15 px-3 py-2 text-sm outline-none focus:border-poppy"
+            aria-label="Type SEND to confirm"
+            className="!w-28 uppercase"
           />
-          <button
+          <Button
+            variant="danger"
+            size="sm"
             disabled={!canSend}
+            loading={pending}
+            loadingLabel="Sending…"
             onClick={() =>
               start(async () => {
                 const r = await sendEventText(msg);
@@ -100,14 +86,37 @@ export function TextArtists({
                 }
               })
             }
-            className="rounded-lg bg-poppy px-5 py-2 text-sm font-display font-bold text-white hover:opacity-90 disabled:opacity-50"
           >
-            {pending ? "Sending…" : `Text ${recipientCount} artists`}
-          </button>
+            {`Text ${recipientCount} artists`}
+          </Button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+          <span>Or send a test to your phone:</span>
+          <Input
+            value={testTo}
+            onChange={(e) => setTestTo(e.target.value)}
+            placeholder="your mobile #"
+            aria-label="Test mobile number"
+            className="!w-40"
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={pending || !testTo.trim() || chars === 0}
+            onClick={() =>
+              start(async () => {
+                const r = await sendTestText(testTo, msg);
+                setResult(r.ok ? `Test sent to ${r.to} ✓` : r.error);
+              })
+            }
+          >
+            Send test
+          </Button>
         </div>
       </div>
 
-      {result && <p className="mt-3 text-sm font-semibold text-ink">{result}</p>}
-    </div>
+      {result && <StatusMessage className="mt-3">{result}</StatusMessage>}
+    </Card>
   );
 }

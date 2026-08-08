@@ -73,7 +73,10 @@ export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: strin
             tabIndex={0}
             hidden={t.id !== active}
           >
-            {t.content}
+            {/* Only the active panel renders. Keeping inactive panels mounted
+                duplicated masked icons (Central Icons reuse a fixed mask id per
+                icon), and a display:none copy breaks the visible one's mask. */}
+            {t.id === active ? t.content : null}
           </div>
         ))}
       </div>

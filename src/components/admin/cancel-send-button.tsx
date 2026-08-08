@@ -22,10 +22,8 @@ export function CancelSendButton({ id, status }: { id: string; status: SendStatu
           router.refresh();
         })
       }
-      className={`rounded-full border-2 px-3 py-1 text-xs font-bold transition-colors disabled:opacity-50 ${
-        canceled
-          ? "border-fern-deep/40 text-fern-deep hover:bg-fern-soft"
-          : "border-ink/15 text-ink-soft hover:border-poppy hover:text-poppy-deep"
+      className={`text-xs font-semibold underline-offset-2 transition-colors hover:underline disabled:opacity-50 ${
+        canceled ? "text-fern-deep" : "text-ink-soft hover:text-poppy-deep"
       }`}
     >
       {pending ? "…" : canceled ? "Restore" : "Cancel"}

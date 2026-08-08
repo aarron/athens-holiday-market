@@ -87,7 +87,7 @@ export default function HomePage() {
               <ButtonLink href="/artists" size="lg">
                 Meet the artists
               </ButtonLink>
-              <ButtonLink href="/apply" size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-ink">
+              <ButtonLink href="/apply" size="lg" variant="outline" className="border-white text-white hover:!bg-white hover:!text-ink">
                 Apply to sell
               </ButtonLink>
             </div>
@@ -164,13 +164,13 @@ export default function HomePage() {
               all the handmade wonders. Find the perfect something special, made by hand and made
               with heart.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
               <ButtonLink href={mapsHref()} variant="ink" size="lg">
                 Get directions
               </ButtonLink>
-              <ButtonLink href="/contact" variant="ghost" size="lg">
+              <Link href="/contact" className="link font-display text-lg font-semibold">
                 Questions? Contact us
-              </ButtonLink>
+              </Link>
             </div>
           </div>
 

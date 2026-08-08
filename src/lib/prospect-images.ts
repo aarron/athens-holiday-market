@@ -1,7 +1,8 @@
 import { put } from "@vercel/blob";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { prospectImages } from "@/db/schema";
+import { prospectImages, prospects } from "@/db/schema";
+import { extractSiteImages } from "@/lib/site-images";
 
 /**
  * Cache scraped prospect reference images into Vercel Blob. The research URLs are
@@ -45,6 +46,48 @@ async function cacheOne(img: { id: number; prospectId: number; sourceUrl: string
   });
   await db.update(prospectImages).set({ blobUrl: blob.url }).where(eq(prospectImages.id, img.id));
   return true;
+}
+
+/**
+ * Pull reference photos from each prospect's own website for prospects that have
+ * a site but no images yet. Uses NO web-search quota — it just fetches the
+ * artist's page and extracts og:image + a few in-page photos. This is what
+ * populates the bulk of the imported prospects (the spreadsheet had no images).
+ * Best-effort; a site that blocks us or has no usable images is simply skipped.
+ */
+export async function enrichProspectImagesFromSites(opts: { limit?: number } = {}) {
+  const haveImages = new Set(
+    (await db.select({ pid: prospectImages.prospectId }).from(prospectImages)).map((r) => r.pid),
+  );
+  const candidates = (
+    await db
+      .select({ id: prospects.id, website: prospects.website })
+      .from(prospects)
+      .where(sql`${prospects.website} is not null`)
+  )
+    .filter((r) => r.website && !haveImages.has(r.id))
+    .slice(0, opts.limit ?? 200);
+
+  let processed = 0;
+  let withImages = 0;
+  let imagesAdded = 0;
+  for (const c of candidates) {
+    processed++;
+    try {
+      const urls = await extractSiteImages(c.website!, 4);
+      if (urls.length) {
+        await db
+          .insert(prospectImages)
+          .values(urls.map((sourceUrl, position) => ({ prospectId: c.id, sourceUrl, position })));
+        withImages++;
+        imagesAdded += urls.length;
+      }
+    } catch (e) {
+      console.error(`[enrich-images] prospect ${c.id} failed:`, e);
+    }
+    await new Promise((res) => setTimeout(res, 120)); // gentle pacing
+  }
+  return { processed, withImages, imagesAdded };
 }
 
 /** Cache every prospect image that isn't in Blob yet. Best-effort per image. */

@@ -13,7 +13,8 @@ import {
 import { categorizeMedium } from "@/lib/mediums";
 import { cleanWebsite, cleanInstagram, cleanEmail, prospectDedupeKey } from "@/lib/prospects";
 import { extractSiteImages } from "@/lib/site-images";
-import { cachePendingProspectImages } from "@/lib/prospect-images";
+import { cachePendingProspectImages, enrichProspectImagesFromSites } from "@/lib/prospect-images";
+import { perplexityChat, hasPerplexity } from "@/lib/perplexity";
 
 /**
  * Autonomous artist scouting. The model does DISCOVERY only — grounded by the
@@ -138,33 +139,54 @@ function searchErrored(content: Anthropic.ContentBlock[]): boolean {
   );
 }
 
-async function discover(
-  client: Anthropic,
+const DISCOVERY_SYSTEM =
+  "You research independent, handmade artists and makers who would be a great fit to invite to a juried holiday craft market in Athens, Georgia. " +
+  "Find REAL makers with an active web presence. Only include artists who make their own work by hand. " +
+  "Exclude galleries that only resell, big brands, print-on-demand shops, and anyone clearly inactive. " +
+  "CRITICAL: your entire response must be a JSON array and nothing else — no prose, questions, or apologies. " +
+  "An empty array [] is fine if you found none. Never invent URLs, emails, or handles.";
+
+function discoveryUser(geoScope: GeoScope, item: PlanItem): string {
+  return (
+    `Find handmade artists based in ${item.region} (within ${GEO_LABEL[geoScope]}) working in any of these mediums: ${item.mediums.join(", ")}. ` +
+    `Return about 7 strong, distinct candidates as a JSON array of objects with keys: ` +
+    `name (maker or business name), medium, city, state (2-letter), website (full URL if known), instagram (handle or URL if known), email (only if clearly published), description (one short sentence), reason (why they'd fit this market, one short phrase). ` +
+    `Omit any key you don't know. Respond with ONLY the JSON array.`
+  );
+}
+
+/** Perplexity Sonar — the primary provider (no Anthropic web-search cap). */
+async function discoverPerplexity(
   geoScope: GeoScope,
   item: PlanItem,
 ): Promise<{ candidates: Candidate[]; errored: boolean }> {
+  const r = await perplexityChat(DISCOVERY_SYSTEM, discoveryUser(geoScope, item), {
+    model: "sonar",
+    maxTokens: 1800,
+    timeoutMs: 60_000,
+  });
+  if (!r.ok) {
+    console.error(`[research] perplexity failed (${r.status}): ${r.error}`);
+    return { candidates: [], errored: true };
+  }
+  return { candidates: parseCandidates(r.text), errored: false };
+}
+
+/** Anthropic web_search — fallback when no Perplexity key is configured. */
+async function discoverAnthropic(
+  geoScope: GeoScope,
+  item: PlanItem,
+): Promise<{ candidates: Candidate[]; errored: boolean }> {
+  const client = new Anthropic();
   const msg = await client.messages.create(
     {
-    model: "claude-sonnet-5",
-    max_tokens: 2000,
-    tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 3 } as never],
-    system:
-      "You research independent, handmade artists and makers who would be a great fit to invite to a juried holiday craft market in Athens, Georgia. " +
-      "Use web search to find REAL makers with an active web presence. Only include artists who make their own work by hand. " +
-      "Exclude galleries that only resell, big brands, print-on-demand shops, and anyone clearly inactive. " +
-      "Search efficiently — a handful of broad searches (craft-fair rosters, maker directories, studio-tour lists), not one search per artist. " +
-      "CRITICAL: your FINAL message must be a JSON array and nothing else — no prose, questions, or apologies. " +
-      "If your search budget runs low, still return whatever verified candidates you already found; an empty array [] is fine if you found none. Never invent URLs, emails, or handles.",
-    messages: [
-      {
-        role: "user",
-        content:
-          `Find handmade artists based in ${item.region} (within ${GEO_LABEL[geoScope]}) working in any of these mediums: ${item.mediums.join(", ")}. ` +
-          `Return about 7 strong, distinct candidates as a JSON array of objects with keys: ` +
-          `name (maker or business name), medium, city, state (2-letter), website (full URL if known), instagram (handle or URL if known), email (only if clearly published), description (one short sentence), reason (why they'd fit this market, one short phrase). ` +
-          `Omit any key you don't know. Respond with ONLY the JSON array.`,
-      },
-    ],
+      model: "claude-sonnet-5",
+      max_tokens: 2000,
+      tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 3 } as never],
+      system:
+        DISCOVERY_SYSTEM +
+        " Use web search efficiently — a handful of broad searches (craft-fair rosters, maker directories, studio-tour lists), not one search per artist.",
+      messages: [{ role: "user", content: discoveryUser(geoScope, item) }],
     },
     { timeout: 150_000 }, // bound each query so one can't blow the function limit
   );
@@ -173,6 +195,11 @@ async function discover(
     .map((b) => b.text)
     .join("");
   return { candidates: parseCandidates(text), errored: searchErrored(msg.content) };
+}
+
+/** Provider dispatch: prefer Perplexity, fall back to Anthropic web search. */
+async function discover(geoScope: GeoScope, item: PlanItem) {
+  return hasPerplexity() ? discoverPerplexity(geoScope, item) : discoverAnthropic(geoScope, item);
 }
 
 /**
@@ -196,9 +223,10 @@ export async function runProspectResearch(
   const params = batch.params as ResearchParams;
   const cycleId = batch.cycleId;
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    await db.update(prospectBatches).set({ status: "failed", note: "ANTHROPIC_API_KEY not set" }).where(eq(prospectBatches.id, batchId));
-    return { error: "ANTHROPIC_API_KEY not set" };
+  if (!hasPerplexity() && !process.env.ANTHROPIC_API_KEY) {
+    const note = "No search provider configured (set PERPLEXITY_API_KEY or ANTHROPIC_API_KEY).";
+    await db.update(prospectBatches).set({ status: "failed", note }).where(eq(prospectBatches.id, batchId));
+    return { error: note };
   }
 
   await db.update(prospectBatches).set({ status: "running" }).where(eq(prospectBatches.id, batchId));
@@ -215,7 +243,6 @@ export async function runProspectResearch(
     [...appEmails, ...optOuts].map((r) => (r.email ?? "").trim().toLowerCase()).filter(Boolean),
   );
 
-  const client = new Anthropic();
   const stats = (batch.stats as { added: number; skipped: number; queriesRun: number }) ?? {
     added: 0,
     skipped: 0,
@@ -230,7 +257,7 @@ export async function runProspectResearch(
 
     let candidates: Candidate[] = [];
     try {
-      const r = await discover(client, params.geoScope, item);
+      const r = await discover(params.geoScope, item);
       candidates = r.candidates;
       // Web-search quota exhausted for now: pause WITHOUT advancing the cursor so
       // the daily cron resumes this exact query once the limit resets.
@@ -362,6 +389,9 @@ export async function runProspectScoutingCron(now: Date = new Date()) {
     }
   }
   results.advance = await advancePendingResearch({ timeBudgetMs: 120_000 });
+  // Pull photos from prospect websites for anyone still missing them, then cache
+  // everything to Blob. Both no-op when there's nothing pending.
+  results.enriched = await enrichProspectImagesFromSites({ limit: 60 });
   results.images = await cachePendingProspectImages({ limit: 200 });
   return results;
 }

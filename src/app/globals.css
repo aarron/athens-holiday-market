@@ -99,6 +99,23 @@
     color: inherit;
   }
 
+  /* Canonical text-link treatment. Opt-in (`.link`) so it never touches nav
+     items or button-style links — only inline links inside body copy. Berry
+     ink, underline on hover/focus so the color isn't the only affordance. */
+  .link {
+    color: var(--color-berry);
+    text-decoration-line: none;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+  }
+  .link:hover {
+    color: var(--color-fuchsia-deep);
+    text-decoration-line: underline;
+  }
+  .link:focus-visible {
+    text-decoration-line: underline;
+  }
+
   /* Tailwind v4 no longer defaults buttons to a pointer cursor; restore it
      for all enabled buttons and button-role controls. */
   button:not(:disabled),

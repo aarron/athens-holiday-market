@@ -127,7 +127,7 @@ export default async function ApplyPage({
           <p className="text-lg text-ink-soft">
             Applications for the {site.event.year} market are now closed. Thank you to everyone who
             applied! Subscribe on the{" "}
-            <a href="/" className="font-semibold text-fern-deep underline underline-offset-4">
+            <a href="/" className="link font-semibold">
               home page
             </a>{" "}
             to hear about next year.

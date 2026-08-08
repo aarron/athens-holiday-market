@@ -38,7 +38,7 @@ export default async function ArtistsPage() {
           <h2 className="mt-6 text-2xl font-extrabold">The lineup is coming soon</h2>
           <p className="mx-auto mt-2 max-w-md text-ink-soft">
             Our jury is still curating this year&apos;s artists. Subscribe on the{" "}
-            <Link href="/" className="font-semibold text-fern-deep underline underline-offset-4">
+            <Link href="/" className="link font-semibold">
               home page
             </Link>{" "}
             to be the first to see the full roster.

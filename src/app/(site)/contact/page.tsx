@@ -88,7 +88,7 @@ export default function ContactPage() {
 
           <p className="flex flex-wrap items-center gap-1.5 text-sm text-ink-soft">
             <MailIcon size={16} className="text-fuchsia-deep" aria-hidden />
-            Prefer email? <a href={`mailto:${site.contactEmail}`} className="font-semibold text-fuchsia-deep underline underline-offset-4">{site.contactEmail}</a>
+            Prefer email? <a href={`mailto:${site.contactEmail}`} className="link font-semibold">{site.contactEmail}</a>
           </p>
         </div>
       </div>

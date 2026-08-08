@@ -121,7 +121,7 @@ export default function VenuePage() {
               <address className="mt-0.5 not-italic text-ink-soft">{host.address}</address>
               <a
                 href={host.phoneHref}
-                className="mt-1 inline-block font-semibold text-fern-deep underline underline-offset-4"
+                className="link mt-1 inline-block font-semibold"
               >
                 {host.phone}
               </a>

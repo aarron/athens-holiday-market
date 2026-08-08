@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { acceptedApplicationIdForEmail, ensureArtistForApplication } from "@/lib/magic";
+import { acceptedApplicationIdForEmail, ensureArtistForApplication, resolveIdentity } from "@/lib/magic";
 import type { AppRole } from "@/lib/roles";
 
 export type SessionUser = {
@@ -22,7 +22,13 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   }
   const s = await getSession();
   if (!s) return null;
-  return { email: s.email, name: s.name ?? null, role: s.role, artistId: s.artistId };
+  // Re-resolve authority from source every request — the cookie is treated as
+  // identity only, never as a role grant. Removing someone from the admin/judge
+  // allowlist, deleting their users row, or un-accepting an artist revokes
+  // access on their next request instead of after the token's TTL.
+  const identity = await resolveIdentity(s.email);
+  if (!identity) return null;
+  return { email: s.email, name: s.name ?? null, role: identity.role, artistId: s.artistId };
 }
 
 /** Require any signed-in user; redirect to login otherwise. */

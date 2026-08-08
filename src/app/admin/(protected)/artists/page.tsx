@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listArtistsForAdmin, getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
+import { getSessionUser } from "@/lib/admin-auth";
 import { SafeImg } from "@/components/admin/safe-img";
 import { EmailLogisticsButton } from "@/components/admin/email-logistics-button";
 import { AddArtistForm } from "@/components/admin/add-artist-form";
@@ -19,6 +20,8 @@ export default async function AdminArtists() {
   const pending = artists.filter((a) => a.submittedAt);
   const cycle = await getActiveCycle();
   const acceptedCount = cycle ? (await getDecisionGroups(cycle.id)).accepted.total : 0;
+  const me = await getSessionUser();
+  const isAdmin = me?.role === "admin";
 
   return (
     <div className="space-y-6">
@@ -35,7 +38,7 @@ export default async function AdminArtists() {
         <EmailLogisticsButton count={acceptedCount} />
       </div>
 
-      <AddArtistForm />
+      {isAdmin && <AddArtistForm />}
 
       {artists.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-[var(--shadow-card)]">

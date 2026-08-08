@@ -11,9 +11,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// Fallback GET → unsubscribe then show the friendly page.
+// Fallback GET must NOT mutate — link prefetchers/scanners would silently
+// unsubscribe people. Redirect to the confirm page; the confirm click POSTs.
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token") ?? "";
-  await unsubscribeByToken(token);
   return NextResponse.redirect(new URL(`/unsubscribe?token=${encodeURIComponent(token)}`, req.url));
 }

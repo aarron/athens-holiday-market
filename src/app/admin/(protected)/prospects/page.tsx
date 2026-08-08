@@ -8,8 +8,10 @@ import {
   listResearchBatches,
   type ProspectStatus,
 } from "@/lib/prospect-data";
+import { inviteCounts, listInvitableProspects, inviteEmailHtml } from "@/lib/prospect-invite";
 import { ResearchPanel } from "@/components/admin/research-panel";
 import { ProspectGrid } from "@/components/admin/prospect-grid";
+import { InvitePanel } from "@/components/admin/invite-panel";
 
 export const metadata: Metadata = { title: "Scouting", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -50,11 +52,14 @@ export default async function ProspectsPage({
       ? "all"
       : (["new", "shortlisted", "maybe", "passed"] as ProspectStatus[]).find((s) => s === status) ??
         "new";
-  const [summary, cards, batches] = await Promise.all([
+  const [summary, cards, batches, invCounts, inviteRecipients] = await Promise.all([
     getProspectSummary(cycle.id),
     listProspects(cycle.id, view === "all" ? {} : { status: view }),
     listResearchBatches(cycle.id),
+    inviteCounts(cycle.id),
+    listInvitableProspects(cycle.id),
   ]);
+  const invitePreview = inviteEmailHtml({ name: "there", token: "preview" });
 
   const filters: { key: ProspectStatus | "all"; label: string; n: number }[] = [
     { key: "new", label: "To review", n: summary.new },
@@ -94,6 +99,14 @@ export default async function ProspectsPage({
       </div>
 
       <ResearchPanel batches={batches} />
+
+      <InvitePanel
+        ready={invCounts.ready}
+        emailed={invCounts.invited}
+        shortlisted={summary.shortlisted}
+        previewHtml={invitePreview}
+        recipients={inviteRecipients}
+      />
 
       <div className="flex flex-wrap gap-1.5">
         {filters.map((f) => {

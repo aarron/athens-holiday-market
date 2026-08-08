@@ -11,7 +11,14 @@ import {
   prospectOptOuts,
 } from "@/db/schema";
 import { categorizeMedium } from "@/lib/mediums";
-import { cleanWebsite, cleanInstagram, cleanEmail, prospectDedupeKey } from "@/lib/prospects";
+import {
+  cleanWebsite,
+  cleanInstagram,
+  cleanEmail,
+  prospectDedupeKey,
+  websiteHost,
+  looseNameKey,
+} from "@/lib/prospects";
 import { extractSiteImages } from "@/lib/site-images";
 import { cachePendingProspectImages, enrichProspectImagesFromSites } from "@/lib/prospect-images";
 import { perplexityChat, hasPerplexity } from "@/lib/perplexity";
@@ -231,14 +238,21 @@ export async function runProspectResearch(
 
   await db.update(prospectBatches).set({ status: "running" }).where(eq(prospectBatches.id, batchId));
 
-  // Load exclusion sets once: existing prospect keys (this cycle), applicant
-  // emails (this cycle), and cold-outreach opt-outs.
+  // Load exclusion sets once: existing prospect identity (this cycle), applicant
+  // emails (this cycle), and cold-outreach opt-outs. We dedupe on THREE signals —
+  // the stable dedupeKey, the website host, and a loose name key — so near-dupes
+  // like "R. Wood Studio" vs "R. Wood Studio Ceramics & Shoppe" collapse.
   const [existingProspects, appEmails, optOuts] = await Promise.all([
-    db.select({ dedupeKey: prospects.dedupeKey }).from(prospects).where(eq(prospects.cycleId, cycleId)),
+    db
+      .select({ dedupeKey: prospects.dedupeKey, name: prospects.name, website: prospects.website })
+      .from(prospects)
+      .where(eq(prospects.cycleId, cycleId)),
     db.select({ email: applications.email }).from(applications).where(eq(applications.cycleId, cycleId)),
     db.select({ email: prospectOptOuts.email }).from(prospectOptOuts),
   ]);
   const seenKeys = new Set(existingProspects.map((p) => p.dedupeKey));
+  const seenHosts = new Set(existingProspects.map((p) => websiteHost(p.website)).filter(Boolean));
+  const seenLoose = new Set(existingProspects.map((p) => looseNameKey(p.name)).filter(Boolean));
   const excludedEmails = new Set(
     [...appEmails, ...optOuts].map((r) => (r.email ?? "").trim().toLowerCase()).filter(Boolean),
   );
@@ -273,7 +287,10 @@ export async function runProspectResearch(
     for (const c of candidates) {
       const website = cleanWebsite(c.website);
       const key = prospectDedupeKey(c.name, website);
-      if (seenKeys.has(key)) {
+      const host = websiteHost(website);
+      const loose = looseNameKey(c.name);
+      // Skip if we've seen this by any identity signal — key, host, or loose name.
+      if (seenKeys.has(key) || (host && seenHosts.has(host)) || (loose && seenLoose.has(loose))) {
         stats.skipped++;
         continue;
       }
@@ -283,6 +300,8 @@ export async function runProspectResearch(
         continue;
       }
       seenKeys.add(key);
+      if (host) seenHosts.add(host);
+      if (loose) seenLoose.add(loose);
 
       const medium = c.medium?.trim() || null;
       const [inserted] = await db

@@ -42,11 +42,19 @@ export async function extractSiteImages(pageUrl: string, max = 4): Promise<strin
   const base = pageUrl;
   const found: string[] = [];
   const seen = new Set<string>();
-  const add = (raw: string | null | undefined) => {
+  // Known image CDNs / query hints where the URL often has no file extension.
+  const IMG_HINT =
+    /(squarespace-cdn|shopify|\/cdn\/|etsystatic|wixstatic|cloudfront|imgix|format=|\/image|w=\d)/i;
+  const add = (raw: string | null | undefined, trusted = false) => {
     if (!raw) return;
     const abs = absolutize(raw.trim(), base);
     if (!abs || JUNK.test(abs)) return;
-    if (!/\.(jpe?g|png|webp|avif)(\?|$)/i.test(abs)) return; // real raster only
+    // Trusted sources (og:image/twitter:image) are hero images — accept even
+    // without a file extension. In-page <img> needs a real extension or a
+    // recognizable image-CDN URL, so we don't pick up tracking pixels/SVGs.
+    const looksImage = /\.(jpe?g|png|webp|avif)(\?|$)/i.test(abs) || IMG_HINT.test(abs);
+    if (!trusted && !looksImage) return;
+    if (trusted && /\.svg(\?|$)/i.test(abs)) return;
     const key = abs.split("?")[0];
     if (seen.has(key)) return;
     seen.add(key);
@@ -56,15 +64,15 @@ export async function extractSiteImages(pageUrl: string, max = 4): Promise<strin
   // Prefer social-share images first — usually the best hero shot.
   for (const m of html.matchAll(/<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)(?::src)?["'][^>]*>/gi)) {
     const c = m[0].match(/content=["']([^"']+)["']/i);
-    if (c) add(c[1]);
+    if (c) add(c[1], true);
   }
   // Then in-page images (src and the largest srcset entry).
   for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
     if (found.length >= max * 3) break;
     const tag = m[0];
-    const src = tag.match(/\bsrc=["']([^"']+)["']/i)?.[1];
+    const src = tag.match(/\bsrc=["']([^"']+)["']/i)?.[1] ?? tag.match(/\bdata-src=["']([^"']+)["']/i)?.[1];
     add(src);
-    const srcset = tag.match(/\bsrcset=["']([^"']+)["']/i)?.[1];
+    const srcset = (tag.match(/\bsrcset=["']([^"']+)["']/i) ?? tag.match(/\bdata-srcset=["']([^"']+)["']/i))?.[1];
     if (srcset) {
       const last = srcset.split(",").pop()?.trim().split(/\s+/)[0];
       add(last);

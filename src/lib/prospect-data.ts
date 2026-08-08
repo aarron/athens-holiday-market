@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { prospects, prospectImages, prospectBatches } from "@/db/schema";
+import { siteScreenshotUrl } from "@/lib/prospects";
 
 export type ProspectStatus = "new" | "shortlisted" | "maybe" | "passed";
 
@@ -22,6 +23,9 @@ export type ProspectCard = {
   status: ProspectStatus;
   invitedAt: Date | null;
   images: string[]; // blobUrl preferred, else sourceUrl, in position order
+  // Live website screenshot, only when there are no real photos — a visual
+  // stand-in the reviewer can click through to the artist's site.
+  sitePreview: string | null;
 };
 
 /** Count of prospects in each triage state for the active cycle. */
@@ -102,5 +106,6 @@ export async function listProspects(
     status: p.status as ProspectStatus,
     invitedAt: p.invitedAt,
     images: p.images.map((im) => im.blobUrl ?? im.sourceUrl),
+    sitePreview: p.images.length === 0 ? siteScreenshotUrl(p.website) : null,
   }));
 }

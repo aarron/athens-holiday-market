@@ -68,20 +68,26 @@ export async function segmentRecipients(segment: string) {
     .where(segmentWhere(segment));
 }
 
+async function countForSegment(value: Segment): Promise<number> {
+  if (CYCLE_SEGMENTS.has(value)) return (await segmentRecipients(value)).length;
+  const r = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(subscribers)
+    .where(segmentWhere(value));
+  return r[0]?.n ?? 0;
+}
+
+/** Count of active subscribers for the "all" list (cheap — one query). */
+export async function subscriberListSize(): Promise<number> {
+  return countForSegment("all");
+}
+
 export async function segmentCounts() {
-  const out = {} as Record<Segment, number>;
-  for (const s of SEGMENTS) {
-    if (CYCLE_SEGMENTS.has(s.value)) {
-      out[s.value] = (await segmentRecipients(s.value)).length;
-    } else {
-      const r = await db
-        .select({ n: sql<number>`count(*)::int` })
-        .from(subscribers)
-        .where(segmentWhere(s.value));
-      out[s.value] = r[0]?.n ?? 0;
-    }
-  }
-  return out;
+  // Run the per-segment counts concurrently rather than in sequence.
+  const entries = await Promise.all(
+    SEGMENTS.map(async (s) => [s.value, await countForSegment(s.value)] as const),
+  );
+  return Object.fromEntries(entries) as Record<Segment, number>;
 }
 
 export async function listBroadcasts() {

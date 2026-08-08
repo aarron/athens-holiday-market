@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, inArray, like } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, artists, cycles, settings } from "@/db/schema";
-import { segmentCounts } from "@/lib/broadcast-data";
+import { subscriberListSize } from "@/lib/broadcast-data";
 import { eventReminderPlan } from "@/lib/event-reminders";
 import { site } from "@/lib/site";
 
@@ -50,8 +50,7 @@ function fmtDate(dateStr: string) {
  */
 export async function getScheduledSends(now: Date = new Date()) {
   const today = todayET(now);
-  const counts = await segmentCounts();
-  const listSize = counts.all;
+  const listSize = await subscriberListSize();
 
   // Read every relevant "already sent" flag in one query.
   const plan = eventReminderPlan();

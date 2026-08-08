@@ -143,7 +143,7 @@ export default async function EmailHubPage() {
     </>
   );
 
-  const emailPanel = (
+  const emailTable = (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <h2 className="font-display text-xl font-extrabold">Email</h2>
@@ -231,6 +231,15 @@ export default async function EmailHubPage() {
     </section>
   );
 
+  // Decisions live at the top of the Email tab — the first thing to handle when
+  // applicants are waiting, above the announcement list.
+  const emailPanel = (
+    <div className="space-y-8">
+      {decisionsPanel}
+      {emailTable}
+    </div>
+  );
+
   const textPanel = (
     <section>
       <div className="mb-4">
@@ -244,10 +253,7 @@ export default async function EmailHubPage() {
   );
 
   const tabs = [
-    ...(hasDecisions
-      ? [{ id: "decisions", label: "Decisions", badge: totalToNotify || undefined, content: decisionsPanel }]
-      : []),
-    { id: "email", label: "Email", content: emailPanel },
+    { id: "email", label: "Email", badge: totalToNotify || undefined, content: emailPanel },
     { id: "text", label: "Text", content: textPanel },
     { id: "scheduled", label: "Automations", content: <ScheduledSends data={scheduled} /> },
   ];
@@ -259,7 +265,7 @@ export default async function EmailHubPage() {
         <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
       </div>
 
-      <SectionTabs tabs={tabs} initial={hasDecisions && totalToNotify > 0 ? "decisions" : "email"} />
+      <SectionTabs tabs={tabs} initial="email" />
     </div>
   );
 }

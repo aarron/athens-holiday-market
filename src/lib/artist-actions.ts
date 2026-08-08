@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { artists, users } from "@/db/schema";
 import { requireArtistAccess } from "@/lib/admin-auth";
 import { sendArtistReviewAlert } from "@/lib/emails";
+import { cleanUrl, sanitizeSocials } from "@/lib/clean";
 
 const schema = z.object({
   statement: z.string().max(4000).optional().default(""),
@@ -27,14 +28,14 @@ export async function submitArtistDraft(input: ArtistDraftInput) {
   if (!parsed.success) return { error: "Please double-check your entries." };
 
   const { statement, bio, website, socials, logoUrl, photoUrls } = parsed.data;
-  const cleanSocials = Object.fromEntries(
-    Object.entries(socials).filter(([, v]) => v && v.trim()),
-  );
+  // Sanitize outbound URLs on write: safe website, known-platform socials only.
+  const cleanWebsite = cleanUrl(website) ?? "";
+  const cleanSocials = sanitizeSocials(socials);
 
   await db
     .update(artists)
     .set({
-      pendingContent: { statement, bio, website, socials: cleanSocials, logoUrl: logoUrl ?? null, photoUrls },
+      pendingContent: { statement, bio, website: cleanWebsite, socials: cleanSocials, logoUrl: logoUrl ?? null, photoUrls },
       submittedAt: new Date(),
       updatedAt: new Date(),
     })

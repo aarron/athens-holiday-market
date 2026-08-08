@@ -16,7 +16,7 @@ import {
   GlobeIcon,
 } from "@/components/icons";
 import { categorizeMedium } from "@/lib/mediums";
-import { cleanName, cleanUrl } from "@/lib/clean";
+import { cleanName, cleanUrl, sanitizeSocials } from "@/lib/clean";
 
 type IconType = typeof InstagramIcon;
 const SOCIALS: Record<string, { label: string; Icon: IconType }> = {
@@ -75,8 +75,8 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   const artist = await getArtistBySlug(slug);
   if (!artist || !artist.published) notFound();
 
-  const socials = (artist.socials ?? {}) as Record<string, string>;
-  const socialEntries = Object.entries(socials).filter(([, v]) => v);
+  // Sanitize on render too (defense in depth): known platforms + safe URLs only.
+  const socialEntries = Object.entries(sanitizeSocials(artist.socials as Record<string, string>));
 
   return (
     <div className="mx-auto max-w-7xl px-5 pb-12 pt-24 sm:px-8 sm:pb-16 sm:pt-28">
@@ -133,7 +133,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
                 <a
                   href={cleanUrl(artist.website)!}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noreferrer nofollow"
                   className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-display font-semibold text-paper transition-colors hover:bg-ink-soft"
                 >
                   Visit website
@@ -143,12 +143,14 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
               {socialEntries.map(([key, url]) => {
                 const s = SOCIALS[key];
                 const Icon = s?.Icon ?? GlobeIcon;
+                // url is already sanitized (https, safe host) by sanitizeSocials;
+                // key is guaranteed to be a known platform, so the label is real.
                 return (
                   <a
                     key={key}
-                    href={url.startsWith("http") ? url : `https://${url}`}
+                    href={url}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noreferrer nofollow"
                     aria-label={s?.label ?? key}
                     className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink/15 px-4 py-2 text-sm font-display font-semibold transition-colors hover:bg-cream"
                   >

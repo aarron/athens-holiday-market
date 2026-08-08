@@ -6,6 +6,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, votes, comments, artists, artistPhotos, cycles } from "@/db/schema";
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
+import { cleanUrl, sanitizeSocials } from "@/lib/clean";
 import {
   sendDecisionEmail,
   sendArtistPageLive,
@@ -117,8 +118,8 @@ export async function publishArtist(applicationId: number) {
           statement: app.description,
           bio: app.bio ?? null,
           medium: app.medium,
-          website: app.website || null,
-          socials: (app.socials as Record<string, string>) ?? {},
+          website: cleanUrl(app.website),
+          socials: sanitizeSocials(app.socials as Record<string, string>),
           published: true,
           updatedAt: new Date(),
         })
@@ -151,8 +152,8 @@ export async function publishArtist(applicationId: number) {
       statement: app.description,
       bio: app.bio ?? null,
       medium: app.medium,
-      website: app.website || null,
-      socials: (app.socials as Record<string, string>) ?? {},
+      website: cleanUrl(app.website),
+      socials: sanitizeSocials(app.socials as Record<string, string>),
       published: true,
     })
     .returning({ id: artists.id });
@@ -197,9 +198,17 @@ export async function emailPostingTeam() {
 /** Hide an artist from the public directory (keeps the record). */
 export async function unpublishArtist(applicationId: number) {
   await requireAdmin();
-  await db.update(artists).set({ published: false }).where(eq(artists.applicationId, applicationId));
+  // Return the slug so we can purge the artist's own page from the ISR/static
+  // cache immediately — otherwise `revalidate = 300` on /artists/[slug] could
+  // keep serving a taken-down page for up to 5 minutes.
+  const [row] = await db
+    .update(artists)
+    .set({ published: false })
+    .where(eq(artists.applicationId, applicationId))
+    .returning({ slug: artists.slug });
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/artists");
+  if (row?.slug) revalidatePath(`/artists/${row.slug}`);
   return { ok: true };
 }
 
@@ -230,8 +239,9 @@ export async function approveArtistSubmission(artistId: number) {
     .set({
       statement: pc.statement ?? artist.statement,
       bio: pc.bio ?? artist.bio,
-      website: pc.website ?? artist.website,
-      socials: pc.socials ?? artist.socials,
+      // Re-sanitize on promote — never trust stored pending content verbatim.
+      website: cleanUrl(pc.website ?? artist.website),
+      socials: sanitizeSocials((pc.socials ?? artist.socials) as Record<string, string>),
       logoUrl: pc.logoUrl ?? null,
       published: true,
       pendingContent: null,

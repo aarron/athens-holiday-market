@@ -53,6 +53,10 @@ export function Button({
 }: ButtonProps & ComponentProps<"button">) {
   return (
     <button
+      // Default to a non-submitting button so controls inside a <form> (e.g. the
+      // proofread helpers) don't accidentally submit it. Real submit buttons
+      // pass type="submit" explicitly, which wins via the spread below.
+      type="button"
       className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled || loading}
       aria-busy={loading || undefined}

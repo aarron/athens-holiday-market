@@ -299,6 +299,20 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/* -------------------------------------------------------------- text sends */
+/** One row per event-day SMS blast — the persistent record for audit + an
+ *  idempotency claim (unique clientToken) so a double-submit can't re-blast. */
+export const textSends = pgTable("text_sends", {
+  id: serial("id").primaryKey(),
+  clientToken: text("client_token").notNull().unique(),
+  actorEmail: text("actor_email").notNull(),
+  message: text("message").notNull(),
+  recipientCount: integer("recipient_count").notNull().default(0),
+  sentCount: integer("sent_count").notNull().default(0),
+  failedCount: integer("failed_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /* ----------------------------------------------------------- admin events */
 /** Append-only audit log of outward/irreversible admin actions — who did what,
  *  to which target, and when. Never updated or deleted. */

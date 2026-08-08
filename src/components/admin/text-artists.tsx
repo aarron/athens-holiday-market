@@ -17,6 +17,11 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
   const [other, setOther] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  // Confirm modal state. `token` is minted when the modal opens so a
+  // double-submit re-uses it and the server treats the second send as a no-op.
+  const [confirming, setConfirming] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [token, setToken] = useState("");
 
   const chars = msg.trim().length;
   const segments = Math.max(1, Math.ceil(chars / 153));
@@ -31,20 +36,30 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
 
   const canSend = configured && chars > 0 && recipientCount > 0 && !pending;
 
-  function send() {
+  function openConfirm() {
     setResult(null);
+    setConfirmText("");
+    setToken(crypto.randomUUID());
+    setConfirming(true);
+  }
+
+  function send() {
     start(async () => {
-      const r = await sendEventText({ message: msg, artists, judges, other });
+      const r = await sendEventText({ message: msg, artists, judges, other, clientToken: token });
       if (r.ok) {
         setResult(
-          `Sent to ${r.sent} ${r.sent === 1 ? "number" : "numbers"}${
-            r.failed.length ? ` · ${r.failed.length} failed` : ""
-          }`,
+          "duplicate" in r && r.duplicate
+            ? "Already sent — ignored the repeat."
+            : `Sent to ${r.sent} ${r.sent === 1 ? "number" : "numbers"}${
+                r.failed.length ? ` · ${r.failed.length} failed` : ""
+              }`,
         );
+        setConfirming(false);
         setMsg("");
         setOther("");
       } else {
         setResult(r.error);
+        setConfirming(false);
       }
     });
   }
@@ -124,7 +139,7 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
 
       {/* Primary action, left-aligned; recipient count to its right. */}
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button variant="create" disabled={!canSend} loading={pending} loadingLabel="Sending…" onClick={send}>
+        <Button variant="create" disabled={!canSend} onClick={openConfirm}>
           Send Text
         </Button>
         <span className="text-sm text-ink-soft">
@@ -135,6 +150,47 @@ export function TextArtists({ audience }: { audience: TextAudience }) {
       </div>
 
       {result && <StatusMessage className="mt-3">{result}</StatusMessage>}
+
+      {/* Type-"send" confirmation — an intentional pause before an irreversible
+          blast to real phones. */}
+      {confirming && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" role="dialog" aria-modal="true" aria-label="Confirm text send">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-[var(--shadow-lift)]">
+            <h3 className="font-display text-xl font-extrabold">
+              Text {recipientCount} {recipientCount === 1 ? "phone" : "phones"}?
+            </h3>
+            <p className="mt-2 text-sm text-ink-soft">
+              This sends an SMS to every selected number immediately and can&apos;t be recalled.
+              Type <span className="font-mono font-bold">send</span> to confirm.
+            </p>
+            <div className="mt-3 rounded-lg bg-cream-soft p-3 text-sm">
+              <span className="font-semibold">Message:</span> {msg}
+            </div>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="send"
+              aria-label="Type send to confirm"
+              className="mt-3 !h-11"
+              autoFocus
+            />
+            <div className="mt-4 flex items-center gap-2">
+              <Button
+                variant="create"
+                loading={pending}
+                loadingLabel="Sending…"
+                disabled={confirmText.trim().toLowerCase() !== "send" || pending}
+                onClick={send}
+              >
+                Send to {recipientCount}
+              </Button>
+              <Button variant="ghost" disabled={pending} onClick={() => setConfirming(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

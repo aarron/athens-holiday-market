@@ -2,10 +2,11 @@
 
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { applications } from "@/db/schema";
+import { applications, textSends } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getActiveCycle } from "@/lib/admin-data";
 import { judgePhoneList } from "@/lib/env";
+import { logAdminEvent } from "@/lib/audit";
 import { normalizePhone, sendSms, twilioConfigured } from "@/lib/twilio";
 
 export type TextRecipient = { id: number; name: string; phone: string };
@@ -77,15 +78,20 @@ export type TextSelection = {
   judges?: boolean;
   /** Free-form comma/space/newline-separated extra numbers. */
   other?: string;
+  /** Per-confirmation idempotency token — a re-submit with the same token is a
+   *  no-op, so a double-click can't re-blast the list. */
+  clientToken: string;
 };
 
 /**
  * Send a text to the selected recipient groups. Numbers are normalized and
  * de-duplicated across groups, so a judge who is also in "Other" is texted once.
+ * Idempotent per clientToken and recorded in text_sends for audit.
  */
 export async function sendEventText(input: TextSelection) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   if (!twilioConfigured) return { ok: false as const, error: "Twilio is not configured." };
+  if (!input.clientToken) return { ok: false as const, error: "Missing confirmation token." };
 
   const body = (input.message ?? "").trim();
   if (!body) return { ok: false as const, error: "Message is empty." };
@@ -118,6 +124,22 @@ export async function sendEventText(input: TextSelection) {
     return { ok: false as const, error: "No recipients selected." };
   }
 
+  // Claim this send by its token. A duplicate submit (same token) inserts
+  // nothing and returns no row, so we bail without re-texting anyone.
+  const [claim] = await db
+    .insert(textSends)
+    .values({
+      clientToken: input.clientToken,
+      actorEmail: admin.email,
+      message: body,
+      recipientCount: phones.size,
+    })
+    .onConflictDoNothing({ target: textSends.clientToken })
+    .returning({ id: textSends.id });
+  if (!claim) {
+    return { ok: true as const, sent: 0, failed: [], duplicate: true as const };
+  }
+
   let sent = 0;
   const failed: string[] = [];
   // Sequential to stay well under Twilio's per-second limits for a small list.
@@ -129,5 +151,17 @@ export async function sendEventText(input: TextSelection) {
       failed.push(phone);
     }
   }
+
+  await db
+    .update(textSends)
+    .set({ sentCount: sent, failedCount: failed.length })
+    .where(eq(textSends.id, claim.id));
+  await logAdminEvent({
+    action: "sms.send",
+    targetType: "text_send",
+    targetId: claim.id,
+    summary: `Texted ${sent} number${sent === 1 ? "" : "s"}${failed.length ? ` (${failed.length} failed)` : ""}: "${body.slice(0, 60)}${body.length > 60 ? "…" : ""}"`,
+  });
+
   return { ok: true as const, sent, failed };
 }

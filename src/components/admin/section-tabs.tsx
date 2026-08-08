@@ -1,18 +1,42 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export type TabDef = { id: string; label: string; badge?: number; content: ReactNode };
 
 /**
  * Lightweight client tab shell. Panels are server-rendered and passed in as
  * `content`, so each tab keeps its own server data — the shell only toggles
- * which one is visible. Inactive panels stay mounted (hidden) so their state
- * and scroll position survive tab switches.
+ * which one is visible.
+ *
+ * The active tab is mirrored in the URL hash (e.g. `#email`) so tabs are
+ * deep-linkable and bookmarkable — landing on `/admin/broadcasts#email` opens
+ * the Email tab directly.
  */
 export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: string }) {
   const [active, setActive] = useState(initial ?? tabs[0]?.id);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const ids = tabs.map((t) => t.id).join(",");
+
+  // Sync from the URL hash on mount and on back/forward (hashchange). Done in an
+  // effect (not initial state) to keep the first client render matching SSR.
+  useEffect(() => {
+    const valid = new Set(ids.split(","));
+    const apply = () => {
+      const h = window.location.hash.replace(/^#/, "");
+      if (h && valid.has(h)) setActive(h);
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, [ids]);
+
+  function select(id: string) {
+    setActive(id);
+    if (typeof window !== "undefined" && window.location.hash.replace(/^#/, "") !== id) {
+      history.replaceState(null, "", `#${id}`);
+    }
+  }
 
   // Roving arrow-key navigation (ARIA tabs pattern, automatic activation).
   function onKeyDown(e: React.KeyboardEvent, i: number) {
@@ -24,7 +48,7 @@ export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: strin
     else if (e.key === "End") next = last;
     if (next === -1) return;
     e.preventDefault();
-    setActive(tabs[next].id);
+    select(tabs[next].id);
     btnRefs.current[next]?.focus();
   }
 
@@ -46,7 +70,7 @@ export function SectionTabs({ tabs, initial }: { tabs: TabDef[]; initial?: strin
               aria-selected={on}
               aria-controls={`panel-${t.id}`}
               tabIndex={on ? 0 : -1}
-              onClick={() => setActive(t.id)}
+              onClick={() => select(t.id)}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={`relative -mb-px shrink-0 border-b-2 px-1 pb-3 text-sm font-display font-bold transition-colors ${
                 on ? "border-fern-deep text-fern-deep" : "border-transparent text-ink-soft hover:text-ink"

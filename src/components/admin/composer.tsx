@@ -39,9 +39,10 @@ export function Composer({
   draft,
 }: {
   counts: Record<Segment, number>;
-  draft?: { id: number; subject: string; body: string; segment: Segment };
+  draft?: { id: number; name: string | null; subject: string; body: string; segment: Segment };
 }) {
   const router = useRouter();
+  const [name, setName] = useState(draft?.name ?? "");
   const [subject, setSubject] = useState(draft?.subject ?? "");
   const [body, setBody] = useState(draft?.body ?? "");
   const [segment, setSegment] = useState<Segment>(draft?.segment ?? "all");
@@ -57,7 +58,7 @@ export function Composer({
   function onSaveDraft() {
     setMsg("");
     start(async () => {
-      const r = await saveDraft({ id: draftId, subject, body, segment });
+      const r = await saveDraft({ id: draftId, name, subject, body, segment });
       if (r && "ok" in r && r.ok) {
         setDraftId(r.id);
         setMsg("Draft saved ✓");
@@ -90,10 +91,10 @@ export function Composer({
     start(async () => {
       const r =
         mode === "schedule"
-          ? await scheduleBroadcast({ subject, body, segment, scheduledFor, draftId })
-          : await sendBroadcast({ subject, body, segment, draftId });
+          ? await scheduleBroadcast({ name, subject, body, segment, scheduledFor, draftId })
+          : await sendBroadcast({ name, subject, body, segment, draftId });
       if (r && "ok" in r && r.ok) {
-        router.push("/admin/broadcasts");
+        router.push("/admin/broadcasts#email");
       } else {
         setConfirming(false);
         setMsg(r?.error ?? "Couldn't send.");
@@ -125,6 +126,25 @@ export function Composer({
               </option>
             ))}
           </Select>
+        </Field>
+
+        <Field
+          htmlFor="bc-name"
+          label={
+            <>
+              Name
+              <span className="ml-2 font-normal text-ink-soft/70">
+                internal only — helps you find it later
+              </span>
+            </>
+          }
+        >
+          <Input
+            id="bc-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={`${new Date().getFullYear()} Acceptance email`}
+          />
         </Field>
 
         <Field label="Subject" htmlFor="bc-subject">

@@ -10,6 +10,7 @@ import { ScheduledSends } from "@/components/admin/scheduled-sends";
 import { SectionTabs } from "@/components/admin/section-tabs";
 import { CancelBroadcastButton } from "@/components/admin/cancel-broadcast-button";
 import { DeleteDraftButton } from "@/components/admin/delete-draft-button";
+import { AddRecipientButton } from "@/components/admin/add-recipient-button";
 import { ButtonLink } from "@/components/ui/button";
 import { ClockIcon, CheckCircleIcon, DraftIcon, SendingIcon } from "@/components/icons";
 import type { ComponentType } from "react";
@@ -32,6 +33,25 @@ const STATUS_PILL: Record<string, { cls: string; label: string; Icon: ComponentT
   sending: { cls: "bg-cream text-ink-soft", label: "Sending", Icon: SendingIcon },
   sent: { cls: "bg-fern-soft text-fern-deep", label: "Sent", Icon: CheckCircleIcon },
 };
+
+function StatBit({
+  n,
+  label,
+  pct,
+  color,
+}: {
+  n: number;
+  label: string;
+  pct?: number | null;
+  color: string;
+}) {
+  return (
+    <span className={`font-semibold ${color}`}>
+      {n} <span className="font-normal text-ink-soft">{label}</span>
+      {pct != null && <span className="font-normal text-ink-soft/70"> ({pct}%)</span>}
+    </span>
+  );
+}
 
 function DecisionCard({
   href,
@@ -143,7 +163,7 @@ export default async function EmailHubPage() {
               <thead>
                 <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
                   <th className="px-5 py-4 font-semibold">Subject</th>
-                  <th className="px-5 py-4 font-semibold">To whom</th>
+                  <th className="px-5 py-4 font-semibold">Recipients</th>
                   <th className="px-5 py-4 font-semibold">When</th>
                   <th className="px-5 py-4 font-semibold">Status</th>
                   <th className="px-5 py-4 font-semibold sr-only">Actions</th>
@@ -164,19 +184,23 @@ export default async function EmailHubPage() {
                     <tr key={b.id} className="border-b border-ink/5 align-top last:border-0">
                       <td className="px-5 py-4">
                         <Link href={href} className="font-display font-bold hover:text-fern-deep">
-                          {b.subject || "Untitled draft"}
+                          {b.name || b.subject || "Untitled draft"}
                         </Link>
-                        {b.status === "sent" && rate?.openRate != null && (
-                          <span className="mt-0.5 block text-xs text-ink-soft">
-                            <span className="font-semibold text-fern-deep">{rate.openRate}% opened</span>
-                            {rate.clickRate != null && (
-                              <>
-                                {" · "}
-                                <span className="font-semibold text-teal-deep">{rate.clickRate}% clicked</span>
-                              </>
-                            )}
-                          </span>
+                        {b.name && b.subject && (
+                          <span className="mt-0.5 block text-xs text-ink-soft/70">{b.subject}</span>
                         )}
+                        {b.status === "sent" &&
+                          (rate ? (
+                            <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+                              <StatBit n={rate.opened} label="opened" pct={rate.openRate} color="text-fern-deep" />
+                              <StatBit n={rate.clicked} label="clicked" color="text-teal-deep" />
+                              {rate.bounced > 0 && (
+                                <StatBit n={rate.bounced} label="bounced" color="text-tangerine-deep" />
+                              )}
+                            </span>
+                          ) : (
+                            <span className="mt-1 block text-xs text-ink-soft/60">Awaiting receipts…</span>
+                          ))}
                       </td>
                       <td className="px-5 py-4 text-ink-soft">
                         {SEGMENT_LABEL[b.segment] ?? b.segment}
@@ -194,6 +218,7 @@ export default async function EmailHubPage() {
                       <td className="px-5 py-4 text-right">
                         {b.status === "scheduled" && <CancelBroadcastButton id={b.id} />}
                         {b.status === "draft" && <DeleteDraftButton id={b.id} />}
+                        {b.status === "sent" && <AddRecipientButton broadcastId={b.id} />}
                       </td>
                     </tr>
                   );

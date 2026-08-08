@@ -1,0 +1,1 @@
+ALTER TABLE "broadcasts" ADD COLUMN "name" text;

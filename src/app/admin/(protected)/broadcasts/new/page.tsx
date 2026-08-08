@@ -18,11 +18,19 @@ export default async function NewBroadcastPage({
   const counts = await segmentCounts();
 
   // Continue editing a saved draft when ?draft=<id> is present.
-  let draft: { id: number; subject: string; body: string; segment: Segment } | undefined;
+  let draft:
+    | { id: number; name: string | null; subject: string; body: string; segment: Segment }
+    | undefined;
   if (draftParam) {
     const row = await getBroadcast(Number(draftParam));
     if (row && row.status === "draft") {
-      draft = { id: row.id, subject: row.subject, body: row.body, segment: row.segment as Segment };
+      draft = {
+        id: row.id,
+        name: row.name,
+        subject: row.subject,
+        body: row.body,
+        segment: row.segment as Segment,
+      };
     }
   }
 

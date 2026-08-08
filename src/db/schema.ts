@@ -246,6 +246,9 @@ export const broadcastStatusEnum = pgEnum("broadcast_status", [
 
 export const broadcasts = pgTable("broadcasts", {
   id: serial("id").primaryKey(),
+  // Internal label for bookkeeping (e.g. "2026 Acceptance email") — the same
+  // emails go out each year, so a name keeps them straight. Falls back to subject.
+  name: text("name"),
   subject: text("subject").notNull(),
   body: text("body").notNull(), // admin-authored markdown-ish source
   segment: broadcastSegmentEnum("segment").notNull().default("subscribed"),

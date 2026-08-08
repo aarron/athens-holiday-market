@@ -92,10 +92,17 @@ export async function getBroadcast(id: number) {
   return db.query.broadcasts.findFirst({ where: eq(broadcasts.id, id) });
 }
 
-/** At-a-glance open/click rates per broadcast for the Email list (one query). */
-export async function broadcastReceiptSummaries(): Promise<
-  Record<number, { openRate: number | null; clickRate: number | null }>
-> {
+/** Cumulative engagement counts + rates per broadcast for the Email list (one
+ *  query). Same rollup as {@link broadcastReceipts} but batched across all rows. */
+export type BroadcastRateRow = {
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  openRate: number | null;
+  clickRate: number | null;
+};
+export async function broadcastReceiptSummaries(): Promise<Record<number, BroadcastRateRow>> {
   const rows = await db
     .select({
       broadcastId: broadcastRecipients.broadcastId,
@@ -108,12 +115,17 @@ export async function broadcastReceiptSummaries(): Promise<
   const byId: Record<number, Record<string, number>> = {};
   for (const r of rows) (byId[r.broadcastId] ??= {})[r.status] = r.n;
 
-  const out: Record<number, { openRate: number | null; clickRate: number | null }> = {};
+  const out: Record<number, BroadcastRateRow> = {};
   for (const [id, c] of Object.entries(byId)) {
     const clicked = c.clicked ?? 0;
     const opened = (c.opened ?? 0) + clicked;
     const delivered = (c.delivered ?? 0) + opened;
+    const bounced = c.bounced ?? 0;
     out[Number(id)] = {
+      delivered,
+      opened,
+      clicked,
+      bounced,
       openRate: delivered > 0 ? Math.round((opened / delivered) * 100) : null,
       clickRate: delivered > 0 ? Math.round((clicked / delivered) * 100) : null,
     };

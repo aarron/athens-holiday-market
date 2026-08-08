@@ -3,6 +3,10 @@
 import { useRef, useState, useTransition } from "react";
 import { submitArtistDraft } from "@/lib/artist-actions";
 import { ProofreadField } from "@/components/proofread-field";
+import { Card } from "@/components/ui/card";
+import { Field, Input } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { StatusMessage } from "@/components/ui/status-message";
 import { ExternalIcon } from "@/components/icons";
 
 type Initial = {
@@ -24,6 +28,7 @@ const SOCIALS = [
 ] as const;
 
 const MAX_PHOTOS = 6;
+const TEXTAREA = "w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep";
 
 async function uploadFile(file: File): Promise<string> {
   const fd = new FormData();
@@ -117,7 +122,9 @@ export function ArtistEditor({
       {/* Photos */}
       <Card
         title="Photos of your work"
+        titleSize="lg"
         hint={`Up to ${MAX_PHOTOS}. Drag & drop or click to add. These appear on your public page.`}
+        bodyClassName="space-y-3"
       >
         <div
           onDragEnter={(e) => {
@@ -134,9 +141,7 @@ export function ArtistEditor({
             setDragging(false);
             onAddPhotos(e.dataTransfer.files);
           }}
-          className={`rounded-xl p-1 transition-colors ${
-            dragging ? "bg-fern-soft ring-2 ring-fern-deep" : ""
-          }`}
+          className={`rounded-xl p-1 transition-colors ${dragging ? "bg-fern-soft ring-2 ring-fern-deep" : ""}`}
         >
           <div className="grid grid-cols-3 gap-3">
             {photos.map((url, i) => (
@@ -145,6 +150,7 @@ export function ArtistEditor({
                 <img src={url} alt="" className="aspect-square w-full object-cover" />
                 <button
                   onClick={() => setPhotos((p) => p.filter((_, idx) => idx !== i))}
+                  aria-label={`Remove photo ${i + 1}`}
                   className="absolute right-1.5 top-1.5 rounded-full bg-ink/80 px-2 py-0.5 text-xs font-bold text-white"
                 >
                   Remove
@@ -168,87 +174,75 @@ export function ArtistEditor({
             </p>
           )}
         </div>
-        <input
-          ref={photoInput}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={(e) => onAddPhotos(e.target.files)}
-        />
+        <input ref={photoInput} type="file" accept="image/*" multiple hidden onChange={(e) => onAddPhotos(e.target.files)} />
       </Card>
 
       {/* Logo */}
-      <Card title="Logo" hint="Optional. A square logo works best.">
+      <Card title="Logo" titleSize="lg" hint="Optional. A square logo works best." bodyClassName="space-y-3">
         <div className="flex items-center gap-4">
           {logoUrl ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={logoUrl} alt="Your logo" className="h-20 w-20 rounded-lg object-contain" />
-              <button onClick={() => setLogoUrl(null)} className="text-sm font-semibold text-poppy-deep">
+              <button onClick={() => setLogoUrl(null)} className="text-sm font-semibold text-poppy-deep hover:underline">
                 Remove
               </button>
             </>
           ) : (
-            <button
-              onClick={() => logoInput.current?.click()}
-              disabled={uploading}
-              className="rounded-lg border-2 border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-cream disabled:opacity-60"
-            >
+            <Button variant="secondary" size="sm" disabled={uploading} onClick={() => logoInput.current?.click()}>
               Upload logo
-            </button>
+            </Button>
           )}
         </div>
         <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => onSetLogo(e.target.files)} />
       </Card>
 
-      {uploadErr && <p className="text-sm font-medium text-poppy-deep">{uploadErr}</p>}
+      {uploadErr && <StatusMessage tone="error">{uploadErr}</StatusMessage>}
 
       {/* Artist statement — about the work */}
       <Card
         title="Artist statement"
+        titleSize="lg"
         hint="About your work — what you make and what makes it special. This is the main text on your page. 40–120 words works well."
+        bodyClassName="space-y-3"
       >
         <ProofreadField
           value={statement}
           onChange={setStatement}
           rows={6}
           placeholder="Example: I throw functional stoneware in small batches — mugs, bowls, and vases meant for everyday use. Each piece is wheel-thrown and glazed by hand, so no two are quite alike."
-          textareaClassName="w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
+          textareaClassName={TEXTAREA}
         />
       </Card>
 
       {/* Artist bio — about the person */}
       <Card
         title="Artist bio"
+        titleSize="lg"
         hint="About you — where you're based, how you started, what you love about making. (Optional, but a nice touch.)"
+        bodyClassName="space-y-3"
       >
         <ProofreadField
           value={bio}
           onChange={setBio}
           rows={4}
           placeholder="Example: I'm a potter based in Athens. I fell for clay in a community studio ten years ago and haven't stopped since."
-          textareaClassName="w-full rounded-lg border-2 border-ink/15 bg-white px-3 py-2 outline-none focus:border-fern-deep"
+          textareaClassName={TEXTAREA}
         />
       </Card>
 
       {/* Links */}
-      <Card title="Website & socials" hint="Optional links to your shop and channels.">
-        <Field label="Website">
-          <input
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
-            placeholder="yourwebsite.com"
-            className="input"
-          />
+      <Card title="Website & socials" titleSize="lg" hint="Optional links to your shop and channels." bodyClassName="space-y-3">
+        <Field label="Website" htmlFor="ae-website">
+          <Input id="ae-website" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="yourwebsite.com" />
         </Field>
         {SOCIALS.map((s) => (
-          <Field key={s.key} label={s.label}>
-            <input
+          <Field key={s.key} label={s.label} htmlFor={`ae-${s.key}`}>
+            <Input
+              id={`ae-${s.key}`}
               value={socials[s.key] ?? ""}
               onChange={(e) => setSocials((prev) => ({ ...prev, [s.key]: e.target.value }))}
               placeholder={`${s.label} URL`}
-              className="input"
             />
           </Field>
         ))}
@@ -260,19 +254,12 @@ export function ArtistEditor({
           <p className="text-sm text-paper/80">
             Submitting sends your page to our team for review before it goes live.
           </p>
-          <button
-            onClick={onSubmit}
-            disabled={pending || uploading}
-            className="rounded-lg bg-fuchsia px-6 py-2.5 font-display font-bold text-white hover:opacity-90 disabled:opacity-60"
-          >
-            {pending ? "Submitting…" : "Submit for review"}
-          </button>
+          <Button variant="create" disabled={pending || uploading} loading={pending} loadingLabel="Submitting…" onClick={onSubmit}>
+            Submit for review
+          </Button>
         </div>
         {saved && <p className="mt-2 text-sm font-semibold text-chartreuse">Submitted! We&apos;ll review it soon. ✓</p>}
       </div>
-
-      {/* Matches the documented input recipe (rounded-lg = 8px, not 6px). */}
-      <style>{`.input{height:2.75rem;width:100%;border-radius:0.5rem;border:2px solid rgba(23,22,27,0.15);background:#fff;padding:0 0.75rem;outline:none}.input:focus{border-color:var(--color-fern-deep)}`}</style>
     </div>
   );
 }
@@ -294,24 +281,5 @@ function StatusBanner({ status, slug, published }: { status: string; slug: strin
         </a>
       )}
     </div>
-  );
-}
-
-function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl bg-white p-5 shadow-[var(--shadow-card)]">
-      <h2 className="font-display text-lg font-extrabold">{title}</h2>
-      {hint && <p className="mt-0.5 text-sm text-ink-soft">{hint}</p>}
-      <div className="mt-4 space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-semibold text-ink-soft">{label}</span>
-      {children}
-    </label>
   );
 }

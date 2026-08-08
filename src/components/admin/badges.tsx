@@ -1,32 +1,6 @@
-const STATUS_STYLES: Record<string, { label: string; cls: string }> = {
-  submitted: { label: "Submitted", cls: "bg-cream text-ink-soft" },
-  under_review: { label: "Under review", cls: "bg-sky-soft text-sky-deep" },
-  accepted: { label: "Accepted", cls: "bg-fern-soft text-fern-deeper" },
-  waitlisted: { label: "Waitlisted", cls: "bg-tangerine-soft text-tangerine-deep" },
-  rejected: { label: "Rejected", cls: "bg-poppy-soft text-poppy-deep" },
-};
-
-export function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_STYLES[status] ?? STATUS_STYLES.submitted;
-  return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${s.cls}`}>
-      {s.label}
-    </span>
-  );
-}
-
-export function BoothFeeBadge({ paid, status }: { paid: boolean; status: string }) {
-  if (status !== "accepted") return <span className="text-ink-soft/40">—</span>;
-  return paid ? (
-    <span className="inline-block rounded-full bg-fern-soft px-2.5 py-0.5 text-xs font-bold text-fern-deeper">
-      Paid
-    </span>
-  ) : (
-    <span className="inline-block rounded-full bg-tangerine-soft px-2.5 py-0.5 text-xs font-bold text-tangerine-deep">
-      Unpaid
-    </span>
-  );
-}
+// Status badges now live in ui/. Re-exported here so existing admin imports keep
+// working; VoteTally (jurying-specific) stays below.
+export { StatusBadge, BoothFeeBadge, SendBadge, Badge } from "@/components/ui/badge";
 
 export type Tally = { yes: number; maybe: number; no: number };
 

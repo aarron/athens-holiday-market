@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { StatusBadge, BoothFeeBadge, VoteTally, type Tally } from "@/components/admin/badges";
+import { useMemo, useState, useTransition } from "react";
+import { BoothFeeBadge, VoteTally, type Tally } from "@/components/admin/badges";
 import { SafeImg } from "@/components/admin/safe-img";
 import { ChevronUpIcon, ChevronDownIcon } from "@/components/icons";
+import { setStatus } from "@/lib/admin-actions";
 
 export type Row = {
   id: number;
@@ -50,6 +51,24 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
     useState<(typeof PAYMENT_OPTIONS)[number]["value"]>("all");
   const [sortCol, setSortCol] = useState<SortCol>("recent");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
+  // Decisions made inline from this table override the row's server status, so
+  // filters/sort/badges react immediately (an accepted row leaves "To review").
+  const [overrides, setOverrides] = useState<Record<number, string>>({});
+  const statusOf = (r: Row) => overrides[r.id] ?? r.status;
+  const [, startDecide] = useTransition();
+
+  // Finalize a decision inline. Optimistic, reconciled: revert the override if
+  // the server write fails. setStatus only changes status (no emails) — the
+  // accepted-artist blast stays a separate, deliberate step.
+  function decide(r: Row, next: string) {
+    const prev = statusOf(r);
+    if (next === prev) return;
+    setOverrides((o) => ({ ...o, [r.id]: next }));
+    startDecide(async () => {
+      const res = await setStatus(r.id, next as never);
+      if (!(res && "ok" in res && res.ok)) setOverrides((o) => ({ ...o, [r.id]: prev }));
+    });
+  }
 
   function sortBy(col: SortCol) {
     if (col === sortCol) setDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -62,16 +81,17 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const out = rows.filter((r) => {
+      const status = statusOf(r);
       if (needle && !`${r.name} ${r.medium}`.toLowerCase().includes(needle)) return false;
       // status
       if (statusFilter === "pending") {
-        if (r.status !== "submitted" && r.status !== "under_review") return false;
-      } else if (statusFilter !== "all" && r.status !== statusFilter) {
+        if (status !== "submitted" && status !== "under_review") return false;
+      } else if (statusFilter !== "all" && status !== statusFilter) {
         return false;
       }
       // payment (only meaningful for accepted artists)
-      if (paymentFilter === "paid" && !(r.status === "accepted" && r.boothFeePaid)) return false;
-      if (paymentFilter === "unpaid" && !(r.status === "accepted" && !r.boothFeePaid)) return false;
+      if (paymentFilter === "paid" && !(status === "accepted" && r.boothFeePaid)) return false;
+      if (paymentFilter === "unpaid" && !(status === "accepted" && !r.boothFeePaid)) return false;
       return true;
     });
     out.sort((a, b) => {
@@ -87,7 +107,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
           cmp = a.tally.yes - b.tally.yes;
           break;
         case "status":
-          cmp = (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9);
+          cmp = (STATUS_RANK[statusOf(a)] ?? 9) - (STATUS_RANK[statusOf(b)] ?? 9);
           break;
         case "fee":
           cmp = Number(a.boothFeePaid) - Number(b.boothFeePaid);
@@ -98,7 +118,8 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
       return dir === "asc" ? cmp : -cmp;
     });
     return out;
-  }, [rows, q, statusFilter, paymentFilter, sortCol, dir]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, q, statusFilter, paymentFilter, sortCol, dir, overrides]);
 
   const hasFilters = q || statusFilter !== "all" || paymentFilter !== "all";
 
@@ -210,7 +231,7 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
                   <VoteTally tally={r.tally} />
                 </td>
                 <td className="px-5 py-4">
-                  <StatusBadge status={r.status} />
+                  <RowDecision status={statusOf(r)} onDecide={(next) => decide(r, next)} />
                 </td>
                 <td className="px-5 py-4">
                   <BoothFeeBadge paid={r.boothFeePaid} status={r.status} />
@@ -231,6 +252,44 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
       <div className="border-t border-ink/10 px-5 py-4 text-sm text-ink-soft">
         {filtered.length} of {rows.length} applications
       </div>
+    </div>
+  );
+}
+
+/**
+ * Inline decision control for a row: Accept / Waitlist buttons that finalize the
+ * status right from the overview. The button matching the current status is
+ * filled; a rejected row keeps a muted tag (reject stays on the detail page).
+ */
+function RowDecision({ status, onDecide }: { status: string; onDecide: (next: string) => void }) {
+  const btn = (value: string, label: string, color: string) => {
+    const active = status === value;
+    return (
+      <button
+        type="button"
+        onClick={() => onDecide(value)}
+        aria-pressed={active}
+        title={active ? `Currently ${label.toLowerCase()}ed` : `Mark ${label.toLowerCase()}`}
+        className="h-8 rounded-lg border-2 px-2.5 font-display text-xs font-bold transition-colors hover:bg-cream"
+        style={
+          active
+            ? { backgroundColor: color, borderColor: color, color: "#fff" }
+            : { borderColor: "rgba(23,22,27,0.15)" }
+        }
+      >
+        {label}
+      </button>
+    );
+  };
+  return (
+    <div className="flex items-center gap-1.5">
+      {btn("accepted", "Accept", "var(--color-fern-deep)")}
+      {btn("waitlisted", "Waitlist", "var(--color-tangerine)")}
+      {status === "rejected" && (
+        <span className="ml-0.5 text-xs font-semibold" style={{ color: "var(--color-poppy)" }}>
+          Rejected
+        </span>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runArtistPageReminders } from "@/lib/artist-reminders";
+import { runArtistSocialKitEmails } from "@/lib/artist-social-kit";
 import { runEventReminders } from "@/lib/event-reminders";
 import { runNprFlagpoleReminder } from "@/lib/npr-flagpole-reminder";
 import { runScheduledBroadcasts } from "@/lib/broadcast-send";
@@ -25,6 +26,7 @@ export async function GET(req: Request) {
 
   const tasks = [
     ["artistReminders", runArtistPageReminders],
+    ["artistSocialKit", runArtistSocialKitEmails],
     ["eventReminders", runEventReminders],
     ["nprFlagpole", runNprFlagpoleReminder],
     ["scheduledBroadcasts", runScheduledBroadcasts],

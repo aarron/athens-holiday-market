@@ -8,10 +8,12 @@ import {
   SpotlightDownloader,
   type SpotlightArtist,
 } from "@/components/admin/spotlight-downloader";
-import { EmailPostingTeamButton } from "@/components/admin/email-posting-team-button";
+import { SpotlightKitActions } from "@/components/admin/spotlight-kit-actions";
 
 export const metadata: Metadata = { title: "Social kit" };
 export const dynamic = "force-dynamic";
+// Rebuild/email actions here render ~2 branded images per accepted artist.
+export const maxDuration = 300;
 
 export default async function SocialKitPage() {
   const user = await requireStaff();
@@ -43,10 +45,10 @@ export default async function SocialKitPage() {
       {user.role === "admin" && (
         <div className="rounded-xl bg-cream-soft p-4">
           <p className="mb-2 text-sm text-ink-soft">
-            Kick off the campaign by prompting the posting team (Jim, Ansley, and Jamie) to start
-            sharing.
+            The posting team is emailed a download link automatically when the accepted artists are
+            notified. You can rebuild the zip after later changes, grab the link, or re-send it here.
           </p>
-          <EmailPostingTeamButton />
+          <SpotlightKitActions />
         </div>
       )}
 

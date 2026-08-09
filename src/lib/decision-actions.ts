@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
@@ -8,7 +9,9 @@ import { applications } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-auth";
 import { resend, EMAIL_FROM } from "@/lib/resend-client";
 import { emailShell, renderMarkdown } from "@/lib/email-shell";
+import { artistPageCtaBlock } from "@/lib/emails";
 import { invoiceAcceptedWithoutInvoice } from "@/lib/booth-fee";
+import { refreshAndNotifyPostingTeam } from "@/lib/social-kit-notify";
 import { logAdminEvent } from "@/lib/audit";
 import { chunk, personalize } from "@/lib/send-util";
 
@@ -61,7 +64,12 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
       from: EMAIL_FROM,
       to: a.email,
       subject,
-      html: emailShell(renderMarkdown(personalize(body, a.name))),
+      // Accepted artists always get the "build your page" CTA appended, so the
+      // batch send matches the single decision email and gives a clear next step.
+      html: emailShell(
+        renderMarkdown(personalize(body, a.name)) +
+          (group === "accepted" ? artistPageCtaBlock(a.email) : ""),
+      ),
     }));
     try {
       const res = await resend.batch.send(payload);
@@ -104,6 +112,12 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     } catch (e) {
       console.error("[decisions] booth-fee auto-invoice failed:", e);
     }
+    // Build the branded spotlight zip and (first time only) email the posting
+    // team its download link. Deferred to after() so rendering ~2 images per
+    // accepted artist never delays the admin's response.
+    after(async () => {
+      await refreshAndNotifyPostingTeam(cycleId);
+    });
   }
 
   revalidatePath("/admin/decisions");

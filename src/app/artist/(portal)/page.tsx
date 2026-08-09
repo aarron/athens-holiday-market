@@ -44,6 +44,12 @@ export default async function ArtistPortalPage() {
       ? "published"
       : "draft";
 
+  // The share kit only needs a photo, not a published page — so an artist who's
+  // mid-edit (or waiting on approval) can still grab their promo images when the
+  // "your kit is ready" email lands.
+  const heroPhoto = initial.photoUrls[0] ?? null;
+  const canShare = !!heroPhoto;
+
   const first = artist.name.split(" ")[0];
   const info = site.artistInfo;
   const pill = "inline-flex items-center gap-1.5 rounded-full border-2 border-ink/15 px-3.5 py-1.5 text-sm font-semibold transition-colors hover:bg-cream";
@@ -65,7 +71,7 @@ export default async function ArtistPortalPage() {
               <ExternalIcon size={14} aria-hidden />
             </a>
           )}
-          {artist.published && (
+          {canShare && (
             <a href="#share" className={pill}>
               Get share images
             </a>
@@ -149,13 +155,14 @@ export default async function ArtistPortalPage() {
       </div>
 
       {/* Share your work */}
-      {artist.published && (
+      {canShare && (
         <div id="share" className="scroll-mt-20">
           <SharePanel
             name={artist.name}
             medium={artist.medium ?? ""}
             slug={artist.slug}
-            photoUrl={artist.photos[0]?.url ?? null}
+            photoUrl={heroPhoto}
+            published={artist.published}
           />
         </div>
       )}

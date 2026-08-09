@@ -9,6 +9,9 @@ import { DecisionSender } from "@/components/admin/decision-sender";
 
 export const metadata: Metadata = { title: "Send decisions", robots: { index: false } };
 export const dynamic = "force-dynamic";
+// The accepted send kicks off a background spotlight-zip render (after()) that
+// draws ~2 images per accepted artist; give the function room.
+export const maxDuration = 300;
 
 export default async function DecisionGroupPage({
   params,

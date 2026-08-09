@@ -18,6 +18,7 @@ export const MEDIUM_CATEGORIES = [
   "Bath & Body",
   "Food & Drink",
   "Home & Decor",
+  "Upcycled",
   "Mixed Media & Sculpture",
   "Other",
 ] as const;
@@ -39,10 +40,13 @@ const RULES: [RegExp, MediumCategory][] = [
   [/paint|acrylic|\boil\b|watercolo|\bink\b|gouache|drawing|\bdraw\b|illustrat|\bart print|fine art|\bpastel/i, "Painting & Drawing"],
   [/print|block.?print|screen.?print|risograph|\bpaper\b|puzzle|\bcard\b|\bzine\b|stationer|sticker|\bbooks?\b|cookbook|calendar|notebook/i, "Printmaking & Paper"],
   [/textile|\bfiber\b|\bfibre\b|weav|woven|\bknit|crochet|embroider|\bfelt|macram|\bbatik\b|tie ?dye|fabric|quilt|handbag|\bbag(s)?\b|\bsew|apparel|clothing|\bcotton\b|\byarn\b|tapestry|scarf|scarves|\bhat(s)?\b/i, "Textiles & Fiber"],
+  // Upcycled / reclaimed work — checked before the material rules so
+  // "upcycled metal & wood" files here rather than as Metalwork/Woodwork.
+  [/upcycl|repurpos|reclaim|salvage|refurbish|restored|restoration|found (object|material)/i, "Upcycled"],
   [/\bwood|woodcarv|woodwork|\bcarv|whittl|\blathe\b|turned wood/i, "Woodwork"],
   [/\bmetal|\btin\b|\bsteel\b|\biron\b|\bweld|\bcopper\b|pewter|\bwire\b|blacksmith|forge/i, "Metalwork"],
   [/wreath|\bfloral\b|greenery|grapevine|\bornament|home ?d[eé]cor|\bdecor\b|centerpiece|dried flower|\bplant(s)?\b|terrarium/i, "Home & Decor"],
-  [/mixed media|\bmixed\b|sculpt|\bresin\b|collage|assemblage|\b3d\b|folk ?art|decoupage|upcycl|found (object|material)|reclaim/i, "Mixed Media & Sculpture"],
+  [/mixed media|\bmixed\b|sculpt|\bresin\b|collage|assemblage|\b3d\b|folk ?art|decoupage/i, "Mixed Media & Sculpture"],
 ];
 
 /** Map a free-text medium to a canonical category. */

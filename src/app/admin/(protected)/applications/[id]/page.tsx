@@ -16,6 +16,7 @@ import {
   VoteButtons,
   CommentBox,
   DecisionControls,
+  BoothFeePaidToggle,
   PublishControls,
   SendArtistLinkButton,
   DeleteApplicationButton,
@@ -155,16 +156,15 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           {/* Photos — click to enlarge */}
           <PhotoGallery photos={app.photos} />
 
-          {/* Description */}
+          {/* About the work + artist details, one surface split by a rule. */}
           <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
             <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
               About the work
             </h2>
             <p className="mt-2 whitespace-pre-line leading-relaxed">{app.description}</p>
-          </div>
 
-          {/* Artist details — everything about who they are, in one place */}
-          <div className="rounded-xl bg-white p-6 shadow-[var(--shadow-card)]">
+            <hr className="my-6 border-ink/10" />
+
             <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
               Artist details
             </h2>
@@ -238,11 +238,15 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
         {/* Sidebar */}
         <aside className="space-y-6">
-          <Card title="Your vote">
-            <VoteButtons applicationId={app.id} myVote={myVote} />
-          </Card>
-
+          {/* Voting + decision, one box split by rules. */}
           <Card>
+            <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Your vote</h2>
+            <div className="mt-3">
+              <VoteButtons applicationId={app.id} myVote={myVote} />
+            </div>
+
+            <hr className="my-5 border-ink/10" />
+
             <div className="flex items-center justify-between">
               <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Jury votes</h2>
               <VoteTally tally={tally(app.votes)} />
@@ -269,15 +273,22 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                 );
               })}
             </ul>
+
+            {isAdmin && (
+              <>
+                <hr className="my-5 border-ink/10" />
+                <DecisionControls applicationId={app.id} status={app.status} />
+              </>
+            )}
           </Card>
 
           {isAdmin && (
             <Card>
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Manage</h2>
+                <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Booth fee</h2>
                 <BoothFeeBadge paid={app.boothFeePaid} status={app.status} />
               </div>
-              <DecisionControls applicationId={app.id} status={app.status} boothFeePaid={app.boothFeePaid} />
+              <BoothFeePaidToggle applicationId={app.id} status={app.status} paid={app.boothFeePaid} />
               <div className="mt-5 border-t border-ink/10 pt-5">
                 <BoothFeeInvoice
                   applicationId={app.id}
@@ -331,20 +342,22 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           )}
 
           {isAdmin && app.status === "accepted" && (
-            <>
-              <Card title="Artist page">
+            <Card>
+              <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Artist page</h2>
+              <div className="mt-3">
                 <SendArtistLinkButton email={app.email} />
                 <p className="mt-2 text-xs text-ink-soft/70">
                   Sends a magic link so the artist builds their own page — you review before it goes
                   live. Or publish directly from their application:
                 </p>
-              </Card>
+              </div>
+              <hr className="my-5 border-ink/10" />
               <PublishControls
                 applicationId={app.id}
                 published={artistProfile?.published ?? false}
                 slug={artistProfile?.slug}
               />
-            </>
+            </Card>
           )}
 
           {isAdmin && (

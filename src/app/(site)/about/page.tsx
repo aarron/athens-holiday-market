@@ -247,7 +247,7 @@ export default function AboutPage() {
 
       {/* Story */}
       <div className="mt-16 space-y-14 sm:mt-20">
-        <Row kicker={<span className={KICKER}>The nights</span>}>
+        <Row kicker={<span className={KICKER}>A busy market</span>}>
           <H2>Two evenings, one very full courtyard.</H2>
           <p className="mt-4 max-w-2xl text-lg text-ink-soft">
             If you&rsquo;ve been, you know: the courtyard fills up fast and stays busy from the moment
@@ -259,7 +259,7 @@ export default function AboutPage() {
           </p>
         </Row>
 
-        <Row kicker={<span className={KICKER}>The makers</span>}>
+        <Row kicker={<span className={KICKER}>The organizers</span>}>
           <H2>Made by artists, for artists.</H2>
           <p className="mt-4 max-w-2xl text-lg text-ink-soft">
             The market is organized and run by working artists — people who have set up at shows for

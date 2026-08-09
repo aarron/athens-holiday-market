@@ -40,17 +40,18 @@ const RECEIPT_COLOR: Record<string, string> = {
   failed: "var(--color-poppy)",
 };
 
+// We waitlist rather than reject, so past "rejected" years read as waitlisted.
 const HISTORY_LABEL: Record<string, string> = {
   accepted: "Accepted",
   waitlisted: "Waitlisted",
-  rejected: "Rejected",
+  rejected: "Waitlisted",
   submitted: "Applied",
   under_review: "Applied",
 };
 const HISTORY_COLOR: Record<string, string> = {
   accepted: "var(--color-fern-deep)",
   waitlisted: "var(--color-tangerine-deep)",
-  rejected: "var(--color-poppy-deep)",
+  rejected: "var(--color-tangerine-deep)",
   submitted: "var(--color-ink)",
   under_review: "var(--color-sky-deep)",
 };
@@ -82,37 +83,11 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
         <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-fern-deep">
           <BackIcon size={16} aria-hidden />
           All applications
         </Link>
-
-        {nav && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="tabular-nums text-ink-soft">
-              {nav.position} of {nav.total}
-            </span>
-            {nav.prevId ? (
-              <Link href={`/admin/applications/${nav.prevId}`} className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/15 px-3 py-1.5 font-semibold transition-colors hover:bg-cream">
-                <BackIcon size={15} aria-hidden /> Prev
-              </Link>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/10 px-3 py-1.5 font-semibold text-ink-soft/40">
-                <BackIcon size={15} aria-hidden /> Prev
-              </span>
-            )}
-            {nav.nextId ? (
-              <Link href={`/admin/applications/${nav.nextId}`} className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/15 px-3 py-1.5 font-semibold transition-colors hover:bg-cream">
-                Next <ArrowRightIcon size={15} aria-hidden />
-              </Link>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/10 px-3 py-1.5 font-semibold text-ink-soft/40">
-                Next <ArrowRightIcon size={15} aria-hidden />
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
@@ -148,6 +123,32 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             </div>
           )}
         </div>
+
+        {nav && (
+          <div className="flex shrink-0 items-center gap-2 text-sm">
+            <span className="tabular-nums text-ink-soft">
+              {nav.position} of {nav.total}
+            </span>
+            {nav.prevId ? (
+              <Link href={`/admin/applications/${nav.prevId}`} className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/15 px-3 py-1.5 font-semibold transition-colors hover:bg-cream">
+                <BackIcon size={15} aria-hidden /> Prev
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/10 px-3 py-1.5 font-semibold text-ink-soft/40">
+                <BackIcon size={15} aria-hidden /> Prev
+              </span>
+            )}
+            {nav.nextId ? (
+              <Link href={`/admin/applications/${nav.nextId}`} className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/15 px-3 py-1.5 font-semibold transition-colors hover:bg-cream">
+                Next <ArrowRightIcon size={15} aria-hidden />
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-lg border-2 border-ink/10 px-3 py-1.5 font-semibold text-ink-soft/40">
+                Next <ArrowRightIcon size={15} aria-hidden />
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">

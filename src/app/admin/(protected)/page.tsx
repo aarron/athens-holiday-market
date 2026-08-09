@@ -122,12 +122,11 @@ export default async function AdminDashboard({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             <StatTile label="Submissions" value={stats.total} accent="var(--color-ink)" />
             <StatTile label="To review" value={stats.pending} accent="var(--color-sky)" />
             <StatTile label="Accepted" value={stats.accepted} accent="var(--color-fern-deep)" />
             <StatTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" />
-            <StatTile label="Rejected" value={stats.rejected} accent="var(--color-poppy)" />
             <StatTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" />
           </div>
 

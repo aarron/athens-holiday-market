@@ -4,6 +4,16 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { sendBoothFeeInvoice, sendBoothFeeReminderNow } from "@/lib/paypal-actions";
 
+/** The PayPal wordmark rendered as brand-blue text (no trademarked logo art). */
+function PayPalMark() {
+  return (
+    <span className="font-extrabold italic tracking-tight" aria-label="PayPal">
+      <span style={{ color: "#003087" }}>Pay</span>
+      <span style={{ color: "#009cde" }}>Pal</span>
+    </span>
+  );
+}
+
 /**
  * PayPal booth-fee invoice controls on the application detail page. Invoices are
  * normally auto-sent when the accepted decision goes out; this covers the manual
@@ -47,17 +57,19 @@ export function BoothFeeInvoice({
 
   return (
     <div>
-      <p className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">PayPal invoice</p>
+      <p className="flex items-center gap-1.5 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+        <PayPalMark /> <span>invoice</span>
+      </p>
 
       {!configured ? (
-        <p className="mt-2 text-sm text-ink-soft/70">PayPal isn&apos;t configured yet — invoices are disabled.</p>
+        <p className="mt-2 text-sm text-ink-soft/70"><PayPalMark /> isn&apos;t configured yet — invoices are disabled.</p>
       ) : !invoiceId ? (
         <button
           disabled={pending}
           onClick={() => run(() => sendBoothFeeInvoice(applicationId))}
-          className="mt-2 h-11 w-full rounded-lg border-2 border-fuchsia bg-fuchsia/5 font-display text-sm font-bold text-fuchsia-deep transition-colors hover:bg-fuchsia/10 disabled:opacity-50"
+          className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border-2 border-[#0070ba]/40 bg-white font-display text-sm font-bold text-ink transition-colors hover:bg-[#0070ba]/5 disabled:opacity-50"
         >
-          {pending ? "Sending…" : "Send PayPal invoice"}
+          {pending ? "Sending…" : <>Send <PayPalMark /> invoice</>}
         </button>
       ) : (
         <div className="mt-2 space-y-2">

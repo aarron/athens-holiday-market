@@ -52,3 +52,4 @@ scripts/data/
 
 # Downloaded past-application photos — migrated to Vercel Blob, never commit (privacy + size)
 public/photos/backfill/
+CODE-REVIEW-REMEDIATION-PROMPT.md

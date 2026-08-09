@@ -23,6 +23,27 @@ function Ext({ href, children }: { href: string; children: React.ReactNode }) {
 
 const BCB = "https://www.bigcitybreadcafe.com/";
 
+const KICKER = "font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep";
+
+/**
+ * The page's one grid unit: a fixed label rail on the left and a flexible
+ * content column on the right. Every section uses it, so headings, prose, and
+ * the FAQ all share the same two-column structure and left edge. Stacks on
+ * small screens.
+ */
+function Row({ kicker, children }: { kicker: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="grid gap-x-10 gap-y-3 md:grid-cols-[11rem_minmax(0,1fr)]">
+      <div className="pt-1.5">{kicker}</div>
+      <div>{children}</div>
+    </section>
+  );
+}
+
+function H2({ children }: { children: React.ReactNode }) {
+  return <h2 className="font-display text-2xl font-extrabold sm:text-3xl">{children}</h2>;
+}
+
 const faqs: FaqItem[] = [
   {
     q: "When and where is the market?",
@@ -149,112 +170,101 @@ const faqs: FaqItem[] = [
   },
 ];
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className="font-display text-2xl font-extrabold sm:text-3xl">{children}</h2>;
-}
+const PHOTOS = [
+  {
+    src: "/about/market-lights.jpg",
+    alt: "Shoppers browsing artist booths strung with lights in the Big City Bread courtyard at dusk",
+  },
+  {
+    src: "/about/market-sunset.jpg",
+    alt: "The market courtyard glowing at sunset, shoppers gathered around artist tables and a fire",
+  },
+];
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-20 pt-24 sm:px-8 sm:pt-28">
-      {/* Intro */}
-      <section className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-        <div>
+    <div className="mx-auto max-w-4xl px-6 pb-24 pt-24 sm:px-8 sm:pt-28">
+      {/* Hero */}
+      <Row
+        kicker={
           <div className="flex items-center gap-2">
-            <Flower size={22} color="var(--color-fuchsia)" />
-            <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep">
-              About the market
-            </p>
+            <Flower size={20} color="var(--color-fuchsia)" />
+            <span className={KICKER}>About</span>
           </div>
-          <h1 className="mt-3 text-4xl font-extrabold leading-[1.05] sm:text-6xl">
-            A handmade holiday, more than 25 years in the making.
-          </h1>
-          <p className="mt-5 text-lg text-ink-soft">
-            For over 25 years, the Athens Holiday Market has been a fixture of the season — bringing
-            together a rich community of artists and the people who love their work, all in the
-            courtyard of one of the city&rsquo;s most beloved culinary spots,{" "}
-            <Ext href={BCB}>Big City Bread Cafe</Ext>.
-          </p>
-          <div className="mt-7">
-            <ButtonLink href="/apply" variant="primary" size="lg">
-              Apply to sell
-            </ButtonLink>
-          </div>
+        }
+      >
+        <h1 className="text-4xl font-extrabold leading-[1.05] sm:text-5xl">
+          A handmade holiday, more than 25 years in the making.
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg text-ink-soft">
+          For over 25 years, the Athens Holiday Market has been a fixture of the season — bringing
+          together a rich community of artists and the people who love their work, all in the
+          courtyard of one of the city&rsquo;s most beloved culinary spots,{" "}
+          <Ext href={BCB}>Big City Bread Cafe</Ext>.
+        </p>
+        <div className="mt-7">
+          <ButtonLink href="/apply" variant="primary" size="lg">
+            Apply to sell
+          </ButtonLink>
         </div>
+      </Row>
 
-        <div className="relative">
-          <div className="overflow-hidden rounded-xl shadow-[var(--shadow-lift)]">
+      {/* Photo band */}
+      <div className="mt-14 grid grid-cols-2 gap-4 sm:gap-5">
+        {PHOTOS.map((p, i) => (
+          <div
+            key={p.src}
+            className="relative aspect-[3/4] overflow-hidden rounded-xl shadow-[var(--shadow-lift)]"
+          >
             <Image
-              src="/about/market-lights.jpg"
-              alt="Shoppers browsing artist booths strung with lights in the Big City Bread courtyard at dusk"
-              width={1200}
-              height={1600}
-              priority
-              className="h-full w-full object-cover"
-              sizes="(max-width: 1024px) 100vw, 45vw"
+              src={p.src}
+              alt={p.alt}
+              fill
+              priority={i === 0}
+              sizes="(max-width: 768px) 50vw, 420px"
+              className="object-cover"
             />
           </div>
-          <Flower
-            size={64}
-            color="var(--color-fuchsia)"
-            className="absolute -left-4 -top-4 hidden drop-shadow-lg sm:block"
-          />
-        </div>
-      </section>
+        ))}
+      </div>
 
-      {/* Origin story */}
-      <div className="mx-auto mt-16 max-w-3xl sm:mt-20">
-        <div className="space-y-4 text-lg text-ink-soft">
-          <p>
+      {/* Story */}
+      <div className="mt-16 space-y-14 sm:mt-20">
+        <Row kicker={<span className={KICKER}>History</span>}>
+          <H2>How it began</H2>
+          <p className="mt-4 max-w-2xl text-lg text-ink-soft">
             <Ext href="https://caroljohn.art/">Carol John</Ext> founded the market in 2002 with a
             simple idea: give local artists a warm, well-run place to sell their work during the
             holidays. In 2006, Carol passed the baton to Jamie Voivedich, an artist who had shown at
             the market since the very beginning. The market has grown ever since, but the heart of it
             hasn&rsquo;t changed.
           </p>
-        </div>
-      </div>
+        </Row>
 
-      {/* Two evenings + photo */}
-      <section className="mt-16 grid items-center gap-10 sm:mt-20 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
-        <div className="relative order-last lg:order-first">
-          <div className="overflow-hidden rounded-xl shadow-[var(--shadow-lift)]">
-            <Image
-              src="/about/market-sunset.jpg"
-              alt="The market courtyard glowing at sunset, shoppers gathered around artist tables and a fire"
-              width={1200}
-              height={1600}
-              className="h-full w-full object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
-        </div>
-        <div>
-          <SectionHeading>Two evenings, one very full courtyard.</SectionHeading>
-          <p className="mt-4 text-lg text-ink-soft">
+        <Row kicker={<span className={KICKER}>The nights</span>}>
+          <H2>Two evenings, one very full courtyard.</H2>
+          <p className="mt-4 max-w-2xl text-lg text-ink-soft">
             If you&rsquo;ve been, you know: the courtyard fills up fast and stays busy from the moment
             the lights come on until the last shopper heads home. Neighbors run into neighbors, gifts
             get found, and the same faces come back year after year — many of them have made the
             market part of their holidays for a decade or more. For our artists, that means a
             courtyard full of shoppers who came to buy handmade and to support the people who make it.
           </p>
-        </div>
-      </section>
+        </Row>
 
-      {/* Mission blocks */}
-      <div className="mx-auto mt-16 max-w-3xl space-y-12 sm:mt-20">
-        <div>
-          <SectionHeading>Made by artists, for artists.</SectionHeading>
-          <p className="mt-4 text-lg text-ink-soft">
+        <Row kicker={<span className={KICKER}>The makers</span>}>
+          <H2>Made by artists, for artists.</H2>
+          <p className="mt-4 max-w-2xl text-lg text-ink-soft">
             The market is organized and run by working artists — people who have set up at shows for
             years and know exactly what makes a day behind the booth go well. We&rsquo;ve been in your
             shoes, so we do everything we can to make the market comfortable, easy, and worth your
             time.
           </p>
-        </div>
+        </Row>
 
-        <div>
-          <SectionHeading>Why we do it.</SectionHeading>
-          <p className="mt-4 text-lg text-ink-soft">
+        <Row kicker={<span className={KICKER}>Our mission</span>}>
+          <H2>Why we do it.</H2>
+          <p className="mt-4 max-w-2xl text-lg text-ink-soft">
             Our mission is to give local artists real economic opportunity and a genuine sense of
             community, and to support arts and education across the Southeast. Booth fees don&rsquo;t
             just keep the lights on — they give back. Over the years, proceeds have supported{" "}
@@ -267,16 +277,16 @@ export default function AboutPage() {
             </Ext>
             .
           </p>
-        </div>
+        </Row>
       </div>
 
       {/* Apply CTA band */}
-      <section className="mt-16 overflow-hidden rounded-2xl bg-cream-soft px-6 py-12 text-center shadow-[var(--shadow-card)] sm:mt-20 sm:px-12 sm:py-16">
+      <section className="mt-16 overflow-hidden rounded-2xl bg-cream-soft px-6 py-14 text-center shadow-[var(--shadow-card)] sm:mt-20 sm:px-12 sm:py-16">
         <Flower size={40} color="var(--color-fuchsia)" className="mx-auto" />
         <h2 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
           We&rsquo;d love to see your work.
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-ink-soft">
+        <p className="mx-auto mt-4 max-w-xl text-lg text-ink-soft">
           Applications open every year on Labor Day, and space is limited. We&rsquo;re lucky to hear
           from exceptional artists across the region, and each year a small jury curates the lineup.
           If you make something wonderful, we hope you&rsquo;ll apply.
@@ -289,25 +299,28 @@ export default function AboutPage() {
       </section>
 
       {/* FAQ */}
-      <section className="mx-auto mt-20 max-w-3xl sm:mt-24">
-        <div className="flex items-center gap-2">
-          <Flower size={20} color="var(--color-fuchsia)" />
-          <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-deep">
-            Artist FAQ
+      <div className="mt-20 sm:mt-24">
+        <Row
+          kicker={
+            <div className="flex items-center gap-2">
+              <Flower size={18} color="var(--color-fuchsia)" />
+              <span className={KICKER}>Artist FAQ</span>
+            </div>
+          }
+        >
+          <H2>Before you apply</H2>
+          <p className="mt-3 max-w-2xl text-lg text-ink-soft">
+            Everything you need to know before you apply. Still have a question?{" "}
+            <a href="/contact" className="link">
+              Get in touch
+            </a>{" "}
+            — we&rsquo;re happy to help.
           </p>
-        </div>
-        <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">Before you apply</h2>
-        <p className="mt-3 text-lg text-ink-soft">
-          Everything you need to know before you apply. Still have a question?{" "}
-          <a href="/contact" className="link">
-            Get in touch
-          </a>{" "}
-          — we&rsquo;re happy to help.
-        </p>
-        <div className="mt-8">
-          <FaqAccordion items={faqs} />
-        </div>
-      </section>
+          <div className="mt-8">
+            <FaqAccordion items={faqs} />
+          </div>
+        </Row>
+      </div>
     </div>
   );
 }

@@ -32,13 +32,13 @@ export function MediumBlend({ blend }: { blend: BlendRow[] }) {
         aria-expanded={open}
       >
         <div className="flex items-baseline gap-3">
-          <h2 className="font-display text-lg font-extrabold">Blend by medium</h2>
+          <h2 className="font-display text-lg font-extrabold">Mediums</h2>
           <span className="hidden text-sm text-ink-soft sm:inline">
             {totalAccepted}/{totalApplied} accepted across {blend.length} mediums
           </span>
         </div>
         <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-soft">
-          {open ? "Hide" : "Show blend"}
+          {open ? "Hide" : "Show"}
           <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
         </span>
       </button>

@@ -32,7 +32,7 @@ export function ExhibitCard({ hasPage }: { hasPage: boolean }) {
         <SparkleIcon size={22} className="text-fuchsia-deep" aria-hidden />
         <div>
           <p className="font-display font-bold">
-            {hasPage ? "You're exhibiting this year" : "Are you exhibiting this year too?"}
+            {hasPage ? "Are exhibiting this year?" : "Are you exhibiting this year too?"}
           </p>
           <p className="text-sm text-ink-soft">
             {hasPage

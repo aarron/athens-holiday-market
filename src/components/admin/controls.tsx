@@ -116,27 +116,21 @@ export function DecisionControls({
 
   return (
     <div>
-      {/* Heading + buttons on one line so the section stays compact. */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft whitespace-nowrap">
-          Manage decision
-        </p>
-        <div className="flex gap-2">
-          {STATUS_OPTS.map(([s, label, color]) => {
-            const active = cur === s;
-            return (
-              <button
-                key={s}
-                disabled={pending}
-                onClick={() => (s !== cur ? setConfirmTo(s) : undefined)}
-                className="h-9 rounded-lg border-2 px-3 font-display text-sm font-bold transition-all disabled:opacity-60"
-                style={active ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: "rgba(23,22,27,0.15)" }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+      <div className="flex gap-2">
+        {STATUS_OPTS.map(([s, label, color]) => {
+          const active = cur === s;
+          return (
+            <button
+              key={s}
+              disabled={pending}
+              onClick={() => (s !== cur ? setConfirmTo(s) : undefined)}
+              className="h-9 rounded-lg border-2 px-3 font-display text-sm font-bold transition-all disabled:opacity-60"
+              style={active ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: "rgba(23,22,27,0.15)" }}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {confirmTo && (

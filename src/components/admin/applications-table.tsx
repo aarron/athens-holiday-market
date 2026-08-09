@@ -259,11 +259,13 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
 /**
  * Inline decision control for a row: Accept / Waitlist buttons that finalize the
  * status right from the overview. The button matching the current status is
- * filled; a rejected row keeps a muted tag (reject stays on the detail page).
+ * filled. We waitlist rather than reject, so a legacy "rejected" row simply
+ * shows as waitlisted.
  */
 function RowDecision({ status, onDecide }: { status: string; onDecide: (next: string) => void }) {
+  const shown = status === "rejected" ? "waitlisted" : status;
   const btn = (value: string, label: string, color: string) => {
-    const active = status === value;
+    const active = shown === value;
     return (
       <button
         type="button"
@@ -285,11 +287,6 @@ function RowDecision({ status, onDecide }: { status: string; onDecide: (next: st
     <div className="flex items-center gap-1.5">
       {btn("accepted", "Accept", "var(--color-fern-deep)")}
       {btn("waitlisted", "Waitlist", "var(--color-tangerine)")}
-      {status === "rejected" && (
-        <span className="ml-0.5 text-xs font-semibold" style={{ color: "var(--color-poppy)" }}>
-          Rejected
-        </span>
-      )}
     </div>
   );
 }

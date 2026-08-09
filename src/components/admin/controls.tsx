@@ -4,7 +4,6 @@ import { useRef, useState, useTransition } from "react";
 import { ExternalIcon } from "@/components/icons";
 import { VOTE_STATES } from "@/components/admin/badges";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/field";
 import { StatusMessage } from "@/components/ui/status-message";
 import {
@@ -20,7 +19,7 @@ import {
 
 type Vote = "yes" | "maybe" | "no";
 
-const VOTE_ORDER: Vote[] = ["yes", "maybe", "no"];
+const VOTE_ORDER: Vote[] = ["yes", "no", "maybe"];
 
 export function VoteButtons({ applicationId, myVote }: { applicationId: number; myVote?: Vote }) {
   const [pending, start] = useTransition();
@@ -84,24 +83,19 @@ export function CommentBox({ applicationId }: { applicationId: number }) {
 }
 
 const STATUS_OPTS: [string, string, string][] = [
-  ["under_review", "Under review", "var(--color-sky)"],
   ["accepted", "Accept", "var(--color-fern-deep)"],
   ["waitlisted", "Waitlist", "var(--color-tangerine)"],
-  ["rejected", "Reject", "var(--color-poppy)"],
 ];
 
 export function DecisionControls({
   applicationId,
   status,
-  boothFeePaid,
 }: {
   applicationId: number;
   status: string;
-  boothFeePaid: boolean;
 }) {
   const [pending, start] = useTransition();
   const [cur, setCur] = useState(status);
-  const [paid, setPaid] = useState(boothFeePaid);
   // A decision change is armed here and only applied on explicit confirm — a
   // stray click shouldn't grant portal login or queue someone for a blast.
   const [confirmTo, setConfirmTo] = useState<string | null>(null);
@@ -116,24 +110,26 @@ export function DecisionControls({
     });
   }
 
-  const DECISION = new Set(["accepted", "waitlisted", "rejected"]);
   const confirmLabel = confirmTo
     ? STATUS_OPTS.find(([s]) => s === confirmTo)?.[1] ?? confirmTo
     : "";
 
   return (
-    <div className="space-y-5">
-      <div>
-        <p className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Decision</p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
+    <div>
+      {/* Heading + buttons on one line so the section stays compact. */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft whitespace-nowrap">
+          Manage decision
+        </p>
+        <div className="flex gap-2">
           {STATUS_OPTS.map(([s, label, color]) => {
             const active = cur === s;
             return (
               <button
                 key={s}
                 disabled={pending}
-                onClick={() => (DECISION.has(s) && s !== cur ? setConfirmTo(s) : apply(s))}
-                className="h-11 rounded-lg border-2 font-display text-sm font-bold transition-all disabled:opacity-60"
+                onClick={() => (s !== cur ? setConfirmTo(s) : undefined)}
+                className="h-9 rounded-lg border-2 px-3 font-display text-sm font-bold transition-all disabled:opacity-60"
                 style={active ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: "rgba(23,22,27,0.15)" }}
               >
                 {label}
@@ -141,60 +137,72 @@ export function DecisionControls({
             );
           })}
         </div>
+      </div>
 
-        {confirmTo && (
-          <div className="mt-3 rounded-lg border-2 border-fuchsia/40 bg-fuchsia/5 p-3">
-            <p className="text-sm font-semibold">
-              Set decision to <strong>{confirmLabel}</strong>?
+      {confirmTo && (
+        <div className="mt-3 rounded-lg border-2 border-fuchsia/40 bg-fuchsia/5 p-3">
+          <p className="text-sm font-semibold">
+            Set decision to <strong>{confirmLabel}</strong>?
+          </p>
+          {confirmTo === "accepted" && (
+            <p className="mt-1 text-xs text-ink-soft">
+              Accepting grants this email portal login and includes them in accepted-artist emails,
+              texts, and logistics.
             </p>
-            {confirmTo === "accepted" && (
-              <p className="mt-1 text-xs text-ink-soft">
-                Accepting grants this email portal login and includes them in accepted-artist
-                emails, texts, and logistics.
-              </p>
-            )}
-            <div className="mt-2.5 flex gap-2">
-              <Button
-                variant="confirm"
-                size="sm"
-                loading={pending}
-                onClick={() => {
-                  const next = confirmTo;
-                  setConfirmTo(null);
-                  apply(next);
-                }}
-              >
-                Yes, set to {confirmLabel}
-              </Button>
-              <Button variant="ghost" size="sm" disabled={pending} onClick={() => setConfirmTo(null)}>
-                Cancel
-              </Button>
-            </div>
+          )}
+          <div className="mt-2.5 flex gap-2">
+            <Button
+              variant="confirm"
+              size="sm"
+              loading={pending}
+              onClick={() => {
+                const next = confirmTo;
+                setConfirmTo(null);
+                apply(next);
+              }}
+            >
+              Yes, set to {confirmLabel}
+            </Button>
+            <Button variant="ghost" size="sm" disabled={pending} onClick={() => setConfirmTo(null)}>
+              Cancel
+            </Button>
           </div>
-        )}
-      </div>
-
-      <div>
-        <p className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Booth fee</p>
-        <button
-          disabled={pending || cur !== "accepted"}
-          onClick={() => {
-            const next = !paid;
-            setPaid(next);
-            start(async () => {
-              const r = await setBoothFee(applicationId, next);
-              if (!(r && "ok" in r && r.ok)) setPaid(!next);
-            });
-          }}
-          className={`mt-2 h-11 w-full rounded-lg border-2 font-display text-sm font-bold transition-all disabled:opacity-50 ${
-            paid ? "border-fern-deep bg-fern-soft text-fern-deep" : "border-ink/15 text-ink hover:bg-cream"
-          }`}
-        >
-          {cur !== "accepted" ? "Accept first" : paid ? "✓ Paid — mark unpaid" : "Mark booth fee paid"}
-        </button>
-      </div>
-
+        </div>
+      )}
     </div>
+  );
+}
+
+/** Standalone "mark booth fee paid" toggle (lives in the Booth fee box). */
+export function BoothFeePaidToggle({
+  applicationId,
+  status,
+  paid: initialPaid,
+}: {
+  applicationId: number;
+  status: string;
+  paid: boolean;
+}) {
+  const [pending, start] = useTransition();
+  const [paid, setPaid] = useState(initialPaid);
+  const accepted = status === "accepted";
+  return (
+    <button
+      disabled={pending || !accepted}
+      onClick={() => {
+        const next = !paid;
+        setPaid(next);
+        start(async () => {
+          const r = await setBoothFee(applicationId, next);
+          if (!(r && "ok" in r && r.ok)) setPaid(!next);
+        });
+      }}
+      className={`h-11 w-full rounded-lg border-2 font-display text-sm font-bold transition-all disabled:opacity-50 ${
+        paid ? "border-fern-deep bg-fern-soft text-fern-deep" : "border-ink/15 text-ink hover:bg-cream"
+      }`}
+    >
+      {!accepted ? "Accept first" : paid ? "✓ Paid — mark unpaid" : "Mark booth fee paid"}
+    </button>
   );
 }
 
@@ -214,7 +222,10 @@ export function PublishControls({
   const [armed, setArmed] = useState(false);
 
   return (
-    <Card title="Public profile">
+    <div>
+      <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+        Public profile
+      </h2>
       {published && slug ? (
         <div className="space-y-2">
           <a
@@ -281,7 +292,7 @@ export function PublishControls({
         </div>
       )}
       {msg && <StatusMessage className="mt-2">{msg}</StatusMessage>}
-    </Card>
+    </div>
   );
 }
 

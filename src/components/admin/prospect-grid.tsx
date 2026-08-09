@@ -72,7 +72,7 @@ function TriageButtons({
 }) {
   return (
     <div className="flex items-stretch gap-1.5">
-      {(["passed", "maybe", "shortlisted"] as Decision[]).map((s) => {
+      {(["shortlisted", "passed", "maybe"] as Decision[]).map((s) => {
         const d = DECISION[s];
         const active = current === s;
         const Icon = d.Icon;

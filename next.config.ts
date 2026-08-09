@@ -17,6 +17,18 @@ const nextConfig: NextConfig = {
     // Artist photos live on Vercel Blob; allow next/image to optimize them.
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
+  // @napi-rs/canvas ships a native .node addon (used by the social-kit spotlight
+  // renderer). Keep it external so Next requires it from node_modules at runtime
+  // instead of trying to bundle the binary (which breaks resolution).
+  serverExternalPackages: ["@napi-rs/canvas"],
+  // The social-kit spotlight renderer reads the brand font + logo from disk at
+  // runtime (server-side canvas). Public assets aren't in the serverless function
+  // filesystem by default, so trace them into every route that can trigger a
+  // build: the daily cron, admin server actions, and API routes.
+  outputFileTracingIncludes: {
+    "/api/**": ["./public/kit/jost.ttf", "./public/brand/logo.png"],
+    "/admin/**": ["./public/kit/jost.ttf", "./public/brand/logo.png"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

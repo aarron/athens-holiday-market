@@ -118,6 +118,9 @@ export const applications = pgTable(
     decisionSentAt: timestamp("decision_sent_at", { withTimezone: true }),
     // Set when we nudge an accepted artist who hasn't built their page (once).
     pageReminderSentAt: timestamp("page_reminder_sent_at", { withTimezone: true }),
+    // Set when we email the artist their ready-to-share social kit (once): fires
+    // after they've built/submitted their page, or ~7 days post-decision.
+    socialKitEmailSentAt: timestamp("social_kit_email_sent_at", { withTimezone: true }),
     // PayPal booth-fee invoicing.
     paypalInvoiceId: text("paypal_invoice_id"),
     paypalInvoiceUrl: text("paypal_invoice_url"), // payer-facing "view & pay" link

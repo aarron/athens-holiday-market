@@ -8,13 +8,7 @@ import { applications, votes, comments, artists, artistPhotos, cycles } from "@/
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
 import { cleanUrl, sanitizeSocials } from "@/lib/clean";
 import { logAdminEvent } from "@/lib/audit";
-import {
-  sendDecisionEmail,
-  sendArtistPageLive,
-  sendJudgeSocialKit,
-  sendArtistLogistics,
-  SOCIAL_POSTING_TEAM,
-} from "@/lib/emails";
+import { sendDecisionEmail, sendArtistPageLive, sendArtistLogistics } from "@/lib/emails";
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -225,12 +219,21 @@ export async function emailAcceptedArtistsLogistics() {
   return { ok: true, total: accepted.length, sent };
 }
 
-/** Email the posting team a prompt to download + share artist spotlights. */
+/** Rebuild the spotlight zip for the active cycle and email the posting team its
+ *  download link. */
 export async function emailPostingTeam() {
   await requireAdmin();
-  const res = await sendJudgeSocialKit(SOCIAL_POSTING_TEAM);
-  if (res && "error" in res) return { error: "Couldn't send. Please try again." };
-  return { ok: true, count: SOCIAL_POSTING_TEAM.length };
+  const { emailPostingTeamNow } = await import("@/lib/social-kit-notify");
+  const res = await emailPostingTeamNow();
+  if ("error" in res) return { error: res.error };
+  return { ok: true, count: res.count };
+}
+
+/** Rebuild the spotlight zip for the active cycle without emailing anyone. */
+export async function rebuildSpotlightKit() {
+  await requireAdmin();
+  const { rebuildActiveSpotlightZip } = await import("@/lib/social-kit-notify");
+  return rebuildActiveSpotlightZip();
 }
 
 /** Hide an artist from the public directory (keeps the record). */

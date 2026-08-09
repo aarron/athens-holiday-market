@@ -15,11 +15,13 @@ export function SharePanel({
   medium,
   slug,
   photoUrl,
+  published = true,
 }: {
   name: string;
   medium: string;
   slug: string;
   photoUrl: string | null;
+  published?: boolean;
 }) {
   const [busy, setBusy] = useState<Kind | null>(null);
   const [err, setErr] = useState("");
@@ -97,6 +99,13 @@ export function SharePanel({
       </div>
 
       {err && <StatusMessage tone="error" className="mt-2">{err}</StatusMessage>}
+
+      {!published && (
+        <p className="mt-3 rounded-lg bg-cream-soft px-3 py-2 text-xs leading-relaxed text-ink-soft">
+          Your images are ready to download and post now. The booth link in the captions goes live
+          the moment we publish your page — so you may want to hold the captioned posts until then.
+        </p>
+      )}
 
       <div className="mt-5 space-y-3">
         <p className="text-sm font-bold text-ink">Captions</p>

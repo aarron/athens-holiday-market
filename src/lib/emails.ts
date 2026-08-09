@@ -202,10 +202,16 @@ export const SOCIAL_POSTING_TEAM = (process.env.SOCIAL_POSTING_TEAM || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
-/** Prompt the posting team to download + post artist spotlights weekly. */
-export async function sendJudgeSocialKit(to: string[]) {
+/** Prompt the posting team to download + post artist spotlights weekly.
+ *  `zipUrl` (when given) is a direct download of every artist's branded feed +
+ *  story images in one zip, so there's nothing to generate by hand. */
+export async function sendJudgeSocialKit(to: string[], zipUrl?: string) {
   if (!resend || to.length === 0) return { skipped: true as const };
-  const url = `${site.url}/admin/social-kit`;
+  const hubUrl = `${site.url}/admin/social-kit`;
+  const download = zipUrl
+    ? `<p style="margin:0 0 8px"><a href="${zipUrl}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Download all spotlights (zip) →</a></p>
+       <p style="margin:0 0 18px;font-size:13px;color:#6b6b6b;line-height:1.6">One zip with every artist's feed + story image. Or <a href="${hubUrl}" style="color:#17a898;font-weight:600;text-decoration:none">browse them one at a time →</a></p>`
+    : `<p style="margin:0 0 18px"><a href="${hubUrl}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open the social kit →</a></p>`;
   const inner = `
     <h1 style="margin:0 0 12px;font-size:22px">Time to spotlight our artists ✨</h1>
     <p style="margin:0 0 14px;line-height:1.6">Our ${site.event.year} lineup is set — let's build buzz for the
@@ -213,9 +219,8 @@ export async function sendJudgeSocialKit(to: string[]) {
     <p style="margin:0 0 14px;line-height:1.6">The plan: post <strong>one artist spotlight each week</strong> leading up to
       the market (${site.event.days[0].label} &amp; ${site.event.days[1].label}) on Instagram and Facebook. Each image is
       sized for both feed and stories.</p>
-    <p style="margin:0 0 18px"><a href="${url}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open the social kit →</a></p>
-    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Log in with this email address (one-time link, no
-      password). Tag ${site.social.instagram} so posts are easy to reshare.</p>`;
+    ${download}
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Tag ${site.social.instagram} so posts are easy to reshare.</p>`;
   try {
     return await resend.emails.send({
       from: EMAIL_FROM,
@@ -225,6 +230,33 @@ export async function sendJudgeSocialKit(to: string[]) {
     });
   } catch (e) {
     console.error("[emails] failed to send judge social kit:", e);
+    return { error: true as const };
+  }
+}
+
+/** Let an accepted artist know their ready-to-share promo images are waiting in
+ *  their hub. Fires once they've built their page, or ~7 days after acceptance. */
+export async function sendArtistSocialKit(to: string, name: string) {
+  if (!resend) return { skipped: true as const };
+  const first = (name || "").trim().split(/\s+/)[0] || "there";
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:23px">Your share kit is ready ✨</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(first)}, we've made you ready-to-post images to help
+      shoppers find your booth at the ${site.event.year} ${site.name} — sized for both Instagram/Facebook feed and
+      stories, with your photo and the market branding built in.</p>
+    <p style="margin:0 0 14px;line-height:1.6">They're in your artist hub, along with a couple of ready-made captions.
+      Grab them, post, and tag ${site.social.instagram} — we'll reshare you.</p>
+    <p style="margin:0 0 18px"><a href="${site.url}/artist" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Get your share images →</a></p>
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Log in with this email address — one-time link, no password needed.</p>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Your ${site.name} share kit is ready`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to send artist social kit:", e);
     return { error: true as const };
   }
 }
@@ -328,6 +360,22 @@ function ctaButton(href: string, label: string) {
   return `<p style="margin:0 0 18px"><a href="${href}" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">${label}</a></p>`;
 }
 
+/**
+ * The accepted-artist "build your page" call-to-action, as a self-contained
+ * HTML block. Shared by the single decision email and the batch decision send
+ * so an accepted artist always gets the same prominent next step — log in and
+ * build their page — no matter which path notified them.
+ */
+export function artistPageCtaBlock(to: string) {
+  return `<div style="margin:16px 0 0;padding:16px 18px;background:#f1f7ec;border-radius:10px">
+    <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — build your artist page.</strong>
+    We've started it for you with your application photos and words. Log in with this email address
+    (<strong>${escapeHtml(to)}</strong>), review it, add or swap photos, and submit it for us to publish.</p>
+    ${ctaButton(`${site.url}/artist/login`, "Build your artist page →")}
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">The button emails you a one-time login link — no password needed.</p>
+  </div>`;
+}
+
 /** Send an applicant their decision. Best-effort. */
 export async function sendDecisionEmail(to: string, name: string, decision: Decision) {
   if (!resend) {
@@ -336,16 +384,7 @@ export async function sendDecisionEmail(to: string, name: string, decision: Deci
   }
   const c = DECISION_COPY[decision];
   // Accepted artists get a clear next step: build their public page.
-  const buildPage =
-    decision === "accepted"
-      ? `<div style="margin:0 0 18px;padding:16px 18px;background:#f1f7ec;border-radius:10px">
-           <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — build your artist page.</strong>
-           We've started it for you with your application photos and words. Log in with this email address
-           (<strong>${escapeHtml(to)}</strong>), review it, add or swap photos, and submit it for us to publish.</p>
-           ${ctaButton(`${site.url}/artist/login`, "Build your artist page →")}
-           <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">The button emails you a one-time login link — no password needed.</p>
-         </div>`
-      : "";
+  const buildPage = decision === "accepted" ? artistPageCtaBlock(to) : "";
   const inner = `
     <h1 style="margin:0 0 12px;font-size:24px">${c.heading}</h1>
     <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)},</p>

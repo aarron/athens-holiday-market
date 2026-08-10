@@ -15,7 +15,7 @@ const BAR_COLORS = [
   "var(--color-poppy)",
 ];
 
-export function MediumBlend({ blend }: { blend: BlendRow[] }) {
+export function MediumBlend({ blend, bare = false }: { blend: BlendRow[]; bare?: boolean }) {
   const [open, setOpen] = useState(false);
   if (blend.length === 0) return null;
 
@@ -24,7 +24,7 @@ export function MediumBlend({ blend }: { blend: BlendRow[] }) {
   const totalApplied = blend.reduce((a, b) => a + b.total, 0);
 
   return (
-    <div className="rounded-xl bg-white shadow-[var(--shadow-card)]">
+    <div className={bare ? "border-t border-ink/10" : "rounded-xl bg-white shadow-[var(--shadow-card)]"}>
       {/* Compact header (always visible) */}
       <button
         onClick={() => setOpen((v) => !v)}

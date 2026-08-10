@@ -5,19 +5,18 @@ import { ApplicationsTable, type Row } from "@/components/admin/applications-tab
 import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
 import { CycleSelector } from "@/components/admin/cycle-selector";
 import { AdminSearch } from "@/components/admin/admin-search";
-import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 function StatTile({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
-    <Card>
+    <div>
       <div className="font-display text-4xl font-extrabold tabular-nums" style={{ color: accent }}>
         {value}
       </div>
       <div className="mt-1 text-sm font-medium text-ink-soft">{label}</div>
-    </Card>
+    </div>
   );
 }
 
@@ -118,18 +117,21 @@ export default async function AdminDashboard({
           </p>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <StatTile label="Submissions" value={stats.total} accent="var(--color-ink)" />
-            <StatTile label="To review" value={stats.pending} accent="var(--color-sky)" />
-            <StatTile label="Accepted" value={stats.accepted} accent="var(--color-fern-deep)" />
-            <StatTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" />
-            <StatTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" />
+        <section className="rounded-xl bg-white shadow-[var(--shadow-card)]">
+          <div className="p-5 sm:p-6">
+            <h2 className="font-display text-lg font-extrabold">Applications</h2>
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              <StatTile label="Submissions" value={stats.total} accent="var(--color-ink)" />
+              <StatTile label="To review" value={stats.pending} accent="var(--color-sky)" />
+              <StatTile label="Accepted" value={stats.accepted} accent="var(--color-fern-deep)" />
+              <StatTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" />
+              <StatTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" />
+            </div>
           </div>
 
-          <MediumBlend blend={blend} />
-          <ApplicationsTable rows={rows} canDecide={me?.role === "admin"} />
-        </>
+          <MediumBlend blend={blend} bare />
+          <ApplicationsTable rows={rows} canDecide={me?.role === "admin"} bare />
+        </section>
       )}
     </div>
   );

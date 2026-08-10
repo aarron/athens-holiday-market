@@ -44,7 +44,15 @@ const STATUS_RANK: Record<string, number> = {
 const selectCls =
   "h-10 rounded-lg border-2 border-ink/15 bg-paper px-2.5 text-sm font-semibold text-ink outline-none focus:border-fern-deep";
 
-export function ApplicationsTable({ rows, canDecide = false }: { rows: Row[]; canDecide?: boolean }) {
+export function ApplicationsTable({
+  rows,
+  canDecide = false,
+  bare = false,
+}: {
+  rows: Row[];
+  canDecide?: boolean;
+  bare?: boolean;
+}) {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]["value"]>("all");
   const [paymentFilter, setPaymentFilter] =
@@ -152,7 +160,7 @@ export function ApplicationsTable({ rows, canDecide = false }: { rows: Row[]; ca
   );
 
   return (
-    <div className="rounded-xl bg-white shadow-[var(--shadow-card)]">
+    <div className={bare ? "border-t border-ink/10" : "rounded-xl bg-white shadow-[var(--shadow-card)]"}>
       <div className="flex flex-wrap items-center gap-3 border-b border-ink/10 p-4">
         <input
           value={q}

@@ -131,7 +131,7 @@ export default async function AdminDashboard({
           </div>
 
           <MediumBlend blend={blend} />
-          <ApplicationsTable rows={rows} />
+          <ApplicationsTable rows={rows} canDecide={me?.role === "admin"} />
         </>
       )}
     </div>

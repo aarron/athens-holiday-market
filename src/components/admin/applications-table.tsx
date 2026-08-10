@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { BoothFeeBadge, VoteTally, type Tally } from "@/components/admin/badges";
+import { StatusBadge, BoothFeeBadge, VoteTally, type Tally } from "@/components/admin/badges";
 import { SafeImg } from "@/components/admin/safe-img";
 import { ChevronUpIcon, ChevronDownIcon } from "@/components/icons";
 import { setStatus } from "@/lib/admin-actions";
@@ -44,7 +44,7 @@ const STATUS_RANK: Record<string, number> = {
 const selectCls =
   "h-10 rounded-lg border-2 border-ink/15 bg-paper px-2.5 text-sm font-semibold text-ink outline-none focus:border-fern-deep";
 
-export function ApplicationsTable({ rows }: { rows: Row[] }) {
+export function ApplicationsTable({ rows, canDecide = false }: { rows: Row[]; canDecide?: boolean }) {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]["value"]>("all");
   const [paymentFilter, setPaymentFilter] =
@@ -231,7 +231,11 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
                   <VoteTally tally={r.tally} />
                 </td>
                 <td className="px-5 py-4">
-                  <RowDecision status={statusOf(r)} onDecide={(next) => decide(r, next)} />
+                  <RowDecision
+                    status={statusOf(r)}
+                    canDecide={canDecide}
+                    onDecide={(next) => decide(r, next)}
+                  />
                 </td>
                 <td className="px-5 py-4">
                   <BoothFeeBadge paid={r.boothFeePaid} status={r.status} />
@@ -260,10 +264,20 @@ export function ApplicationsTable({ rows }: { rows: Row[] }) {
  * Inline decision control for a row: Accept / Waitlist buttons that finalize the
  * status right from the overview. The button matching the current status is
  * filled. We waitlist rather than reject, so a legacy "rejected" row simply
- * shows as waitlisted.
+ * shows as waitlisted. Non-admins (judges) can't decide, so they see a
+ * read-only status pill instead of the buttons.
  */
-function RowDecision({ status, onDecide }: { status: string; onDecide: (next: string) => void }) {
+function RowDecision({
+  status,
+  canDecide,
+  onDecide,
+}: {
+  status: string;
+  canDecide: boolean;
+  onDecide: (next: string) => void;
+}) {
   const shown = status === "rejected" ? "waitlisted" : status;
+  if (!canDecide) return <StatusBadge status={shown} />;
   const btn = (value: string, label: string, color: string) => {
     const active = shown === value;
     return (

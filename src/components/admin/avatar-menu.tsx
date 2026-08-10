@@ -1,7 +1,9 @@
 "use client";
 
-import { createElement, useEffect, useRef, useState } from "react";
+import { createElement, useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { signOutAction } from "@/lib/auth-actions";
+import { startExhibiting } from "@/lib/exhibit-actions";
 import {
   GhostIcon,
   CatIcon,
@@ -61,6 +63,19 @@ export function AvatarMenu({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  // Ensure this staff member has an exhibiting record (idempotent), then open
+  // their artist page. Replaces the always-on dashboard "Are you exhibiting?"
+  // banner with an on-demand menu action.
+  function editMyArtistPage() {
+    startTransition(async () => {
+      const r = await startExhibiting();
+      if (r && "ok" in r && r.ok) router.push("/artist");
+      else setOpen(false);
+    });
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -108,6 +123,14 @@ export function AvatarMenu({
             </span>
           </div>
           <div className="my-1 border-t border-ink/10" />
+          <button
+            role="menuitem"
+            disabled={pending}
+            onClick={editMyArtistPage}
+            className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors hover:bg-cream disabled:opacity-60"
+          >
+            {pending ? "Opening…" : "Edit my artist page"}
+          </button>
           <form action={signOutAction}>
             <button
               role="menuitem"

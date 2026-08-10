@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 const schema = z.object({
   name: z.string().trim().min(1).max(200),
+  businessName: z.string().trim().max(200).optional().default(""),
   email: z.string().trim().email().max(200),
   phone: z.string().trim().min(3).max(40),
   website: z.string().trim().max(300).optional().default(""),
@@ -61,6 +62,7 @@ export async function POST(req: Request) {
     .values({
       cycleId: cycle.id,
       name: d.name,
+      businessName: d.businessName || null,
       email: d.email.toLowerCase(),
       phone: d.phone,
       smsConsent: d.smsConsent,

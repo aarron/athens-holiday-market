@@ -94,6 +94,9 @@ export const applications = pgTable(
     // stats/vote views, but still a real accepted artist + participation record.
     directAdd: boolean("direct_add").notNull().default(false),
     name: text("name").notNull(),
+    // Optional business/booth name — the name they sell under, if different from
+    // their own. Cleaner than inferring it from email/website, and searchable.
+    businessName: text("business_name"),
     email: text("email").notNull(),
     phone: text("phone"),
     // Explicit consent to receive event-day SMS (captured on the application form).

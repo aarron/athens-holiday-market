@@ -14,6 +14,7 @@ import { MEDIUM_CATEGORIES } from "@/lib/mediums";
 
 const schema = z.object({
   name: z.string().min(1, "Your name is required."),
+  businessName: z.string().optional(),
   email: z.string().min(1, "Email is required.").email("Enter a valid email."),
   phone: z.string().min(3, "A mobile number is required."),
   website: z.string().optional(),
@@ -37,6 +38,7 @@ const errCls = "mt-1 text-sm font-medium text-poppy-deep";
 
 export type ApplicationFormPayload = {
   name: string;
+  businessName?: string;
   email: string;
   phone: string;
   website?: string;
@@ -186,6 +188,21 @@ export function ApplicationForm({
         </label>
         <input id="name" autoComplete="name" aria-required="true" aria-invalid={!!errors.name} aria-describedby={errors.name ? "name-error" : undefined} className={`mt-1.5 ${field}`} {...register("name")} />
         {errors.name && <p id="name-error" role="alert" className={errCls}>{errors.name.message}</p>}
+      </div>
+
+      <div>
+        <label className={label} htmlFor="businessName">
+          Business or booth name
+        </label>
+        <p className="mt-0.5 text-sm text-ink-soft">
+          The name you sell under, if different from your own. (Optional)
+        </p>
+        <input
+          id="businessName"
+          autoComplete="organization"
+          className={`mt-1.5 ${field}`}
+          {...register("businessName")}
+        />
       </div>
 
       <div className="grid gap-7 sm:grid-cols-2">

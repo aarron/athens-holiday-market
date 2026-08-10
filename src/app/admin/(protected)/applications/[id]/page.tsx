@@ -170,6 +170,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
               Artist details
             </h2>
             <dl className="mt-4 divide-y divide-ink/5">
+              {app.businessName && <DetailRow label="Business">{app.businessName}</DetailRow>}
               <DetailRow label="Email">
                 <a href={`mailto:${app.email}`} className="break-all link">
                   {app.email}

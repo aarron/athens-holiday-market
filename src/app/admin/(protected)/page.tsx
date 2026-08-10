@@ -5,6 +5,7 @@ import { acceptedApplicationIdForEmail } from "@/lib/magic";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
 import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
 import { CycleSelector } from "@/components/admin/cycle-selector";
+import { AdminSearch } from "@/components/admin/admin-search";
 import { ExhibitCard } from "@/components/admin/exhibit-card";
 import { Card } from "@/components/ui/card";
 
@@ -108,6 +109,8 @@ export default async function AdminDashboard({
           current={current.year}
         />
       </div>
+
+      <AdminSearch />
 
       {current.isActive && <ExhibitCard hasPage={myApplicationId != null} />}
 

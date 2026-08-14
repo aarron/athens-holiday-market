@@ -4,6 +4,7 @@ import { site } from "@/lib/site";
 import { ButtonLink } from "@/components/ui/button";
 import { Flower } from "@/components/brand";
 import { FaqAccordion, type FaqItem } from "@/components/faq-accordion";
+import { AboutVideo } from "@/components/about-video";
 
 export const metadata: Metadata = {
   title: "About",
@@ -245,8 +246,8 @@ export default function AboutPage() {
         />
       </div>
 
-      {/* Story */}
-      <div className="mt-16 space-y-14 sm:mt-20">
+      {/* A busy market */}
+      <div className="mt-16 sm:mt-20">
         <Row kicker={<span className={KICKER}>A busy market</span>}>
           <H2>Two evenings, one very full courtyard.</H2>
           <p className="mt-4 max-w-2xl text-lg text-ink-soft">
@@ -258,7 +259,39 @@ export default function AboutPage() {
             who make it.
           </p>
         </Row>
+      </div>
 
+      {/* The tree-lit courtyard in full swing at dusk. */}
+      <div className="mt-14 sm:mt-16">
+        <FeaturePhoto
+          src="/about/music-1.jpg"
+          alt="An overhead view of the tree-lit courtyard packed with shoppers browsing artist booths at dusk"
+        />
+      </div>
+
+      {/* Live music */}
+      <div className="mt-16 sm:mt-20">
+        <Row kicker={<span className={KICKER}>Live music</span>}>
+          <H2>A little music by the fire.</H2>
+          <p className="mt-4 max-w-2xl text-lg text-ink-soft">
+            Local musicians play around the fire both evenings — guitars, upright bass, a few voices —
+            a warm, acoustic soundtrack that turns a shopping trip into a night out. Tap the clip for
+            sound.
+          </p>
+        </Row>
+      </div>
+
+      {/* Live-music video — the centerpiece. */}
+      <div className="mt-8 sm:mt-10">
+        <AboutVideo
+          src="/about/live-music.mp4"
+          poster="/about/live-music-poster.jpg"
+          label="Musicians playing acoustic music around a fire pit at the Athens Holiday Market"
+        />
+      </div>
+
+      {/* The organizers */}
+      <div className="mt-16 sm:mt-20">
         <Row kicker={<span className={KICKER}>The organizers</span>}>
           <H2>Made by artists, for artists.</H2>
           <p className="mt-4 max-w-2xl text-lg text-ink-soft">
@@ -271,11 +304,11 @@ export default function AboutPage() {
         </Row>
       </div>
 
-      {/* Second photo — sunset over the courtyard, midway down. */}
-      <div className="mt-16 sm:mt-20">
+      {/* Booths glowing at blue hour. */}
+      <div className="mt-14 sm:mt-16">
         <FeaturePhoto
-          src="/about/market-sunset.jpg"
-          alt="The market courtyard glowing at sunset, shoppers gathered around artist tables and a fire"
+          src="/about/music-2.jpg"
+          alt="Shoppers browsing glowing artist booths among string-lit trees in the courtyard at blue hour"
         />
       </div>
 
@@ -298,6 +331,14 @@ export default function AboutPage() {
             — more than $50,000 in all.
           </p>
         </Row>
+      </div>
+
+      {/* Sunset closer over the courtyard, before the apply CTA. */}
+      <div className="mt-14 sm:mt-16">
+        <FeaturePhoto
+          src="/about/market-sunset.jpg"
+          alt="The market courtyard glowing at sunset, shoppers gathered around artist tables and a fire"
+        />
       </div>
 
       {/* Apply CTA band */}

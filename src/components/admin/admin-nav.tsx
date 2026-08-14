@@ -39,7 +39,7 @@ export function AdminMobileNav({ role, pendingReviews }: { role: string; pending
   return (
     <nav
       aria-label="Admin sections"
-      className="mb-6 flex gap-1.5 overflow-x-auto rounded-xl bg-white p-2 shadow-[var(--shadow-card)] md:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      className="mb-6 flex gap-1.5 overflow-x-auto rounded-xl bg-white p-2 shadow-[var(--shadow-card)] lg:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
     >
       {items.map((i) => {
         const active = i.match(path);
@@ -66,7 +66,7 @@ export function AdminNav({ role, pendingReviews }: { role: string; pendingReview
   const items = buildItems(role, pendingReviews);
 
   return (
-    <nav className="hidden items-center gap-1 md:flex">
+    <nav className="hidden items-center gap-1 lg:flex">
       {items
         .filter((i) => !i.adminOnly || role === "admin")
         .map((i) => {

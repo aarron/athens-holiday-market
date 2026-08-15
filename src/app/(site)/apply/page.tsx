@@ -25,6 +25,54 @@ const CHECKLIST = [
   "Whether you'd like to share a booth",
 ];
 
+/**
+ * The SMS opt-in shown on the application form, reproduced here so the
+ * consent mechanism is visible on /apply year-round — even while the form is
+ * gated. This keeps the public opt-in verifiable (the URL our A2P message flow
+ * cites) whether or not applications are currently open. Mirrors the checkbox
+ * on /sms-opt-in and inside <ApplicationForm />.
+ */
+function SmsProgramNote() {
+  return (
+    <section className="mt-12">
+      <h2 className="text-2xl font-extrabold">Text-message updates</h2>
+      <p className="mt-3 text-ink-soft">
+        When you apply, the form includes an optional, unchecked box to receive a few event-day text
+        updates if you&apos;re accepted — load-in times, schedule, and weather. It is never checked
+        for you and never required. This is the exact box that appears on the application:
+      </p>
+
+      {/* The real consent control, reproduced from the application form. */}
+      <div className="mt-4 rounded-lg bg-cream-soft p-4">
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden
+            className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-ink/20 bg-white"
+          />
+          <span className="text-sm text-ink-soft">
+            <span className="font-semibold text-ink">Text me event-day updates</span> about the
+            market — load-in times, schedule, and weather. Msg &amp; data rates may apply; reply STOP
+            to opt out. <span className="text-ink-soft/70">(Optional)</span>
+          </span>
+        </div>
+      </div>
+
+      <p className="mt-4 text-ink-soft">
+        Occasional messages, only around event days. Reply STOP to unsubscribe or HELP for help. See
+        our{" "}
+        <Link href="/sms-opt-in" className="link font-semibold">
+          full SMS terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="link font-semibold">
+          privacy policy
+        </Link>
+        .
+      </p>
+    </section>
+  );
+}
+
 export default async function ApplyPage({
   searchParams,
 }: {
@@ -110,6 +158,7 @@ export default async function ApplyPage({
             ))}
           </ul>
 
+          <SmsProgramNote />
         </div>
       )}
 
@@ -133,6 +182,7 @@ export default async function ApplyPage({
             </Link>{" "}
             to hear about next year.
           </p>
+          <SmsProgramNote />
         </div>
       )}
     </div>

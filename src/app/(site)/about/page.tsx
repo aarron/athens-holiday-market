@@ -206,7 +206,19 @@ const faqs: FaqItem[] = [
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 pb-24 pt-24 sm:px-8 sm:pt-28">
-      {/* Hero + how it began */}
+      {/* Hero — the courtyard at its fullest, right up top. */}
+      <figure className="relative mb-12 aspect-[4/3] overflow-hidden rounded-2xl shadow-[var(--shadow-lift)] sm:mb-14 sm:aspect-[16/9] lg:aspect-[21/9]">
+        <Image
+          src="/about/music-1.jpg"
+          alt="An overhead view of the tree-lit courtyard packed with shoppers browsing artist booths at dusk"
+          fill
+          priority
+          sizes="(max-width: 896px) 100vw, 896px"
+          className="object-cover"
+        />
+      </figure>
+
+      {/* How it began */}
       <Row
         kicker={
           <div className="flex items-center gap-2">
@@ -237,15 +249,6 @@ export default function AboutPage() {
         </div>
       </Row>
 
-      {/* First photo — the market in full swing, right after the intro. */}
-      <div className="mt-14">
-        <FeaturePhoto
-          src="/about/market-lights.jpg"
-          alt="Shoppers browsing artist booths strung with lights in the Big City Bread courtyard at dusk"
-          priority
-        />
-      </div>
-
       {/* A busy market */}
       <div className="mt-16 sm:mt-20">
         <Row kicker={<span className={KICKER}>A busy market</span>}>
@@ -261,11 +264,11 @@ export default function AboutPage() {
         </Row>
       </div>
 
-      {/* The tree-lit courtyard in full swing at dusk. */}
+      {/* Shoppers among the string-lit booths at dusk. */}
       <div className="mt-14 sm:mt-16">
         <FeaturePhoto
-          src="/about/music-1.jpg"
-          alt="An overhead view of the tree-lit courtyard packed with shoppers browsing artist booths at dusk"
+          src="/about/market-lights.jpg"
+          alt="Shoppers browsing artist booths strung with lights in the Big City Bread courtyard at dusk"
         />
       </div>
 

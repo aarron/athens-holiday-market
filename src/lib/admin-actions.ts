@@ -9,6 +9,7 @@ import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
 import { cleanUrl, sanitizeSocials } from "@/lib/clean";
 import { logAdminEvent } from "@/lib/audit";
 import { sendDecisionEmail, sendArtistPageLive, sendArtistLogistics } from "@/lib/emails";
+import { promoteArtistSubmission } from "@/lib/artist-publish";
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -286,59 +287,7 @@ export async function deleteApplication(applicationId: number) {
 /** Approve an artist's pending submission → copy it live and publish. */
 export async function approveArtistSubmission(artistId: number) {
   await requireAdmin();
-  const artist = await db.query.artists.findFirst({ where: eq(artists.id, artistId) });
-  if (!artist || !artist.pendingContent) return { error: "Nothing to approve." };
-  const pc = artist.pendingContent;
-  const firstPublish = !artist.published;
-
-  await db
-    .update(artists)
-    .set({
-      statement: pc.statement ?? artist.statement,
-      bio: pc.bio ?? artist.bio,
-      // Re-sanitize on promote — never trust stored pending content verbatim.
-      website: cleanUrl(pc.website ?? artist.website),
-      socials: sanitizeSocials((pc.socials ?? artist.socials) as Record<string, string>),
-      logoUrl: pc.logoUrl ?? null,
-      published: true,
-      pendingContent: null,
-      submittedAt: null,
-      updatedAt: new Date(),
-    })
-    .where(eq(artists.id, artistId));
-
-  if (pc.photoUrls) {
-    // Atomic replace (see publishArtist) so an approved page never flashes empty.
-    if (pc.photoUrls.length) {
-      await db.batch([
-        db.delete(artistPhotos).where(eq(artistPhotos.artistId, artistId)),
-        db.insert(artistPhotos).values(
-          pc.photoUrls.slice(0, 6).map((url, i) => ({ artistId, url, position: i })),
-        ),
-      ]);
-    } else {
-      await db.delete(artistPhotos).where(eq(artistPhotos.artistId, artistId));
-    }
-  }
-  revalidatePath("/admin/artists");
-  revalidatePath("/artists");
-  revalidatePath(`/artists/${artist.slug}`);
-
-  // First time going live → celebrate + point them to share tools.
-  if (firstPublish && artist.applicationId) {
-    const app = await db.query.applications.findFirst({
-      where: eq(applications.id, artist.applicationId),
-      columns: { email: true, name: true },
-    });
-    if (app?.email) await sendArtistPageLive(app.email, artist.name ?? app.name, artist.slug);
-  }
-  await logAdminEvent({
-    action: firstPublish ? "artist.publish" : "artist.approve",
-    targetType: "artist",
-    targetId: artistId,
-    summary: `${firstPublish ? "Published" : "Approved update to"} artist page: ${artist.name ?? artist.slug}`,
-  });
-  return { ok: true };
+  return promoteArtistSubmission(artistId);
 }
 
 /** Return a submission to the artist without publishing (clears pending). */

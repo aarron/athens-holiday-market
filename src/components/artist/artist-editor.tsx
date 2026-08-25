@@ -46,11 +46,14 @@ export function ArtistEditor({
   status,
   slug,
   published,
+  selfPublish = false,
 }: {
   initial: Initial;
   status: "draft" | "pending" | "published";
   slug: string;
   published: boolean;
+  /** Staff (admins/judges) publish their own page without review. */
+  selfPublish?: boolean;
 }) {
   const [statement, setStatement] = useState(initial.statement);
   const [bio, setBio] = useState(initial.bio);
@@ -116,7 +119,11 @@ export function ArtistEditor({
           {initial.name}
           {initial.medium ? ` · ${initial.medium}` : ""}
         </p>
-        <StatusBanner status={saved ? "pending" : status} slug={slug} published={published} />
+        <StatusBanner
+          status={saved ? (selfPublish ? "published" : "pending") : status}
+          slug={slug}
+          published={published || (saved && selfPublish)}
+        />
       </div>
 
       {/* Photos */}
@@ -252,13 +259,25 @@ export function ArtistEditor({
       <div className="sticky bottom-4 rounded-xl bg-ink p-4 shadow-[var(--shadow-lift)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-paper/80">
-            Submitting sends your page to our team for review before it goes live.
+            {selfPublish
+              ? "Your changes publish to your live page immediately."
+              : "Submitting sends your page to our team for review before it goes live."}
           </p>
-          <Button variant="create" disabled={pending || uploading} loading={pending} loadingLabel="Submitting…" onClick={onSubmit}>
-            Submit for review
+          <Button
+            variant="create"
+            disabled={pending || uploading}
+            loading={pending}
+            loadingLabel={selfPublish ? "Publishing…" : "Submitting…"}
+            onClick={onSubmit}
+          >
+            {selfPublish ? "Publish changes" : "Submit for review"}
           </Button>
         </div>
-        {saved && <p className="mt-2 text-sm font-semibold text-chartreuse">Submitted! We&apos;ll review it soon. ✓</p>}
+        {saved && (
+          <p className="mt-2 text-sm font-semibold text-chartreuse">
+            {selfPublish ? "Published — your page is live. ✓" : "Submitted! We'll review it soon. ✓"}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -63,8 +63,11 @@ export function ApplicationForm({
   initialValues?: Partial<Values>;
   uploadEndpoint?: string;
   /** When provided, replaces the default POST /api/apply (e.g. the completion
-   *  server action). Return `{ ok }` on success or `{ error }` to show a message. */
-  onSubmit?: (payload: ApplicationFormPayload) => Promise<{ ok?: boolean; error?: string }>;
+   *  server action). Return `{ ok }` on success or `{ error }` to show a message.
+   *  `published: true` means the page went live immediately (staff auto-approve). */
+  onSubmit?: (
+    payload: ApplicationFormPayload,
+  ) => Promise<{ ok?: boolean; error?: string; published?: boolean }>;
 } = {}) {
   const {
     register,
@@ -81,6 +84,7 @@ export function ApplicationForm({
   const [photoError, setPhotoError] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [serverError, setServerError] = useState("");
+  const [publishedLive, setPublishedLive] = useState(false);
 
   const shareBooth = watch("shareBooth");
   const min = site.applications.minPhotos;
@@ -134,6 +138,7 @@ export function ApplicationForm({
           setStatus("error");
           return;
         }
+        if (r?.published) setPublishedLive(true);
       } else {
         const res = await fetch("/api/apply", {
           method: "POST",
@@ -160,15 +165,26 @@ export function ApplicationForm({
         <Flower size={56} color="var(--color-fuchsia)" spin className="mx-auto" />
         <h2 className="mt-5 flex items-center justify-center gap-2.5 text-3xl font-extrabold">
           <CelebrateIcon size={30} className="text-fuchsia-deep" aria-hidden />
-          {mode === "finish" ? "Profile submitted!" : "Application received!"}
+          {mode === "finish"
+            ? publishedLive
+              ? "Your page is live!"
+              : "Profile submitted!"
+            : "Application received!"}
         </h2>
         <p className="mx-auto mt-3 max-w-md text-lg text-ink-soft">
           {mode === "finish" ? (
-            <>
-              Thanks! We have everything we need to build your artist page for the {site.event.year}{" "}
-              {site.name}. An organizer will review it and get it live shortly — you&apos;ll get an
-              email when it&apos;s published.
-            </>
+            publishedLive ? (
+              <>
+                Your artist page for the {site.event.year} {site.name} is now published. You can edit
+                it anytime — changes you make will go live right away.
+              </>
+            ) : (
+              <>
+                Thanks! We have everything we need to build your artist page for the {site.event.year}{" "}
+                {site.name}. An organizer will review it and get it live shortly — you&apos;ll get an
+                email when it&apos;s published.
+              </>
+            )
           ) : (
             <>
               Thank you for applying to the {site.event.year} {site.name}. We&apos;ve emailed you a

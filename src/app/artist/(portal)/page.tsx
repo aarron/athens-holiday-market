@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import { requireArtistAccess } from "@/lib/admin-auth";
+import { isStaff } from "@/lib/roles";
 import { db } from "@/db";
 import { artists } from "@/db/schema";
 import { site } from "@/lib/site";
@@ -12,7 +13,7 @@ export const metadata: Metadata = { title: "Your page", robots: { index: false }
 export const dynamic = "force-dynamic";
 
 export default async function ArtistPortalPage() {
-  const { artist: base } = await requireArtistAccess();
+  const { user, artist: base } = await requireArtistAccess();
   const artist = await db.query.artists.findFirst({
     where: eq(artists.id, base.id),
     with: { photos: { orderBy: (p, { asc }) => [asc(p.position)] } },
@@ -169,7 +170,7 @@ export default async function ArtistPortalPage() {
 
       {/* Your page (editor) */}
       <div id="edit" className="scroll-mt-20">
-        <ArtistEditor initial={initial} status={status} slug={artist.slug} published={artist.published} />
+        <ArtistEditor initial={initial} status={status} slug={artist.slug} published={artist.published} selfPublish={isStaff(user.role)} />
       </div>
     </div>
   );

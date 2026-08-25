@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import { requireArtistAccess } from "@/lib/admin-auth";
+import { isStaff } from "@/lib/roles";
 import { completeArtistProfile } from "@/lib/exhibit-actions";
 import { db } from "@/db";
 import { applications } from "@/db/schema";
@@ -38,7 +39,8 @@ export default async function ArtistFinishPage() {
         <h1 className="text-3xl font-extrabold">Complete your artist profile</h1>
         <p className="mt-2 text-ink-soft">
           You&apos;ve been added to the {site.event.year} {site.name}. Tell us about your work and
-          add photos — this becomes your public artist page once an organizer reviews it.
+          add photos — this becomes your public artist page
+          {isStaff(user.role) ? ", published as soon as you submit." : " once an organizer reviews it."}
         </p>
       </div>
       <ApplicationForm mode="finish" initialValues={initialValues} onSubmit={completeArtistProfile} />

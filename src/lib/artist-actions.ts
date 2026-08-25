@@ -6,6 +6,8 @@ import { z } from "zod";
 import { db } from "@/db";
 import { artists, users } from "@/db/schema";
 import { requireArtistAccess } from "@/lib/admin-auth";
+import { isStaff } from "@/lib/roles";
+import { promoteArtistSubmission } from "@/lib/artist-publish";
 import { sendArtistReviewAlert } from "@/lib/emails";
 import { cleanUrl, sanitizeSocials } from "@/lib/clean";
 
@@ -41,7 +43,16 @@ export async function submitArtistDraft(input: ArtistDraftInput) {
     })
     .where(eq(artists.id, base.id));
 
-  // Alert admins so a pending review doesn't slip by.
+  // Staff (admins and judges) editing their own page are trusted to publish
+  // without review — promote the edit live immediately, same as page creation.
+  if (isStaff(user.role)) {
+    await promoteArtistSubmission(base.id);
+    revalidatePath("/artist");
+    revalidatePath("/admin/artists");
+    return { ok: true, published: true };
+  }
+
+  // Everyone else: alert admins so a pending review doesn't slip by.
   const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, "admin"));
   await sendArtistReviewAlert(
     admins.map((a) => a.email),

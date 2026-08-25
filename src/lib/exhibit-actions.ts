@@ -6,7 +6,9 @@ import { z } from "zod";
 import { db } from "@/db";
 import { applications, applicationPhotos, artists, cycles, users } from "@/db/schema";
 import { requireAdmin, requireStaff, getSessionUser } from "@/lib/admin-auth";
+import { isStaff } from "@/lib/roles";
 import { acceptedApplicationIdForEmail, createMagicToken, ensureArtistForApplication } from "@/lib/magic";
+import { promoteArtistSubmission } from "@/lib/artist-publish";
 import { sendArtistInvite, sendArtistReviewAlert } from "@/lib/emails";
 import { logAdminEvent } from "@/lib/audit";
 import { publicEnv } from "@/lib/env";
@@ -150,9 +152,15 @@ export async function completeArtistProfile(input: z.input<typeof completeSchema
     .insert(applicationPhotos)
     .values(d.photoUrls.map((url, i) => ({ applicationId, url, position: i })));
 
-  // Seed the artist draft from the application and mark it submitted, so it
-  // lands in the same "Needs review" queue as a normal artist submission — the
-  // admin approves it there to go live (review-first).
+  // Staff (admins and judges) build pages for themselves and are trusted to
+  // publish without a second set of eyes — their submission is auto-approved.
+  // Everyone else (invited artists) lands in the "Needs review" queue for an
+  // admin to approve (review-first).
+  const autoApprove = isStaff(user.role);
+
+  // Seed the artist draft from the application and mark it submitted. For a
+  // review-first artist this is where it stops (admin approves later); for
+  // staff we immediately promote it live via the same path as an approval.
   const artist = await ensureArtistForApplication(applicationId);
   if (artist) {
     await db
@@ -170,13 +178,19 @@ export async function completeArtistProfile(input: z.input<typeof completeSchema
         updatedAt: new Date(),
       })
       .where(eq(artists.id, artist.id));
+
+    if (autoApprove) await promoteArtistSubmission(artist.id);
   }
 
-  // Nudge admins to review + publish (mirrors the artist-portal review alert).
-  const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, "admin"));
-  await sendArtistReviewAlert(admins.map((a) => a.email), d.name);
+  // Only nudge admins to review when it isn't already live (mirrors the
+  // artist-portal review alert). Auto-approved staff pages skip the alert.
+  if (!autoApprove) {
+    const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, "admin"));
+    await sendArtistReviewAlert(admins.map((a) => a.email), d.name);
+  }
 
   revalidatePath("/admin/artists");
   revalidatePath(`/admin/applications/${applicationId}`);
-  return { ok: true };
+  revalidatePath("/artist");
+  return { ok: true, published: autoApprove };
 }

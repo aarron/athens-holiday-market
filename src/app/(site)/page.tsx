@@ -17,7 +17,7 @@ const CATEGORIES: { label: string; color: string; img: string; pos?: string }[] 
   { label: "Pottery", color: "var(--color-teal)", img: "/photos/categories/ceramics.jpg" },
   { label: "Textiles & Fiber", color: "var(--color-fern)", img: "/photos/categories/textiles.jpg" },
   { label: "Jewelry", color: "var(--color-fuchsia)", img: "/photos/categories/jewelry.jpg" },
-  { label: "Candles & Apothecary", color: "var(--color-tangerine)", img: "/photos/categories/candles.jpg" },
+  { label: "Candles", color: "var(--color-tangerine)", img: "/photos/categories/candles.jpg" },
   { label: "Prints & Paper", color: "var(--color-sky)", img: "/photos/categories/prints.jpg" },
   { label: "Woodwork", color: "var(--color-berry)", img: "/photos/categories/woodwork.jpg" },
   // Portrait photo of hanging bags — bias the crop lower so the bags show, not the straps.

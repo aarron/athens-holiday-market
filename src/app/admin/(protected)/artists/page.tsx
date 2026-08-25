@@ -4,6 +4,7 @@ import { listArtistsForAdmin } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
 import { SafeImg } from "@/components/admin/safe-img";
 import { AddArtistForm } from "@/components/admin/add-artist-form";
+import { EditMyArtistPageButton } from "@/components/admin/edit-my-artist-page-button";
 
 export const metadata: Metadata = { title: "Artists", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -22,13 +23,16 @@ export default async function AdminArtists() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold">Artist pages</h1>
-        <p className="mt-1 text-ink-soft">
-          {pending.length > 0
-            ? `${pending.length} submission${pending.length === 1 ? "" : "s"} awaiting review.`
-            : "No submissions awaiting review."}
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold">Artist pages</h1>
+          <p className="mt-1 text-ink-soft">
+            {pending.length > 0
+              ? `${pending.length} submission${pending.length === 1 ? "" : "s"} awaiting review.`
+              : "No submissions awaiting review."}
+          </p>
+        </div>
+        <EditMyArtistPageButton />
       </div>
 
       {isAdmin && <AddArtistForm />}

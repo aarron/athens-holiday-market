@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/admin-auth";
 import { SafeImg } from "@/components/admin/safe-img";
 import { AddArtistForm } from "@/components/admin/add-artist-form";
 import { EditMyArtistPageButton } from "@/components/admin/edit-my-artist-page-button";
+import { UnpublishArtistButton } from "@/components/admin/unpublish-artist-button";
 
 export const metadata: Metadata = { title: "Artists", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -48,25 +49,34 @@ export default async function AdminArtists() {
           {artists.map((a) => {
             const s = stateOf(a);
             return (
-              <li key={a.id}>
+              <li
+                key={a.id}
+                className="relative flex items-center gap-4 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
+              >
+                {/* Stretched link: covers the whole card, so any non-interactive
+                    area opens the detail page. Interactive controls below sit
+                    above it via z-10. */}
                 <Link
                   href={`/admin/artists/${a.id}`}
-                  className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
-                >
-                  <SafeImg
-                    src={a.photos[0]?.url ?? null}
-                    alt=""
-                    flowerSize={20}
-                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-display font-bold">{a.name}</p>
-                    <p className="truncate text-sm text-ink-soft">{a.medium}</p>
-                  </div>
+                  aria-label={`Open ${a.name}`}
+                  className="absolute inset-0 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fern-deep"
+                />
+                <SafeImg
+                  src={a.photos[0]?.url ?? null}
+                  alt=""
+                  flowerSize={20}
+                  className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-display font-bold">{a.name}</p>
+                  <p className="truncate text-sm text-ink-soft">{a.medium}</p>
+                </div>
+                <div className="relative z-10 flex items-center gap-2">
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${s.cls}`}>
                     {s.label}
                   </span>
-                </Link>
+                  {a.published && <UnpublishArtistButton artistId={a.id} />}
+                </div>
               </li>
             );
           })}

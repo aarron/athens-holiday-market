@@ -261,6 +261,33 @@ export async function unpublishArtist(applicationId: number) {
 }
 
 /**
+ * Hide an artist from the public directory by artist id (keeps the record).
+ * The list view keys on the artist row directly, so this works for every
+ * published page — including older artists with no linked application, which
+ * the applicationId-based `unpublishArtist` can't target.
+ */
+export async function unpublishArtistById(artistId: number) {
+  await requireAdmin();
+  const [row] = await db
+    .update(artists)
+    .set({ published: false })
+    .where(eq(artists.id, artistId))
+    .returning({ slug: artists.slug });
+  if (!row) return { error: "Artist not found." };
+  revalidatePath("/admin/artists");
+  revalidatePath("/artists");
+  // Purge the artist's own page from ISR immediately (see unpublishArtist).
+  revalidatePath(`/artists/${row.slug}`);
+  await logAdminEvent({
+    action: "artist.unpublish",
+    targetType: "artist",
+    targetId: artistId,
+    summary: `Took down artist page /artists/${row.slug}`,
+  });
+  return { ok: true };
+}
+
+/**
  * Permanently delete an application and everything derived from it — photos,
  * votes, comments, login tokens, and its published artist page (all via
  * ON DELETE CASCADE). Admin-only, irreversible. Redirects to the dashboard.

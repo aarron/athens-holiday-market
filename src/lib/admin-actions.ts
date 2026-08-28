@@ -288,6 +288,31 @@ export async function unpublishArtistById(artistId: number) {
 }
 
 /**
+ * Delete an artist page (the `artists` row and its photos, via cascade) by
+ * artist id. Keeps the underlying application — its votes, comments, and
+ * original photos are untouched, and the page can be rebuilt from it later.
+ * For nuking the whole applicant, use `deleteApplication` on the detail page.
+ */
+export async function deleteArtistPage(artistId: number) {
+  await requireAdmin();
+  const [row] = await db
+    .delete(artists)
+    .where(eq(artists.id, artistId))
+    .returning({ slug: artists.slug, name: artists.name });
+  if (!row) return { error: "Artist page not found." };
+  revalidatePath("/admin/artists");
+  revalidatePath("/artists");
+  revalidatePath(`/artists/${row.slug}`);
+  await logAdminEvent({
+    action: "artist.delete",
+    targetType: "artist",
+    targetId: artistId,
+    summary: `Deleted artist page: ${row.name ?? row.slug}`,
+  });
+  return { ok: true };
+}
+
+/**
  * Permanently delete an application and everything derived from it — photos,
  * votes, comments, login tokens, and its published artist page (all via
  * ON DELETE CASCADE). Admin-only, irreversible. Redirects to the dashboard.

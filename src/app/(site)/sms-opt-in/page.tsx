@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
+import { SmsOptInForm } from "@/components/sms-opt-in-form";
 
 export const metadata: Metadata = {
   title: "SMS updates",
   description:
-    "How the Athens Holiday Market text-message program works — who receives event-day updates, how you opt in, and how to opt out.",
+    "Sign up for Athens Holiday Market event-day text updates — load-in, schedule, and weather — for artists in the market. See how it works and how to opt out.",
   alternates: { canonical: "/sms-opt-in" },
 };
 
 /**
- * Public opt-in / SMS-terms page. Doubles as the consent proof for carrier
- * (Twilio toll-free) verification — a reviewer who isn't logged in can see the
- * exact opt-in language, the checkbox as it appears on the application form, and
- * the full program terms (frequency, rates, STOP/HELP).
+ * Public SMS opt-in for market artists. This page carries a real, completable
+ * opt-in form (a visitor enters their mobile number and checks the consent box),
+ * which is the opt-in cited in our Twilio A2P campaign message flow — a carrier
+ * reviewer can find and complete it without logging in. Below the form are the
+ * full program terms (frequency, rates, STOP/HELP, privacy).
  */
 export default function SmsOptInPage() {
   const H2 = "font-display text-xl font-extrabold sm:text-2xl";
@@ -20,42 +22,27 @@ export default function SmsOptInPage() {
     <div className="mx-auto max-w-2xl px-6 pb-24 pt-24 sm:px-8 sm:pt-28">
       <h1 className="text-4xl font-extrabold leading-[1.05] sm:text-5xl">Text message updates</h1>
       <p className="mt-5 text-lg text-ink-soft">
-        The {site.name} sends a small number of event-day text messages to accepted artists who ask
-        for them. Here&rsquo;s exactly how it works, and how to stop.
+        For artists in the {site.name}: sign up to get a small number of event-day text messages —
+        booth load-in times, schedule, and weather — around the market. It&rsquo;s optional and you
+        can stop any time.
       </p>
 
-      <div className="mt-12 space-y-10">
-        <section>
-          <h2 className={H2}>How you opt in</h2>
-          <p className="mt-3 text-ink-soft">
-            When you apply to sell at the market, the application form asks for your mobile number and
-            includes an unchecked, optional consent box. You are only added to text updates if you
-            check it yourself — it is never checked for you, and it is never required to apply. This
-            is the exact box that appears on the form at{" "}
-            <a href="/apply" className="link">
-              {site.url.replace(/^https?:\/\//, "")}/apply
-            </a>
-            :
-          </p>
+      {/* The real, completable opt-in. */}
+      <section className="mt-8">
+        <h2 className={H2}>Sign up for artist text updates</h2>
+        <p className="mt-2 text-ink-soft">
+          Enter your mobile number and check the box to opt in. You can also opt in on the artist{" "}
+          <a href="/apply" className="link">
+            application form
+          </a>
+          .
+        </p>
+        <div className="mt-4">
+          <SmsOptInForm />
+        </div>
+      </section>
 
-          {/* The real consent control, reproduced from the application form. */}
-          <div className="mt-4 rounded-lg bg-cream-soft p-4">
-            <div className="flex items-start gap-3">
-              <span
-                aria-hidden
-                className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] bg-fern-deep text-[10px] font-bold text-white"
-              >
-                ✓
-              </span>
-              <span className="text-sm text-ink-soft">
-                <span className="font-semibold text-ink">Text me event-day updates</span> about the
-                market — load-in times, schedule, and weather. Msg &amp; data rates may apply; reply
-                STOP to opt out. <span className="text-ink-soft/70">(Optional)</span>
-              </span>
-            </div>
-          </div>
-        </section>
-
+      <div id="terms" className="mt-14 space-y-10">
         <section>
           <h2 className={H2}>What we send</h2>
           <p className="mt-3 text-ink-soft">
@@ -108,7 +95,11 @@ export default function SmsOptInPage() {
           <p className="mt-3 text-ink-soft">
             We use your mobile number only to send the event-day updates described above. We never
             sell or share it, and mobile opt-in data is never shared with third parties for their own
-            marketing. Questions?{" "}
+            marketing. Full details are in our{" "}
+            <a href="/privacy" className="link">
+              privacy policy
+            </a>
+            . Questions?{" "}
             <a href="/contact" className="link">
               Get in touch
             </a>

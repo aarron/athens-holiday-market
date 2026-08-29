@@ -286,6 +286,38 @@ export async function sendContactEmail(name: string, email: string, message: str
   }
 }
 
+/** Forward a public SMS opt-in to the organizer inbox as a consent record. */
+export async function sendSmsOptIn(record: {
+  name: string;
+  phone: string;
+  consentText: string;
+  when: string;
+  ip: string;
+}) {
+  if (!resend) {
+    console.warn("[emails] RESEND not configured; SMS opt-in not forwarded");
+    return { skipped: true as const };
+  }
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:22px">New SMS opt-in</h1>
+    <p style="margin:0 0 6px"><strong>Name:</strong> ${escapeHtml(record.name || "—")}</p>
+    <p style="margin:0 0 6px"><strong>Mobile:</strong> ${escapeHtml(record.phone)}</p>
+    <p style="margin:0 0 6px"><strong>When:</strong> ${escapeHtml(record.when)}</p>
+    <p style="margin:0 0 14px"><strong>IP:</strong> ${escapeHtml(record.ip)}</p>
+    <div style="border-top:1px solid #e6e0d2;padding-top:14px;line-height:1.6"><strong>Consented to:</strong><br>${escapeHtml(record.consentText)}</div>`;
+  try {
+    return await resend.emails.send({
+      from: EMAIL_FROM,
+      to: CONTACT_TO || site.contactEmail,
+      subject: `SMS opt-in: ${record.phone}`,
+      html: wrap(inner),
+    });
+  } catch (e) {
+    console.error("[emails] failed to forward SMS opt-in:", e);
+    return { error: true as const };
+  }
+}
+
 /** Send a one-time magic login link. */
 export async function sendMagicLink(to: string, url: string) {
   // Always log in dev so links are testable without a verified sending domain.

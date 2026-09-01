@@ -20,18 +20,19 @@ export default function SmsOptInPage() {
   const H2 = "font-display text-xl font-extrabold sm:text-2xl";
   return (
     <div className="mx-auto max-w-2xl px-6 pb-24 pt-24 sm:px-8 sm:pt-28">
-      <h1 className="text-4xl font-extrabold leading-[1.05] sm:text-5xl">Text message updates</h1>
+      <h1 className="text-4xl font-extrabold leading-[1.05] sm:text-5xl">Market updates</h1>
       <p className="mt-5 text-lg text-ink-soft">
-        For artists in the {site.name}: sign up to get a small number of event-day text messages —
-        booth load-in times, schedule, and weather — around the market. It&rsquo;s optional and you
-        can stop any time.
+        Sign up for email updates about the {site.name}. If you&rsquo;re an artist in the market, you
+        can <em>also</em> opt in to a few event-day text messages — but that&rsquo;s entirely
+        optional, and you&rsquo;ll get email updates either way.
       </p>
 
-      {/* The real, completable opt-in. */}
+      {/* Email signup is the service; SMS is a separate, optional add-on. */}
       <section className="mt-8">
-        <h2 className={H2}>Sign up for artist text updates</h2>
+        <h2 className={H2}>Sign up for updates</h2>
         <p className="mt-2 text-ink-soft">
-          Enter your mobile number and check the box to opt in. You can also opt in on the artist{" "}
+          Your email subscribes you to market news. Texting is optional — leave the text box
+          unchecked and you&rsquo;ll still be subscribed. Artists can also opt in on the{" "}
           <a href="/apply" className="link">
             application form
           </a>

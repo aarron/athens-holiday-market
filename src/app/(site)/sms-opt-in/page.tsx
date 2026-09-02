@@ -44,6 +44,22 @@ export default function SmsOptInPage() {
       </section>
 
       <div id="terms" className="mt-14 space-y-10">
+        <section className="rounded-xl border-2 border-ink/10 bg-cream-soft/60 p-5">
+          <h2 className={H2}>SMS Terms &amp; Conditions</h2>
+          <p className="mt-3 text-ink-soft">
+            The full terms for this text-message program — frequency, message and data rates, how to
+            opt out (STOP), how to get help (HELP), and carrier information — are published at{" "}
+            <a href="/sms-terms" className="link font-semibold">
+              athensholidaymarket.com/sms-terms
+            </a>
+            . Our{" "}
+            <a href="/privacy" className="link font-semibold">
+              Privacy Policy
+            </a>{" "}
+            covers how we handle your number.
+          </p>
+        </section>
+
         <section>
           <h2 className={H2}>What we send</h2>
           <p className="mt-3 text-ink-soft">

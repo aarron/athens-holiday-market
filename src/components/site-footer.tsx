@@ -97,7 +97,7 @@ export function SiteFooter() {
             <Link href="/privacy" className="link-invert">
               Privacy Policy
             </Link>
-            <Link href="/sms-opt-in" className="link-invert">
+            <Link href="/sms-terms" className="link-invert">
               SMS Terms
             </Link>
             <a

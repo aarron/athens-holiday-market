@@ -146,8 +146,8 @@ export function SmsOptInForm() {
             />
             <span className="text-sm text-ink-soft">
               {SMS_CONSENT_TEXT}{" "}
-              <a href="#terms" className="link">
-                Program terms
+              <a href="/sms-terms" className="link">
+                SMS Terms &amp; Conditions
               </a>{" "}
               and{" "}
               <a href="/privacy" className="link">

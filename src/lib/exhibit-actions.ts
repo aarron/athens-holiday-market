@@ -13,6 +13,8 @@ import { sendArtistInvite, sendArtistReviewAlert } from "@/lib/emails";
 import { logAdminEvent } from "@/lib/audit";
 import { publicEnv } from "@/lib/env";
 import { categorizeMedium } from "@/lib/mediums";
+import { cleanName } from "@/lib/clean";
+import { normalizePhone, validateWebsite, validateSocial } from "@/lib/validate";
 import { site } from "@/lib/site";
 
 async function activeCycle() {
@@ -99,10 +101,27 @@ const min = site.applications.minPhotos;
 const max = site.applications.maxPhotos;
 
 const completeSchema = z.object({
-  name: z.string().trim().min(1).max(200),
-  phone: z.string().trim().min(3).max(40),
-  website: z.string().trim().max(300).optional().default(""),
-  socials: z.record(z.string(), z.string().max(300)).optional().default({}),
+  // Same normalization as /api/apply (see src/lib/validate.ts).
+  name: z.string().trim().min(1).max(200).transform(cleanName),
+  phone: z.string().trim().max(40).transform((v, ctx) => {
+    const p = normalizePhone(v);
+    if (!p) { ctx.addIssue({ code: "custom", message: "Enter a 10-digit US mobile number." }); return z.NEVER; }
+    return p;
+  }),
+  website: z.string().trim().max(300).optional().default("").transform((v, ctx) => {
+    const r = validateWebsite(v);
+    if (!r.ok) { ctx.addIssue({ code: "custom", message: r.error }); return z.NEVER; }
+    return r.value;
+  }),
+  socials: z.record(z.string(), z.string().max(300)).optional().default({}).transform((soc, ctx) => {
+    const out: Record<string, string> = {};
+    for (const k of ["instagram", "facebook", "tiktok"] as const) {
+      const r = validateSocial(k, soc[k]);
+      if (!r.ok) { ctx.addIssue({ code: "custom", path: [k], message: r.error }); return z.NEVER; }
+      if (r.value) out[k] = r.value;
+    }
+    return out;
+  }),
   medium: z.string().trim().min(1).max(300),
   mediumCategory: z.string().trim().max(120).optional().default(""),
   description: z.string().trim().min(1).max(5000),

@@ -11,16 +11,33 @@ import { ProofreadField } from "@/components/proofread-field";
 import { CelebrateIcon } from "@/components/icons";
 import { site } from "@/lib/site";
 import { MEDIUM_CATEGORIES } from "@/lib/mediums";
+import { normalizePhone, validateWebsite, validateSocial } from "@/lib/validate";
 
 const schema = z.object({
   name: z.string().min(1, "Your name is required."),
   businessName: z.string().optional(),
-  email: z.string().min(1, "Email is required.").email("Enter a valid email."),
-  phone: z.string().min(3, "A mobile number is required."),
-  website: z.string().optional(),
-  instagram: z.string().optional(),
-  facebook: z.string().optional(),
-  tiktok: z.string().optional(),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email address."),
+  phone: z
+    .string()
+    .trim()
+    .min(1, "A mobile number is required.")
+    .refine((v) => !!normalizePhone(v), "Enter a 10-digit US mobile number, like (706) 555-0142."),
+  website: z.string().optional().superRefine((v, ctx) => {
+    const r = validateWebsite(v);
+    if (!r.ok) ctx.addIssue({ code: "custom", message: r.error });
+  }),
+  instagram: z.string().optional().superRefine((v, ctx) => {
+    const r = validateSocial("instagram", v);
+    if (!r.ok) ctx.addIssue({ code: "custom", message: r.error });
+  }),
+  facebook: z.string().optional().superRefine((v, ctx) => {
+    const r = validateSocial("facebook", v);
+    if (!r.ok) ctx.addIssue({ code: "custom", message: r.error });
+  }),
+  tiktok: z.string().optional().superRefine((v, ctx) => {
+    const r = validateSocial("tiktok", v);
+    if (!r.ok) ctx.addIssue({ code: "custom", message: r.error });
+  }),
   medium: z.string().min(1, "Tell us the medium of your work."),
   mediumCategory: z.string().min(1, "Please choose a category."),
   description: z.string().min(1, "Please describe your work."),
@@ -302,12 +319,21 @@ export function ApplicationForm({
         <label className={label} htmlFor="website">
           Website showing your work
         </label>
+        <p className="mt-0.5 text-sm text-ink-soft">
+          Optional. A link to your shop or portfolio — we&apos;ll add https:// for you.
+        </p>
         <input
           id="website"
-          placeholder="https://"
+          type="text"
+          inputMode="url"
+          autoComplete="url"
+          placeholder="yourshop.com or etsy.com/shop/you"
+          aria-invalid={!!errors.website}
+          aria-describedby={errors.website ? "website-error" : undefined}
           className={`mt-1.5 ${field}`}
           {...register("website")}
         />
+        {errors.website && <p id="website-error" role="alert" className={errCls}>{errors.website.message}</p>}
       </div>
 
       <fieldset>
@@ -316,9 +342,29 @@ export function ApplicationForm({
           Optional, but they help the jury get to know your work.
         </p>
         <div className="mt-2 grid gap-4 sm:grid-cols-3">
-          <input aria-label="Instagram" placeholder="Instagram" className={field} {...register("instagram")} />
-          <input aria-label="Facebook" placeholder="Facebook" className={field} {...register("facebook")} />
-          <input aria-label="TikTok" placeholder="TikTok" className={field} {...register("tiktok")} />
+          {(
+            [
+              ["instagram", "Instagram", "@handle or link"],
+              ["facebook", "Facebook", "facebook.com/yourpage"],
+              ["tiktok", "TikTok", "@handle or link"],
+            ] as const
+          ).map(([key, labelText, ph]) => (
+            <div key={key}>
+              <input
+                aria-label={labelText}
+                placeholder={`${labelText}: ${ph}`}
+                aria-invalid={!!errors[key]}
+                aria-describedby={errors[key] ? `${key}-error` : undefined}
+                className={field}
+                {...register(key)}
+              />
+              {errors[key] && (
+                <p id={`${key}-error`} role="alert" className={errCls}>
+                  {errors[key]?.message}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       </fieldset>
 

@@ -7,17 +7,38 @@ import { applicationWindow } from "@/lib/applications";
 import { categorizeMedium } from "@/lib/mediums";
 import { site } from "@/lib/site";
 import { sendApplicationReceived } from "@/lib/emails";
+import { cleanName } from "@/lib/clean";
+import { normalizeEmail, normalizePhone, validateWebsite, validateSocial } from "@/lib/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
-  name: z.string().trim().min(1).max(200),
+  // Normalize on write so the database holds clean, canonical values:
+  // title-cased name, lowercased email, E.164 phone, https website (or null),
+  // and social profile URLs (handles accepted and converted).
+  name: z.string().trim().min(1).max(200).transform(cleanName),
   businessName: z.string().trim().max(200).optional().default(""),
-  email: z.string().trim().email().max(200),
-  phone: z.string().trim().min(3).max(40),
-  website: z.string().trim().max(300).optional().default(""),
-  socials: z.record(z.string(), z.string().max(300)).optional().default({}),
+  email: z.string().trim().max(200).transform(normalizeEmail).pipe(z.string().email()),
+  phone: z.string().trim().max(40).transform((v, ctx) => {
+    const p = normalizePhone(v);
+    if (!p) { ctx.addIssue({ code: "custom", message: "Enter a 10-digit US mobile number." }); return z.NEVER; }
+    return p;
+  }),
+  website: z.string().trim().max(300).optional().default("").transform((v, ctx) => {
+    const r = validateWebsite(v);
+    if (!r.ok) { ctx.addIssue({ code: "custom", message: r.error }); return z.NEVER; }
+    return r.value;
+  }),
+  socials: z.record(z.string(), z.string().max(300)).optional().default({}).transform((soc, ctx) => {
+    const out: Record<string, string> = {};
+    for (const k of ["instagram", "facebook", "tiktok"] as const) {
+      const r = validateSocial(k, soc[k]);
+      if (!r.ok) { ctx.addIssue({ code: "custom", path: [k], message: r.error }); return z.NEVER; }
+      if (r.value) out[k] = r.value;
+    }
+    return out;
+  }),
   medium: z.string().trim().min(1).max(300),
   mediumCategory: z.string().trim().max(120).optional().default(""),
   description: z.string().trim().min(1).max(5000),

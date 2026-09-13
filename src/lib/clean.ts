@@ -1,3 +1,5 @@
+import { validateSocial } from "./validate";
+
 /**
  * Light, non-destructive normalizers for artist-submitted copy — used at
  * display time so messy submissions (all-caps names, bare domains, stray
@@ -72,6 +74,14 @@ export function sanitizeSocials(
   for (const [k, v] of Object.entries(socials ?? {})) {
     const key = k.toLowerCase().trim();
     if (!known.has(key)) continue;
+    // Instagram/Facebook/TikTok: accept a bare handle too ("@shop") and turn it
+    // into the canonical profile URL — most artists type a handle, and older
+    // submissions stored them as-is; without this they'd silently vanish.
+    if (key === "instagram" || key === "facebook" || key === "tiktok") {
+      const r = validateSocial(key, v);
+      if (r.ok && r.value) out[key] = r.value;
+      continue;
+    }
     const url = cleanUrl(v);
     if (url) out[key] = url;
   }

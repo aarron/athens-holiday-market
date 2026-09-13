@@ -66,8 +66,8 @@ export const site = {
   applications: {
     opensAt: "2026-09-07T00:00:00-04:00",
     opensLabel: "Monday, September 7, 2026",
-    closesAt: "2026-10-26T23:59:59-04:00",
-    closesLabel: "October 26, 2026",
+    closesAt: "2026-10-01T23:59:59-04:00",
+    closesLabel: "October 1, 2026",
     decisionLabel: "a date to be announced",
     minPhotos: 3,
     maxPhotos: 6,

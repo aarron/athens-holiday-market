@@ -14,10 +14,7 @@ export function AdminSearch() {
 
   useEffect(() => {
     const term = q.trim();
-    if (term.length < 2) {
-      setRes(null);
-      return;
-    }
+    if (term.length < 2) return; // results are cleared in onChange, not here
     const id = ++seq.current;
     const timer = setTimeout(() => {
       start(async () => {
@@ -43,7 +40,14 @@ export function AdminSearch() {
         </svg>
         <input
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            setQ(v);
+            if (v.trim().length < 2) {
+              seq.current++; // drop any in-flight search so it can't repopulate
+              setRes(null);
+            }
+          }}
           type="search"
           placeholder="Search everyone — name, email, business, website…"
           aria-label="Search applicants and subscribers"

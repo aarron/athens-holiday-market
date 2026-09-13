@@ -90,9 +90,13 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
         </Link>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
+      {/* Header: the name/medium/history block flexes and wraps internally, while
+          the prev/next nav is shrink-0 and right-anchored, so the buttons stay in
+          the same top-right spot on every application (judges click them a lot;
+          a long history row used to push them onto a new line at the left). */}
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-4 sm:flex-nowrap">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-extrabold">{app.name}</h1>
             <StatusBadge status={app.status} />
           </div>
@@ -125,7 +129,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
         </div>
 
         {nav && (
-          <div className="flex shrink-0 items-center gap-2 text-sm">
+          <div className="ml-auto flex shrink-0 items-center gap-2 text-sm">
             <span className="tabular-nums text-ink-soft">
               {nav.position} of {nav.total}
             </span>

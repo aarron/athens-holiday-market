@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runArtistPageReminders } from "@/lib/artist-reminders";
 import { runArtistSocialKitEmails } from "@/lib/artist-social-kit";
 import { runEventReminders } from "@/lib/event-reminders";
+import { runApplicationReminders } from "@/lib/application-reminders";
 import { runNprFlagpoleReminder } from "@/lib/npr-flagpole-reminder";
 import { runScheduledBroadcasts } from "@/lib/broadcast-send";
 import { runBoothFeeReminders } from "@/lib/booth-fee";
@@ -28,6 +29,7 @@ export async function GET(req: Request) {
     ["artistReminders", runArtistPageReminders],
     ["artistSocialKit", runArtistSocialKitEmails],
     ["eventReminders", runEventReminders],
+    ["applicationReminders", runApplicationReminders],
     ["nprFlagpole", runNprFlagpoleReminder],
     ["scheduledBroadcasts", runScheduledBroadcasts],
     ["boothFeeReminders", runBoothFeeReminders],

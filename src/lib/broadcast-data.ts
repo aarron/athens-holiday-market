@@ -68,7 +68,7 @@ export async function segmentRecipients(segment: string) {
     .where(segmentWhere(segment));
 }
 
-async function countForSegment(value: Segment): Promise<number> {
+export async function countForSegment(value: Segment): Promise<number> {
   if (CYCLE_SEGMENTS.has(value)) return (await segmentRecipients(value)).length;
   const r = await db
     .select({ n: sql<number>`count(*)::int` })

@@ -2,8 +2,9 @@ import "server-only";
 import { and, eq, inArray, like } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, artists, cycles, settings } from "@/db/schema";
-import { subscriberListSize } from "@/lib/broadcast-data";
+import { subscriberListSize, countForSegment } from "@/lib/broadcast-data";
 import { eventReminderPlan } from "@/lib/event-reminders";
+import { applicationReminderPlan, applicationReminderFlagKey } from "@/lib/application-reminders";
 import { site } from "@/lib/site";
 
 export type SendStatus = "sent" | "scheduled" | "window" | "missed" | "pending-decision" | "canceled";
@@ -56,8 +57,10 @@ export async function getScheduledSends(now: Date = new Date()) {
   const plan = eventReminderPlan();
   const eventKeys = plan.map((p) => `event_reminder:${site.event.year}:${p.kind}`);
   const nprKey = `npr_flagpole_reminder:${site.event.year}`;
+  const applyPlan = applicationReminderPlan();
+  const applyKeys = applyPlan.map((p) => applicationReminderFlagKey(p.kind));
   const flagRows = await db.query.settings.findMany({
-    where: inArray(settings.key, [...eventKeys, nprKey]),
+    where: inArray(settings.key, [...eventKeys, nprKey, ...applyKeys]),
   });
   const flags = new Map(flagRows.map((r) => [r.key, r]));
 
@@ -85,6 +88,29 @@ export async function getScheduledSends(now: Date = new Date()) {
       sentAt: sent && flag?.updatedAt ? flag.updatedAt.toISOString() : null,
     };
   });
+
+  // ── Application-deadline reminders → artist-interested subscribers ──
+  const artistListSize = await countForSegment("artists");
+  for (const p of applyPlan) {
+    const key = applicationReminderFlagKey(p.kind);
+    const flag = flags.get(key);
+    const sent = !!flag?.value;
+    const canceled = skips.has(`send_skip:${key}`);
+    const status: SendStatus = sent
+      ? "sent"
+      : canceled ? "canceled"
+      : p.sendDate >= today ? "scheduled" : "missed";
+    announcements.push({
+      id: `apply:${p.kind}`,
+      topic: p.subject,
+      channel: "Email",
+      audience: `Artists on the mailing list · ${artistListSize} subscriber${artistListSize === 1 ? "" : "s"} (minus anyone who already applied)`,
+      when: fmtDate(p.sendDate),
+      whenSort: p.sendDate,
+      status,
+      sentAt: sent && flag?.updatedAt ? flag.updatedAt.toISOString() : null,
+    });
+  }
 
   // ── NPR + Flagpole ad reminder → Jamie ──
   const nprFlag = flags.get(nprKey);

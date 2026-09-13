@@ -12,7 +12,8 @@
     "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
-    "db:seed": "dotenv -e .env.local -- tsx src/db/seed.ts"
+    "db:seed": "dotenv -e .env.local -- tsx src/db/seed.ts",
+    "db:normalize-apps": "dotenv -e .env.local -- tsx scripts/normalize-applications.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

@@ -82,6 +82,7 @@ export function ApplicationForm({
 
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoError, setPhotoError] = useState("");
+  const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [serverError, setServerError] = useState("");
   const [publishedLive, setPublishedLive] = useState(false);
@@ -91,19 +92,65 @@ export function ApplicationForm({
   const max = site.applications.maxPhotos;
   const maxBytes = site.applications.maxPhotoMb * 1024 * 1024;
 
-  function onPickPhotos(e: React.ChangeEvent<HTMLInputElement>) {
+  const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+
+  /**
+   * Add photos to the current selection (merging, not replacing — people add
+   * their 3–6 photos one at a time). Dedupes re-picks of the same file,
+   * validates type (drag & drop bypasses the input's `accept`) and size, and
+   * caps the total at `max`.
+   */
+  function addFiles(incoming: File[]) {
     setPhotoError("");
-    const files = Array.from(e.target.files ?? []);
-    if (files.length > max) {
-      setPhotoError(`Please choose up to ${max} photos.`);
+    if (!incoming.length) return;
+    const badType = incoming.find((f) => f.type && !ACCEPTED.includes(f.type));
+    if (badType) {
+      setPhotoError(`"${badType.name}" isn't a supported image. Please use JPG, PNG, or WEBP.`);
       return;
     }
-    const tooBig = files.find((f) => f.size > maxBytes);
+    const tooBig = incoming.find((f) => f.size > maxBytes);
     if (tooBig) {
       setPhotoError(`Each photo must be under ${site.applications.maxPhotoMb}MB.`);
       return;
     }
-    setPhotos(files);
+    const seen = new Set(photos.map((f) => `${f.name}|${f.size}|${f.lastModified}`));
+    const fresh = incoming.filter((f) => !seen.has(`${f.name}|${f.size}|${f.lastModified}`));
+    const merged = [...photos, ...fresh];
+    if (merged.length > max) {
+      setPhotoError(`You can add up to ${max} photos — you've selected ${merged.length}. Remove some to continue.`);
+      return;
+    }
+    setPhotos(merged);
+  }
+
+  function onPickPhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    addFiles(Array.from(e.target.files ?? []));
+    // Reset so picking the same file again (after removing it) still fires onChange.
+    e.target.value = "";
+  }
+
+  function removePhoto(idx: number) {
+    setPhotoError("");
+    setPhotos((p) => p.filter((_, i) => i !== idx));
+  }
+
+  // Real drag & drop. Without these, the browser's default drop takes over —
+  // Safari refuses it ("action not permitted") and other browsers navigate away.
+  function onDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragging) setDragging(true);
+  }
+  function onDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+  }
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    addFiles(Array.from(e.dataTransfer.files ?? []));
   }
 
   async function onSubmit(values: Values) {
@@ -378,10 +425,20 @@ export function ApplicationForm({
         </p>
         {/* The <input> is visually hidden but stays keyboard-focusable (sr-only,
             not display:none), and the dropzone shows a focus ring via focus-within. */}
-        <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-ink/25 bg-white px-4 py-8 text-center transition-colors hover:border-fern-deep focus-within:border-fern-deep focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-berry">
+        <label
+          onDragEnter={onDragOver}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          className={`mt-2 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors hover:border-fern-deep focus-within:border-fern-deep focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-berry ${
+            dragging ? "border-fern-deep bg-fern-soft" : "border-ink/25 bg-white"
+          }`}
+        >
           <Flower size={28} color="var(--color-fern-deep)" />
           <span className="mt-2 font-display font-semibold">
-            {photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} selected` : "Choose photos"}
+            {photos.length
+              ? `${photos.length} photo${photos.length > 1 ? "s" : ""} selected — add more`
+              : "Choose photos"}
           </span>
           <span className="text-sm text-ink-soft">or drag &amp; drop</span>
           <input
@@ -396,9 +453,20 @@ export function ApplicationForm({
         </label>
         {photos.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-2">
-            {photos.map((f) => (
-              <li key={f.name} className="rounded-full bg-cream px-3 py-1 text-sm">
-                {f.name}
+            {photos.map((f, i) => (
+              <li
+                key={`${f.name}|${f.size}|${f.lastModified}`}
+                className="flex items-center gap-1.5 rounded-full bg-cream py-1 pl-3 pr-1.5 text-sm"
+              >
+                <span className="max-w-[14rem] truncate">{f.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removePhoto(i)}
+                  aria-label={`Remove ${f.name}`}
+                  className="flex h-5 w-5 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/10 hover:text-ink"
+                >
+                  ×
+                </button>
               </li>
             ))}
           </ul>

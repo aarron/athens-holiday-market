@@ -90,7 +90,37 @@ type Candidate = {
   email?: string;
   description?: string;
   reason?: string;
+  /** Typical retail range for their work, e.g. "$18–$120". */
+  priceRange?: string;
+  /** Model's read of fit vs. our price band (see MAX_TYPICAL_PRICE). */
+  priceFit?: "fit" | "mostly" | "too-high";
 };
+
+/**
+ * Price fit. Shoppers at the market buy gifts; most sales are well under this.
+ * A maker can carry a few pricier pieces, but they need a real selection at or
+ * below it. Candidates whose work is predominantly above it are skipped.
+ */
+export const MAX_TYPICAL_PRICE = 500;
+
+/** Lowest dollar figure in a free-text range ("$18–$120", "from $600", "$1,200+"). */
+function minPriceOf(range: string | undefined): number | null {
+  if (!range) return null;
+  const nums = [...range.matchAll(/\$\s?([\d,]+(?:\.\d+)?)/g)].map((m) => Number(m[1].replace(/,/g, "")));
+  return nums.length ? Math.min(...nums) : null;
+}
+
+/**
+ * Deterministic gate on top of the model's judgment: drop a candidate when the
+ * model says "too-high", or when even their CHEAPEST listed price is above the
+ * band (then they can't have an affordable selection). Unknown price = keep;
+ * the reviewer sees the range (or its absence) in the notes.
+ */
+function priceFits(c: Candidate): boolean {
+  if (c.priceFit === "too-high") return false;
+  const min = minPriceOf(c.priceRange);
+  return min == null || min <= MAX_TYPICAL_PRICE;
+}
 
 function buildPlan(geoScope: GeoScope): PlanItem[] {
   const plan: PlanItem[] = [];
@@ -153,6 +183,9 @@ const DISCOVERY_SYSTEM =
   "You research independent, handmade artists and makers who would be a great fit to invite to a juried holiday craft market in Athens, Georgia. " +
   "Find REAL makers with an active web presence. Only include artists who make their own work by hand. " +
   "Exclude galleries that only resell, big brands, print-on-demand shops, and anyone clearly inactive. " +
+  `PRICE FIT MATTERS: shoppers here buy handmade gifts, and most items sell for well under $${MAX_TYPICAL_PRICE}. ` +
+  `A maker may carry a few pricier pieces, but they must have a real selection of work priced at or below $${MAX_TYPICAL_PRICE}. ` +
+  `Skip makers whose catalog is predominantly above that (large original paintings, furniture, fine jewelry) — check their shop or listings for actual prices. ` +
   "CRITICAL: your entire response must be a JSON array and nothing else — no prose, questions, or apologies. " +
   "An empty array [] is fine if you found none. Never invent URLs, emails, or handles.";
 
@@ -160,8 +193,10 @@ function discoveryUser(geoScope: GeoScope, item: PlanItem): string {
   return (
     `Find handmade artists based in ${item.region} (within ${GEO_LABEL[geoScope]}) working in any of these mediums: ${item.mediums.join(", ")}. ` +
     `Return about 7 strong, distinct candidates as a JSON array of objects with keys: ` +
-    `name (maker or business name), medium, city, state (2-letter), website (full URL if known), instagram (handle or URL if known), email (only if clearly published), description (one short sentence), reason (why they'd fit this market, one short phrase). ` +
-    `Omit any key you don't know. Respond with ONLY the JSON array.`
+    `name (maker or business name), medium, city, state (2-letter), website (full URL if known), instagram (handle or URL if known), email (only if clearly published), description (one short sentence), reason (why they'd fit this market, one short phrase), ` +
+    `priceRange (typical retail range of their work from their shop/listings, like "$18–$120"), ` +
+    `priceFit (one of "fit" = most work at or below $${MAX_TYPICAL_PRICE}, "mostly" = a solid selection at or below $${MAX_TYPICAL_PRICE} plus some pricier pieces, "too-high" = mostly above $${MAX_TYPICAL_PRICE}). ` +
+    `Only include makers whose priceFit is "fit" or "mostly". Omit any key you don't know. Respond with ONLY the JSON array.`
   );
 }
 
@@ -302,6 +337,11 @@ export async function runProspectResearch(
         stats.skipped++;
         continue;
       }
+      if (!priceFits(c)) {
+        console.log(`[research] price-skipped ${c.name} (${c.priceRange ?? "?"}, ${c.priceFit ?? "?"})`);
+        stats.skipped++;
+        continue;
+      }
       seenKeys.add(key);
       if (host) seenHosts.add(host);
       if (loose) seenLoose.add(loose);
@@ -323,7 +363,9 @@ export async function runProspectResearch(
           instagram: cleanInstagram(c.instagram),
           email,
           description: c.description?.trim() || null,
-          notes: c.reason?.trim() || null,
+          // Reason + price read, so the triage deck shows fit at a glance.
+          notes: [c.reason?.trim(), c.priceRange ? `Prices: ${c.priceRange.trim()}${c.priceFit === "mostly" ? " (some pricier pieces)" : ""}` : null]
+            .filter(Boolean).join(" · ") || null,
           foundVia: "Auto-scout",
           dedupeKey: key,
           raw: c,

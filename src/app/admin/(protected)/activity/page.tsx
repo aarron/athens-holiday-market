@@ -60,7 +60,25 @@ export default async function ActivityPage() {
                         {e.action}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-ink-soft">{e.summary}</td>
+                    <td className="px-5 py-3 text-ink-soft">
+                      {/* Merge events carry a full JSON snapshot of the removed row for
+                          recovery — keep it available but collapsed. */}
+                      {e.summary.includes(" SNAPSHOT of ") ? (
+                        <>
+                          {e.summary.split(" SNAPSHOT of ")[0]}
+                          <details className="mt-1">
+                            <summary className="cursor-pointer text-xs font-semibold text-fern-deep">
+                              Archived data
+                            </summary>
+                            <pre className="mt-1 max-w-xl whitespace-pre-wrap break-all text-xs">
+                              {e.summary.split(" SNAPSHOT of ")[1]}
+                            </pre>
+                          </details>
+                        </>
+                      ) : (
+                        e.summary
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

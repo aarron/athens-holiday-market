@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, applicationPhotos, cycles } from "@/db/schema";
 import { applicationWindow } from "@/lib/applications";
@@ -76,6 +76,30 @@ export async function POST(req: Request) {
   const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
   if (!cycle) {
     return NextResponse.json({ error: "No active market cycle." }, { status: 500 });
+  }
+
+  // One application per person per year. Match on email or mobile number (both
+  // already normalized above), since people who re-apply usually change one of
+  // the two — a fixed typo in the email, or a second address. We don't update
+  // the existing application here: the form is unauthenticated, so anyone who
+  // knew an applicant's email or phone could overwrite their submission.
+  const [existing] = await db
+    .select({ id: applications.id })
+    .from(applications)
+    .where(
+      and(
+        eq(applications.cycleId, cycle.id),
+        or(eq(sql`lower(${applications.email})`, d.email), eq(applications.phone, d.phone)),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    return NextResponse.json(
+      {
+        error: `It looks like you've already applied this year — we have an application with this email or mobile number. To change or add to it, email ${site.contactEmail} and we'll update it for you.`,
+      },
+      { status: 409 },
+    );
   }
 
   const [app] = await db

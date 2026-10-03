@@ -1,11 +1,12 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, cycles, settings } from "@/db/schema";
 import { resend, EMAIL_FROM } from "@/lib/resend-client";
 import { emailShell } from "@/lib/email-shell";
 import { segmentRecipients } from "@/lib/broadcast-data";
 import { site } from "@/lib/site";
+import { buildApplicantIndex } from "@/lib/applicant-match";
 
 /**
  * "Applications are closing" reminders to the mailing list's artist-interested
@@ -85,15 +86,17 @@ export function previewApplicationReminderHtml(kind: ApplicationReminderKind = "
   return emailShell(buildInner(kind), { unsubscribeUrl: `${site.url}/unsubscribe?token=preview` });
 }
 
-/** Emails (lowercased) that already applied in the active cycle — don't nag them. */
-async function alreadyAppliedEmails(): Promise<Set<string>> {
+/** This cycle's applicants, indexed so subscribers who already applied — under
+ *  the same email OR a different one — are never told to apply. */
+async function applicantIndex() {
   const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
-  if (!cycle) return new Set();
-  const rows = await db
-    .select({ email: sql<string>`lower(${applications.email})` })
-    .from(applications)
-    .where(and(eq(applications.cycleId, cycle.id)));
-  return new Set(rows.map((r) => r.email));
+  const rows = cycle
+    ? await db
+        .select({ email: applications.email, name: applications.name })
+        .from(applications)
+        .where(eq(applications.cycleId, cycle.id))
+    : [];
+  return buildApplicantIndex(rows);
 }
 
 /**
@@ -121,10 +124,9 @@ export async function runApplicationReminders(now: Date = new Date()) {
     .returning({ key: settings.key });
   if (!claimed) return { sent: 0, note: `${kind} already sent` };
 
-  const applied = await alreadyAppliedEmails();
-  const recipients = (await segmentRecipients("artists")).filter(
-    (r) => !applied.has(r.email.toLowerCase()),
-  );
+  const applied = await applicantIndex();
+  const all = await segmentRecipients("artists");
+  const recipients = all.filter((r) => !applied.match(r));
   const inner = buildInner(kind);
 
   let sent = 0;
@@ -147,7 +149,7 @@ export async function runApplicationReminders(now: Date = new Date()) {
     await db.delete(settings).where(eq(settings.key, flagKey));
   }
 
-  return { kind, recipients: recipients.length, skippedAlreadyApplied: applied.size, sent };
+  return { kind, recipients: recipients.length, skippedAlreadyApplied: all.length - recipients.length, sent };
 }
 
 export { KINDS as APPLICATION_REMINDER_KINDS };

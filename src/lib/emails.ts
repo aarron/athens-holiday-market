@@ -25,6 +25,8 @@ export async function sendApplicationReceived(to: string, name: string) {
       subject: `We received your ${site.name} application`,
       html: wrap(inner),
     });
+    // The Resend SDK reports failures in the response rather than throwing.
+    if (res.error) console.error("[emails] application-received rejected by Resend:", to, res.error);
     return res;
   } catch (e) {
     console.error("[emails] failed to send application-received:", e);

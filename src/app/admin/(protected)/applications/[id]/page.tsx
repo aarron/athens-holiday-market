@@ -72,8 +72,19 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
     getAdjacentApplications(appId),
   ]);
 
-  const myVote = app.votes.find((v) => v.user.email === me?.email)?.value;
+  const meEmail = me?.email?.toLowerCase();
+  const myVote = app.votes.find((v) => v.user.email.toLowerCase() === meEmail)?.value;
   const voteByUser = new Map(app.votes.map((v) => [v.user.id, v.value]));
+  // Every vote in the tally gets a row: "Me" first, then the judges, then anyone
+  // else who voted here (admins vote too — their votes used to count in the
+  // tally without appearing in the list, which confused the jury).
+  const otherVoters = [...jurors, ...app.votes.map((v) => v.user)]
+    .filter((u, i, all) => all.findIndex((x) => x.id === u.id) === i)
+    .filter((u) => u.email.toLowerCase() !== meEmail);
+  const voteRows = [
+    { key: "me", label: "Me", isMe: true, vote: myVote },
+    ...otherVoters.map((u) => ({ key: String(u.id), label: u.name ?? u.email, isMe: false, vote: voteByUser.get(u.id) })),
+  ];
   const isAdmin = me?.role === "admin";
 
   const socials = (app.socials ?? {}) as Record<string, string>;
@@ -258,12 +269,14 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
               <VoteTally tally={tally(app.votes)} />
             </div>
             <ul className="mt-4 space-y-2 border-t border-ink/5 pt-4">
-              {jurors.map((j) => {
-                const v = voteByUser.get(j.id);
-                const s = v ? VOTE_STATES[v as VoteValue] : null;
+              {voteRows.map((r) => {
+                const s = r.vote ? VOTE_STATES[r.vote as VoteValue] : null;
                 return (
-                  <li key={j.id} className="flex items-center justify-between text-sm">
-                    <span>{j.name ?? j.email}</span>
+                  <li key={r.key} className="flex items-center justify-between text-sm">
+                    <span className={r.isMe ? "font-semibold" : undefined}>
+                      {r.label}
+                      {r.isMe && !s && <span className="ml-1.5 font-normal text-ink-soft">(not voted yet)</span>}
+                    </span>
                     {s ? (
                       <span
                         className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold"

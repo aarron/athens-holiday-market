@@ -11,12 +11,20 @@ import { ProofreadField } from "@/components/proofread-field";
 import { CelebrateIcon } from "@/components/icons";
 import { site } from "@/lib/site";
 import { MEDIUM_CATEGORIES } from "@/lib/mediums";
-import { normalizePhone, validateWebsite, validateSocial } from "@/lib/validate";
+import { normalizePhone, validateWebsite, validateSocial, emailTypoSuggestion } from "@/lib/validate";
 
 const schema = z.object({
   name: z.string().min(1, "Your name is required."),
   businessName: z.string().optional(),
-  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email address."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required.")
+    .email("Enter a valid email address.")
+    .superRefine((v, ctx) => {
+      const fix = emailTypoSuggestion(v);
+      if (fix) ctx.addIssue({ code: "custom", message: `Check your email address — did you mean ${fix}?` });
+    }),
   phone: z
     .string()
     .trim()
@@ -88,6 +96,7 @@ export function ApplicationForm({
 } = {}) {
   const {
     register,
+    setValue,
     handleSubmit,
     watch,
     control,
@@ -291,7 +300,24 @@ export function ApplicationForm({
             Email address <span className="text-poppy-deep">*</span>
           </label>
           <input id="email" type="email" autoComplete="email" inputMode="email" aria-required="true" aria-invalid={!!errors.email} aria-describedby={errors.email ? "email-error" : undefined} className={`mt-1.5 ${field}`} {...register("email")} />
-          {errors.email && <p id="email-error" role="alert" className={errCls}>{errors.email.message}</p>}
+          {errors.email && (
+            <p id="email-error" role="alert" className={errCls}>
+              {errors.email.message}
+            </p>
+          )}
+          {/* One-click fix for a likely typo ("gmial.com", ".con"), so the
+              confirmation and decision emails actually reach them. */}
+          {errors.email && emailTypoSuggestion(watch("email")) && (
+            <button
+              type="button"
+              onClick={() =>
+                setValue("email", emailTypoSuggestion(watch("email"))!, { shouldValidate: true })
+              }
+              className="mt-1.5 rounded-md border-2 border-fern-deep/30 px-2.5 py-1 text-sm font-semibold text-fern-deep hover:bg-fern-soft"
+            >
+              Use {emailTypoSuggestion(watch("email"))}
+            </button>
+          )}
         </div>
         <div>
           <label className={label} htmlFor="phone">

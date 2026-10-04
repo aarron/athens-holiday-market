@@ -68,7 +68,7 @@ export const site = {
     opensLabel: "Monday, September 7, 2026",
     closesAt: "2026-10-01T23:59:59-04:00",
     closesLabel: "October 1, 2026",
-    decisionLabel: "a date to be announced",
+    decisionLabel: "Thursday, October 15, 2026",
     minPhotos: 3,
     maxPhotos: 6,
     maxPhotoMb: 10,

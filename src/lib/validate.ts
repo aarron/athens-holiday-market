@@ -121,3 +121,47 @@ export function validateSocial(platform: SocialPlatform, raw: string | null | un
 export function normalizeEmail(raw: string | null | undefined): string {
   return (raw ?? "").trim().toLowerCase();
 }
+
+/* ------------------------------------------------------- email typos */
+
+// Misspellings of the big mail providers. These domains don't host real
+// mailboxes, so mail to them bounces: in 2026, "gmial.com" and a ".con"
+// address both bounced the application confirmation.
+const DOMAIN_TYPOS: Record<string, string> = {
+  "gmial.com": "gmail.com", "gmal.com": "gmail.com", "gmai.com": "gmail.com", "gamil.com": "gmail.com",
+  "gnail.com": "gmail.com", "gmaill.com": "gmail.com", "gmali.com": "gmail.com", "gmil.com": "gmail.com",
+  "gmail.co": "gmail.com", "gmail.cm": "gmail.com", "gmailcom": "gmail.com",
+  "yaho.com": "yahoo.com", "yahooo.com": "yahoo.com", "yhoo.com": "yahoo.com", "yaoo.com": "yahoo.com", "yahoo.cm": "yahoo.com",
+  "hotmial.com": "hotmail.com", "hotmal.com": "hotmail.com", "hotmai.com": "hotmail.com", "hotmil.com": "hotmail.com", "htomail.com": "hotmail.com",
+  "outlok.com": "outlook.com", "outllok.com": "outlook.com", "otlook.com": "outlook.com",
+  "iclod.com": "icloud.com", "icoud.com": "icloud.com", "icluod.com": "icloud.com", "iclould.com": "icloud.com",
+  "bellsouth.ent": "bellsouth.net", "comcast.ent": "comcast.net",
+};
+
+// Endings that aren't real top-level domains but are one keystroke from one.
+const TLD_TYPOS: Record<string, string> = {
+  con: "com", cmo: "com", ocm: "com", comm: "com", vom: "com", xom: "com", cpm: "com", cim: "com",
+  ent: "net", nte: "net", ogr: "org", orgg: "org",
+};
+
+/**
+ * If an email address looks like a typo of a common one, return the likely
+ * intended address ("gakrakow@gmial.com" -> "gakrakow@gmail.com"), else null.
+ * Only flags domains that can't be real, so a correct address never trips it.
+ */
+export function emailTypoSuggestion(raw: string | null | undefined): string | null {
+  const email = (raw ?? "").trim().toLowerCase();
+  const at = email.lastIndexOf("@");
+  if (at < 1) return null;
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  if (DOMAIN_TYPOS[domain]) return `${local}@${DOMAIN_TYPOS[domain]}`;
+  const dot = domain.lastIndexOf(".");
+  if (dot < 1) return null;
+  const tld = domain.slice(dot + 1);
+  if (TLD_TYPOS[tld]) {
+    const fixed = `${domain.slice(0, dot)}.${TLD_TYPOS[tld]}`;
+    return `${local}@${DOMAIN_TYPOS[fixed] ?? fixed}`;
+  }
+  return null;
+}

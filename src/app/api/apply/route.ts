@@ -8,7 +8,7 @@ import { categorizeMedium } from "@/lib/mediums";
 import { site } from "@/lib/site";
 import { sendApplicationReceived } from "@/lib/emails";
 import { cleanName } from "@/lib/clean";
-import { normalizeEmail, normalizePhone, validateWebsite, validateSocial } from "@/lib/validate";
+import { normalizeEmail, normalizePhone, validateWebsite, validateSocial, emailTypoSuggestion } from "@/lib/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +19,19 @@ const schema = z.object({
   // and social profile URLs (handles accepted and converted).
   name: z.string().trim().min(1).max(200).transform(cleanName),
   businessName: z.string().trim().max(200).optional().default(""),
-  email: z.string().trim().max(200).transform(normalizeEmail).pipe(z.string().email()),
+  email: z
+    .string()
+    .trim()
+    .max(200)
+    .transform(normalizeEmail)
+    .pipe(
+      z
+        .string()
+        .email()
+        .refine((e) => !emailTypoSuggestion(e), {
+          message: "That email address looks like a typo — please check it.",
+        }),
+    ),
   phone: z.string().trim().max(40).transform((v, ctx) => {
     const p = normalizePhone(v);
     if (!p) { ctx.addIssue({ code: "custom", message: "Enter a 10-digit US mobile number." }); return z.NEVER; }

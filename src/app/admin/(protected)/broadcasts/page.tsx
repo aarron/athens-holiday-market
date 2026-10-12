@@ -102,9 +102,11 @@ export default async function EmailHubPage() {
 
   const groups = cycle ? await getDecisionGroups(cycle.id) : null;
   const totalToNotify = groups
-    ? groups.accepted.total - groups.accepted.notified + (groups.waitlist.total - groups.waitlist.notified)
+    ? groups.accepted.total - groups.accepted.notified +
+      (groups.waitlist.total - groups.waitlist.notified) +
+      (groups.rejected.total - groups.rejected.notified)
     : 0;
-  const hasDecisions = !!groups && groups.accepted.total + groups.waitlist.total > 0;
+  const hasDecisions = !!groups && groups.accepted.total + groups.waitlist.total + groups.rejected.total > 0;
   const yq = cycle ? `?year=${cycle.year}` : "";
 
   const decisionsPanel = hasDecisions && groups && (
@@ -123,15 +125,17 @@ export default async function EmailHubPage() {
               {totalToNotify} to notify
             </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <DecisionCard href={`/admin/decisions/accepted${yq}`} title="Accepted" total={groups.accepted.total} notified={groups.accepted.notified} accent="var(--color-fern-deep)" />
             <DecisionCard href={`/admin/decisions/waitlist${yq}`} title="Waitlist" total={groups.waitlist.total} notified={groups.waitlist.notified} accent="var(--color-tangerine)" />
+            <DecisionCard href={`/admin/decisions/rejected${yq}`} title="Rejected" total={groups.rejected.total} notified={groups.rejected.notified} accent="var(--color-poppy-deep)" />
           </div>
         </section>
       ) : (
         <section className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-fern-soft px-5 py-3 text-sm">
           <span className="font-semibold text-fern-deep">
-            ✓ All decisions sent — {groups.accepted.total} accepted, {groups.waitlist.total} waitlisted notified.
+            ✓ All decisions sent — {groups.accepted.total} accepted, {groups.waitlist.total} waitlisted,{" "}
+            {groups.rejected.total} rejected notified.
           </span>
           <Link href={`/admin/decisions/accepted${yq}`} className="font-semibold link">
             Review

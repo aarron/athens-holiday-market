@@ -221,11 +221,13 @@ export async function countPendingArtistReviews() {
   return row?.n ?? 0;
 }
 
-export type DecisionGroup = "accepted" | "waitlist";
+export type DecisionGroup = "accepted" | "waitlist" | "rejected";
 const GROUP_STATUSES: Record<DecisionGroup, string[]> = {
   accepted: ["accepted"],
   // Rejected applicants (didn't meet our terms) never get the waitlist email.
   waitlist: ["waitlisted"],
+  // Rejected applicants get their own email that explains why (see lib/rejection.ts).
+  rejected: ["rejected"],
 };
 
 export async function getDecisionGroups(cycleId: number) {
@@ -238,7 +240,7 @@ export async function getDecisionGroups(cycleId: number) {
     const set = apps.filter((a) => GROUP_STATUSES[g].includes(a.status));
     return { total: set.length, notified: set.filter((a) => a.sent).length };
   };
-  return { accepted: build("accepted"), waitlist: build("waitlist") };
+  return { accepted: build("accepted"), waitlist: build("waitlist"), rejected: build("rejected") };
 }
 
 export async function getDecisionRecipients(cycleId: number, group: DecisionGroup) {
@@ -257,6 +259,8 @@ export async function getDecisionRecipients(cycleId: number, group: DecisionGrou
     email: a.email,
     status: a.status,
     hasEmail: !a.email.endsWith("@no-email.invalid"),
+    medium: a.medium,
+    category: a.mediumCategory,
     tally: tally(a.votes),
     decisionSentAt: a.decisionSentAt ? a.decisionSentAt.toISOString() : null,
     decisionEmailStatus: a.decisionEmailStatus,

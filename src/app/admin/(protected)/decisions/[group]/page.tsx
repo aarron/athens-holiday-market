@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getCyclesWithCounts, getDecisionRecipients } from "@/lib/admin-data";
 import { getBroadcastTemplates } from "@/lib/broadcast-templates";
 import { DecisionSender } from "@/components/admin/decision-sender";
+import { RejectionSender } from "@/components/admin/rejection-sender";
 
 export const metadata: Metadata = { title: "Send decisions", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function DecisionGroupPage({
   await requireAdmin();
   const { group } = await params;
   const { year } = await searchParams;
-  if (group !== "accepted" && group !== "waitlist") notFound();
+  if (group !== "accepted" && group !== "waitlist" && group !== "rejected") notFound();
 
   const list = await getCyclesWithCounts();
   const withApps = list.filter((c) => c.count > 0);
@@ -35,8 +36,7 @@ export default async function DecisionGroupPage({
   if (!cycle) notFound();
 
   const recipients = await getDecisionRecipients(cycle.id, group);
-  const templateId = group === "accepted" ? "accepted" : "waitlist";
-  const template = getBroadcastTemplates().find((t) => t.id === templateId)!;
+  const template = getBroadcastTemplates().find((t) => t.id === (group === "accepted" ? "accepted" : "waitlist"))!;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -46,7 +46,7 @@ export default async function DecisionGroupPage({
           Send decisions
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">
-          {group === "accepted" ? "Acceptance" : "Waitlist"} emails
+          {group === "accepted" ? "Acceptance" : group === "waitlist" ? "Waitlist" : "Rejection"} emails
         </h1>
         <p className="mt-1 text-ink-soft">{cycle.name}</p>
       </div>
@@ -57,6 +57,8 @@ export default async function DecisionGroupPage({
             No applicants in this group yet. Set decisions on the applications first.
           </p>
         </div>
+      ) : group === "rejected" ? (
+        <RejectionSender cycleId={cycle.id} recipients={recipients} />
       ) : (
         <DecisionSender
           cycleId={cycle.id}

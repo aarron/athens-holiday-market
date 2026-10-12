@@ -131,3 +131,101 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
   });
   return { ok: true, count: sent, invoiced };
 }
+
+/* --------------------------------------------------------------- rejections */
+
+const rejectionSchema = z.object({
+  cycleId: z.number(),
+  emails: z
+    .array(
+      z.object({
+        applicationId: z.number(),
+        reason: z.enum(["competes", "nonprofit", "other"]),
+        subject: z.string().trim().min(1).max(200),
+        body: z.string().trim().min(1).max(20000),
+      }),
+    )
+    .min(1)
+    .max(200),
+});
+
+/**
+ * Send rejection emails. Each recipient's subject and body arrive already
+ * composed (template + reason paragraph, possibly hand-edited), so every
+ * person gets exactly what the admin reviewed. Only applications that are
+ * still marked rejected in this cycle are emailed.
+ */
+export async function sendRejectionEmails(input: z.input<typeof rejectionSchema>) {
+  await requireAdmin();
+  const parsed = rejectionSchema.safeParse(input);
+  if (!parsed.success) return { error: "Every email needs a subject and a message." };
+  if (!resend) return { error: "Email isn't configured." };
+  const { cycleId, emails } = parsed.data;
+
+  const { hasUnfilledPlaceholder } = await import("@/lib/rejection");
+  const unfilled = emails.filter((e) => hasUnfilledPlaceholder(e.body));
+  if (unfilled.length) return { error: `${unfilled.length} email(s) still have a [placeholder] to fill in.` };
+
+  const apps = await db
+    .select({ id: applications.id, name: applications.name, email: applications.email })
+    .from(applications)
+    .where(
+      and(
+        eq(applications.cycleId, cycleId),
+        eq(applications.status, "rejected"),
+        inArray(applications.id, emails.map((e) => e.applicationId)),
+      ),
+    );
+  const byId = new Map(apps.map((a) => [a.id, a]));
+  const toSend = emails
+    .map((e) => ({ ...e, app: byId.get(e.applicationId) }))
+    .filter((e): e is typeof e & { app: NonNullable<typeof e.app> } => !!e.app && !e.app.email.endsWith("@no-email.invalid"));
+  if (!toSend.length) return { error: "None of these applicants are still marked rejected with an email on file." };
+
+  const now = new Date();
+  let sent = 0;
+  const failed: string[] = [];
+  for (const batch of chunk(toSend, 100)) {
+    try {
+      const res = await resend.batch.send(
+        batch.map((e) => ({
+          from: EMAIL_FROM,
+          to: e.app.email,
+          subject: e.subject,
+          html: emailShell(renderMarkdown(personalize(e.body, e.app.name))),
+        })),
+      );
+      const raw = (res as { data?: { data?: { id: string }[] } | { id: string }[] }).data;
+      const ids = Array.isArray(raw) ? raw : (raw?.data ?? []);
+      const updates = batch.map((e, i) =>
+        db
+          .update(applications)
+          .set({ decisionGroup: "rejected", decisionResendId: ids[i]?.id ?? null, decisionEmailStatus: "sent", decisionSentAt: now })
+          .where(eq(applications.id, e.app.id)),
+      );
+      await db.batch(updates as [(typeof updates)[number], ...typeof updates]);
+      sent += batch.length;
+    } catch (err) {
+      console.error("[decisions] rejection batch failed:", err);
+      failed.push(...batch.map((e) => e.app.name));
+      const fails = batch.map((e) =>
+        db.update(applications).set({ decisionGroup: "rejected", decisionEmailStatus: "failed" }).where(eq(applications.id, e.app.id)),
+      );
+      await db.batch(fails as [(typeof fails)[number], ...typeof fails]);
+    }
+  }
+
+  revalidatePath("/admin/broadcasts");
+  revalidatePath("/admin/decisions/rejected");
+  revalidatePath("/admin");
+  await logAdminEvent({
+    action: "decision.send",
+    targetType: "cycle",
+    targetId: cycleId,
+    summary: `Sent ${sent} rejection email${sent === 1 ? "" : "s"} (${toSend
+      .map((e) => `${e.app.name}: ${e.reason}`)
+      .join("; ")})${failed.length ? `; FAILED: ${failed.join(", ")}` : ""}`,
+  });
+  if (failed.length) return { error: `Sent ${sent}, but these failed and can be retried: ${failed.join(", ")}.` };
+  return { ok: true, count: sent };
+}

@@ -142,7 +142,7 @@ export default async function AdminDashboard({
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
               <StatFilterTile label="Submissions" value={stats.total} accent="var(--color-ink)" filter={{}} />
               <StatFilterTile label="To review" value={stats.pending} accent="var(--color-sky)" filter={{ status: "pending" }} />
-              <StatFilterTile label="Accepted booths" value={juried.booths} accent="var(--color-fern-deep)" filter={{ status: "accepted" }}>
+              <StatFilterTile label="Accepted" value={juried.booths} accent="var(--color-fern-deep)" filter={{ status: "accepted" }}>
                 {juried.sharedPairs > 0 && (
                   <p>
                     {juried.artists} artists · {juried.sharedPairs} shared

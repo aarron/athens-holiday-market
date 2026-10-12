@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
 import { displayStatus } from "@/lib/applications";
+import { currentCategory } from "@/lib/mediums";
 import { StatusBadge, BoothFeeBadge, VoteTally, VOTE_STATES, type VoteValue } from "@/components/admin/badges";
 import {
   VoteButtons,
@@ -115,7 +116,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {app.mediumCategory && (
               <span className="rounded-full bg-sky-soft px-2.5 py-0.5 text-xs font-bold text-sky-deep">
-                {app.mediumCategory}
+                {currentCategory(app.mediumCategory)}
               </span>
             )}
             <span className="text-lg text-ink-soft">{app.medium}</span>

@@ -3,6 +3,7 @@ import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { prospects, prospectImages, prospectBatches } from "@/db/schema";
 import { siteScreenshotUrl } from "@/lib/prospects";
+import { currentCategory } from "@/lib/mediums";
 
 export type ProspectStatus = "new" | "shortlisted" | "maybe" | "passed";
 
@@ -93,7 +94,7 @@ export async function listProspects(
     id: p.id,
     name: p.name,
     medium: p.medium,
-    category: p.category,
+    category: currentCategory(p.category),
     city: p.city,
     state: p.state,
     region: p.region,

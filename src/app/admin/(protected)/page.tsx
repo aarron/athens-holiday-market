@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getCyclesWithCounts, listApplications, listStaff, tally } from "@/lib/admin-data";
 import { countBooths, pairSharedBooths } from "@/lib/booths";
+import { getJudgesExhibiting } from "@/lib/judges-exhibiting";
+import { JudgesExhibitingInput } from "@/components/admin/judges-exhibiting-input";
 import { displayStatus } from "@/lib/applications";
 import { getSessionUser } from "@/lib/admin-auth";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
@@ -77,9 +79,14 @@ export default async function AdminDashboard({
   const partner = pairSharedBooths(allAccepted);
   const juried = countBooths(apps.filter((a) => a.status === "accepted"), partner);
   const directAccepted = allAccepted.filter((a) => a.directAdd);
-  const judgesExhibiting = directAccepted.filter((a) => staffEmails.has(a.email.toLowerCase())).length;
-  const addedArtists = directAccepted.length - judgesExhibiting;
-  const boothsTaken = countBooths(allAccepted, partner).booths;
+  const judgesRecorded = directAccepted.filter((a) => staffEmails.has(a.email.toLowerCase())).length;
+  const addedArtists = directAccepted.length - judgesRecorded;
+  // Admins can enter how many judges are exhibiting before those judges build
+  // their pages; use the larger of that and the judges actually recorded, and
+  // count each not-yet-recorded judge as a booth.
+  const judgesEntered = await getJudgesExhibiting(current.id);
+  const judgesExhibiting = Math.max(judgesRecorded, judgesEntered ?? 0);
+  const boothsTaken = countBooths(allAccepted, partner).booths + (judgesExhibiting - judgesRecorded);
 
   const stats = {
     total: apps.length,
@@ -162,7 +169,13 @@ export default async function AdminDashboard({
                   </p>
                 )}
                 <p>
-                  + {judgesExhibiting} {judgesExhibiting === 1 ? "judge" : "judges"} exhibiting
+                  {me?.role === "admin" && !isArchive ? (
+                    <JudgesExhibitingInput cycleId={current.id} value={judgesExhibiting} />
+                  ) : (
+                    <>
+                      + {judgesExhibiting} {judgesExhibiting === 1 ? "judge" : "judges"} exhibiting
+                    </>
+                  )}
                 </p>
                 {addedArtists > 0 && (
                   <p>

@@ -11,6 +11,11 @@ export type Row = {
   id: number;
   name: string;
   medium: string;
+  category: string;
+  /** The signed-in juror's own vote on this application, if any. */
+  myVote: "yes" | "maybe" | "no" | null;
+  /** Name of the accepted artist this one shares a booth with, when matched. */
+  sharesBoothWith: string | null;
   submittedAt: string;
   tally: Tally;
   status: string;
@@ -30,6 +35,13 @@ const PAYMENT_OPTIONS = [
   { value: "all", label: "Any payment" },
   { value: "paid", label: "Fee paid" },
   { value: "unpaid", label: "Fee unpaid" },
+] as const;
+
+const VOTE_OPTIONS = [
+  { value: "all", label: "Any votes" },
+  { value: "all_yes", label: "All yes" },
+  { value: "no_yes", label: "No yeses" },
+  { value: "my_maybe", label: "My maybes" },
 ] as const;
 
 type SortCol = "name" | "medium" | "yes" | "status" | "fee" | "recent";
@@ -57,6 +69,12 @@ export function ApplicationsTable({
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]["value"]>("all");
   const [paymentFilter, setPaymentFilter] =
     useState<(typeof PAYMENT_OPTIONS)[number]["value"]>("all");
+  const [voteFilter, setVoteFilter] = useState<(typeof VOTE_OPTIONS)[number]["value"]>("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const categories = useMemo(
+    () => [...new Set(rows.map((r) => r.category))].sort((a, b) => a.localeCompare(b)),
+    [rows],
+  );
   const [sortCol, setSortCol] = useState<SortCol>("recent");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
   // Decisions made inline from this table override the row's server status, so
@@ -97,6 +115,12 @@ export function ApplicationsTable({
       } else if (statusFilter !== "all" && status !== statusFilter) {
         return false;
       }
+      // votes: "all yes" and "no yeses" only count applications someone voted on
+      const { yes, maybe, no } = r.tally;
+      if (voteFilter === "all_yes" && !(yes > 0 && maybe === 0 && no === 0)) return false;
+      if (voteFilter === "no_yes" && !(yes === 0 && maybe + no > 0)) return false;
+      if (voteFilter === "my_maybe" && r.myVote !== "maybe") return false;
+      if (categoryFilter !== "all" && r.category !== categoryFilter) return false;
       // payment (only meaningful for accepted artists)
       if (paymentFilter === "paid" && !(status === "accepted" && r.boothFeePaid)) return false;
       if (paymentFilter === "unpaid" && !(status === "accepted" && !r.boothFeePaid)) return false;
@@ -127,9 +151,10 @@ export function ApplicationsTable({
     });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, q, statusFilter, paymentFilter, sortCol, dir, overrides]);
+  }, [rows, q, statusFilter, paymentFilter, voteFilter, categoryFilter, sortCol, dir, overrides]);
 
-  const hasFilters = q || statusFilter !== "all" || paymentFilter !== "all";
+  const hasFilters =
+    q || statusFilter !== "all" || paymentFilter !== "all" || voteFilter !== "all" || categoryFilter !== "all";
 
   // A plain render helper (not a component) so it doesn't reset state per render.
   const th = (col: SortCol, label: string) => (
@@ -182,6 +207,31 @@ export function ApplicationsTable({
           ))}
         </select>
         <select
+          value={voteFilter}
+          onChange={(e) => setVoteFilter(e.target.value as typeof voteFilter)}
+          className={selectCls}
+          aria-label="Filter by votes"
+        >
+          {VOTE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className={selectCls}
+          aria-label="Filter by medium"
+        >
+          <option value="all">All mediums</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value as typeof paymentFilter)}
           className={selectCls}
@@ -199,6 +249,8 @@ export function ApplicationsTable({
               setQ("");
               setStatusFilter("all");
               setPaymentFilter("all");
+              setVoteFilter("all");
+              setCategoryFilter("all");
             }}
             className="h-10 rounded-lg px-3 text-sm font-semibold text-ink-soft hover:bg-cream"
           >
@@ -234,6 +286,11 @@ export function ApplicationsTable({
                 </td>
                 <td className="max-w-[260px] px-5 py-4 text-ink-soft">
                   <span className="line-clamp-1">{r.medium}</span>
+                  {r.sharesBoothWith && (
+                    <span className="mt-0.5 block text-xs font-semibold text-fern-deep">
+                      Shares a booth with {r.sharesBoothWith}
+                    </span>
+                  )}
                 </td>
                 <td className="px-5 py-4">
                   <VoteTally tally={r.tally} />
@@ -269,11 +326,11 @@ export function ApplicationsTable({
 }
 
 /**
- * Inline decision control for a row: Accept / Waitlist buttons that finalize the
- * status right from the overview. The button matching the current status is
- * filled. We waitlist rather than reject, so a legacy "rejected" row simply
- * shows as waitlisted. Non-admins (judges) can't decide, so they see a
- * read-only status pill instead of the buttons.
+ * Inline decision control for a row: Accept / Waitlist / Reject buttons that
+ * finalize the status right from the overview. The button matching the current
+ * status is filled; clicking it again clears the decision, moving the row back
+ * to "To review". Non-admins (judges) can't decide, so they see a read-only
+ * status pill instead of the buttons.
  */
 function RowDecision({
   status,
@@ -284,16 +341,15 @@ function RowDecision({
   canDecide: boolean;
   onDecide: (next: string) => void;
 }) {
-  const shown = status === "rejected" ? "waitlisted" : status;
-  if (!canDecide) return <StatusBadge status={shown} />;
+  if (!canDecide) return <StatusBadge status={status} />;
   const btn = (value: string, label: string, color: string) => {
-    const active = shown === value;
+    const active = status === value;
     return (
       <button
         type="button"
-        onClick={() => onDecide(value)}
+        onClick={() => onDecide(active ? "submitted" : value)}
         aria-pressed={active}
-        title={active ? `Currently ${label.toLowerCase()}ed` : `Mark ${label.toLowerCase()}`}
+        title={active ? "Click again to clear this decision" : `Mark ${label.toLowerCase()}ed`}
         className="h-8 rounded-lg border-2 px-2.5 font-display text-xs font-bold transition-colors hover:bg-cream"
         style={
           active
@@ -309,6 +365,7 @@ function RowDecision({
     <div className="flex items-center gap-1.5">
       {btn("accepted", "Accept", "var(--color-fern-deep)")}
       {btn("waitlisted", "Waitlist", "var(--color-tangerine)")}
+      {btn("rejected", "Reject", "var(--color-poppy)")}
     </div>
   );
 }

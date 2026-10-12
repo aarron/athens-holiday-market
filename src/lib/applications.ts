@@ -1,5 +1,17 @@
 import { site } from "@/lib/site";
 
+/**
+ * Imports of earlier years used "rejected" for anyone not accepted, and back
+ * then the market waitlisted rather than rejected. From this year on,
+ * "rejected" is a real decision for applicants who don't meet our terms.
+ */
+export const REJECTIONS_FROM_YEAR = 2026;
+
+/** The status to show for an application, reading legacy "rejected" as waitlisted. */
+export function displayStatus(status: string, year: number) {
+  return status === "rejected" && year < REJECTIONS_FROM_YEAR ? "waitlisted" : status;
+}
+
 export type ApplicationWindow = "before" | "open" | "closed";
 
 /**
@@ -31,6 +43,10 @@ export const applicationGuidelines: { title: string; body: string }[] = [
   {
     title: "Juried for quality",
     body: "A panel reviews every application. We curate for craftsmanship, originality, and a good mix across mediums.",
+  },
+  {
+    title: "No food or beverages",
+    body: "Our host, Big City Bread Cafe, is a bakery, so we can't accept vendors who would compete with it. That means no food or drink items of any kind — baked goods, candy, tea, coffee, honey, jams, sauces, and the like.",
   },
   {
     title: "Bring your best",

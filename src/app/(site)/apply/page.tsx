@@ -168,6 +168,14 @@ export default async function ApplyPage({
             The deadline to apply is {site.applications.closesLabel}. We can&apos;t wait to see what
             you&apos;ve been making.
           </p>
+          <div className="mb-8 rounded-lg border-2 border-poppy/30 bg-poppy-soft px-5 py-4">
+            <p className="font-display font-bold text-poppy-deep">No food or beverage vendors</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              Our host, Big City Bread Cafe, is a bakery, so we can&apos;t accept vendors who would
+              compete with it. That means no food or drink items of any kind — baked goods, candy,
+              tea, coffee, honey, jams, sauces, and the like.
+            </p>
+          </div>
           <ApplicationForm />
         </div>
       )}

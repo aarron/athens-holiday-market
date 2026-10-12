@@ -28,7 +28,8 @@ const schema = z.object({
 
 const GROUP_STATUSES: Record<string, ("accepted" | "waitlisted" | "rejected")[]> = {
   accepted: ["accepted"],
-  waitlist: ["waitlisted", "rejected"],
+  // Rejected applicants (didn't meet our terms) never get the waitlist email.
+  waitlist: ["waitlisted"],
 };
 
 

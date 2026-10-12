@@ -85,7 +85,11 @@ export function CommentBox({ applicationId }: { applicationId: number }) {
 const STATUS_OPTS: [string, string, string][] = [
   ["accepted", "Accept", "var(--color-fern-deep)"],
   ["waitlisted", "Waitlist", "var(--color-tangerine)"],
+  ["rejected", "Reject", "var(--color-poppy)"],
 ];
+
+/** Clicking the active decision clears it, returning the application to review. */
+const UNDECIDED = "submitted";
 
 export function DecisionControls({
   applicationId,
@@ -123,7 +127,9 @@ export function DecisionControls({
             <button
               key={s}
               disabled={pending}
-              onClick={() => (s !== cur ? setConfirmTo(s) : undefined)}
+              onClick={() => setConfirmTo(s !== cur ? s : UNDECIDED)}
+              aria-pressed={active}
+              title={active ? "Click again to clear this decision" : undefined}
               className="h-9 rounded-lg border-2 px-3 font-display text-sm font-bold transition-all disabled:opacity-60"
               style={active ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: "rgba(23,22,27,0.15)" }}
             >
@@ -136,8 +142,25 @@ export function DecisionControls({
       {confirmTo && (
         <div className="mt-3 rounded-lg border-2 border-fuchsia/40 bg-fuchsia/5 p-3">
           <p className="text-sm font-semibold">
-            Set decision to <strong>{confirmLabel}</strong>?
+            {confirmTo === UNDECIDED ? (
+              <>Clear the decision?</>
+            ) : (
+              <>
+                Set decision to <strong>{confirmLabel}</strong>?
+              </>
+            )}
           </p>
+          {confirmTo === UNDECIDED && (
+            <p className="mt-1 text-xs text-ink-soft">
+              Clears the decision and moves this application back to “To review.”
+            </p>
+          )}
+          {confirmTo === "rejected" && (
+            <p className="mt-1 text-xs text-ink-soft">
+              For applicants who don&rsquo;t meet our terms. Rejected applicants are left out of
+              waitlist emails.
+            </p>
+          )}
           {confirmTo === "accepted" && (
             <p className="mt-1 text-xs text-ink-soft">
               Accepting grants this email portal login and includes them in accepted-artist emails,
@@ -155,7 +178,7 @@ export function DecisionControls({
                 apply(next);
               }}
             >
-              Yes, set to {confirmLabel}
+              {confirmTo === UNDECIDED ? "Yes, clear decision" : <>Yes, set to {confirmLabel}</>}
             </Button>
             <Button variant="ghost" size="sm" disabled={pending} onClick={() => setConfirmTo(null)}>
               Cancel

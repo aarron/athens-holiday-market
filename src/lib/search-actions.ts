@@ -4,8 +4,9 @@ import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, subscribers, cycles, artists } from "@/db/schema";
 import { requireStaff } from "@/lib/admin-auth";
+import { displayStatus } from "@/lib/applications";
 
-type Outcome = "accepted" | "waitlisted" | "pending";
+type Outcome = "accepted" | "waitlisted" | "rejected" | "pending";
 
 export type PersonHit = {
   /** Detail-page target: the current-cycle application if any, else most recent. */
@@ -36,10 +37,10 @@ export type SubHit = {
 
 export type SearchResults = { people: PersonHit[]; subscribers: SubHit[]; query: string };
 
-// We waitlist rather than reject, so a legacy "rejected" reads as waitlisted.
-function outcomeOf(status: string): Outcome {
-  if (status === "accepted") return "accepted";
-  if (status === "waitlisted" || status === "rejected") return "waitlisted";
+// A legacy "rejected" (before real rejections existed) reads as waitlisted.
+function outcomeOf(status: string, year: number): Outcome {
+  const s = displayStatus(status, year);
+  if (s === "accepted" || s === "waitlisted" || s === "rejected") return s;
   return "pending";
 }
 
@@ -136,7 +137,7 @@ export async function adminSearch(query: string): Promise<SearchResults> {
       email: newest?.email ?? p.email,
       phone: firstNonNull((a) => a.phone),
       website: firstNonNull((a) => a.website),
-      years: apps.map((a) => ({ year: a.year, outcome: outcomeOf(a.status) })),
+      years: apps.map((a) => ({ year: a.year, outcome: outcomeOf(a.status, a.year) })),
       current: current
         ? {
             year: current.year,

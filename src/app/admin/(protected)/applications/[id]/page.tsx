@@ -11,6 +11,7 @@ import {
   tally,
 } from "@/lib/admin-data";
 import { getSessionUser } from "@/lib/admin-auth";
+import { displayStatus } from "@/lib/applications";
 import { StatusBadge, BoothFeeBadge, VoteTally, VOTE_STATES, type VoteValue } from "@/components/admin/badges";
 import {
   VoteButtons,
@@ -40,18 +41,18 @@ const RECEIPT_COLOR: Record<string, string> = {
   failed: "var(--color-poppy)",
 };
 
-// We waitlist rather than reject, so past "rejected" years read as waitlisted.
+// Legacy "rejected" years read as waitlisted (see displayStatus).
 const HISTORY_LABEL: Record<string, string> = {
   accepted: "Accepted",
   waitlisted: "Waitlisted",
-  rejected: "Waitlisted",
+  rejected: "Rejected",
   submitted: "Applied",
   under_review: "Applied",
 };
 const HISTORY_COLOR: Record<string, string> = {
   accepted: "var(--color-fern-deep)",
   waitlisted: "var(--color-tangerine-deep)",
-  rejected: "var(--color-tangerine-deep)",
+  rejected: "var(--color-poppy-deep)",
   submitted: "var(--color-ink)",
   under_review: "var(--color-sky-deep)",
 };
@@ -109,7 +110,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-extrabold">{app.name}</h1>
-            <StatusBadge status={app.status} />
+            <StatusBadge status={displayStatus(app.status, app.cycle.year)} />
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {app.mediumCategory && (
@@ -124,7 +125,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
               <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
                 History:
               </span>
-              {history.map((h) => (
+              {history.map(({ year, status: raw }) => ({ year, status: displayStatus(raw, year) })).map((h) => (
                 <span
                   key={h.year}
                   className="rounded-full bg-cream px-2.5 py-0.5 text-xs font-semibold text-ink-soft"
@@ -296,7 +297,7 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             {isAdmin && (
               <>
                 <hr className="my-5 border-ink/10" />
-                <DecisionControls applicationId={app.id} status={app.status} />
+                <DecisionControls applicationId={app.id} status={displayStatus(app.status, app.cycle.year)} />
               </>
             )}
           </Card>

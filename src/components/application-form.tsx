@@ -10,7 +10,7 @@ import { Flower } from "@/components/brand";
 import { ProofreadField } from "@/components/proofread-field";
 import { CelebrateIcon } from "@/components/icons";
 import { site } from "@/lib/site";
-import { MEDIUM_CATEGORIES } from "@/lib/mediums";
+import { APPLY_CATEGORIES } from "@/lib/mediums";
 import { normalizePhone, validateWebsite, validateSocial, emailTypoSuggestion } from "@/lib/validate";
 
 const schema = z.object({
@@ -411,7 +411,7 @@ export function ApplicationForm({
             <option value="" disabled>
               Choose a category…
             </option>
-            {MEDIUM_CATEGORIES.map((c) => (
+            {APPLY_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

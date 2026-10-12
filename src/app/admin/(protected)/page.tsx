@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { getCyclesWithCounts, listApplications, tally } from "@/lib/admin-data";
+import { getCyclesWithCounts, listApplications, listStaff, tally } from "@/lib/admin-data";
+import { countBooths, pairSharedBooths } from "@/lib/booths";
+import { displayStatus } from "@/lib/applications";
 import { getSessionUser } from "@/lib/admin-auth";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
 import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
@@ -9,13 +11,24 @@ import { AdminSearch } from "@/components/admin/admin-search";
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-function StatTile({ label, value, accent }: { label: string; value: number; accent: string }) {
+function StatTile({
+  label,
+  value,
+  accent,
+  children,
+}: {
+  label: string;
+  value: number;
+  accent: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div>
       <div className="font-display text-4xl font-extrabold tabular-nums" style={{ color: accent }}>
         {value}
       </div>
       <div className="mt-1 text-sm font-medium text-ink-soft">{label}</div>
+      {children && <div className="mt-1.5 space-y-0.5 text-xs text-ink-soft">{children}</div>}
     </div>
   );
 }
@@ -28,7 +41,9 @@ export default async function AdminDashboard({
   const { year } = await searchParams;
   const cyclesList = await getCyclesWithCounts();
 
-  const me = await getSessionUser();
+  const [me, staff] = await Promise.all([getSessionUser(), listStaff()]);
+  const myUserId = staff.find((u) => u.email.toLowerCase() === me?.email.toLowerCase())?.id ?? null;
+  const staffEmails = new Set(staff.map((u) => u.email.toLowerCase()));
 
   if (cyclesList.length === 0) {
     return (
@@ -49,13 +64,25 @@ export default async function AdminDashboard({
   const isArchive = !current.isActive;
   // Direct-adds (dropout replacements / exhibiting judges) never went through
   // the jury, so they stay out of the review table, stats, and medium blend.
-  const apps = (current.count > 0 ? await listApplications(current.id) : []).filter(
-    (a) => !a.directAdd,
-  );
+  const allApps = (current.count > 0 ? await listApplications(current.id) : []).map((a) => ({
+    ...a,
+    status: displayStatus(a.status, current.year),
+  }));
+  const apps = allApps.filter((a) => !a.directAdd);
+
+  // Booths, not heads: accepted artists sharing a booth count once. Pair across
+  // everyone accepted (judges can share with a juried artist too), then add the
+  // direct-adds — judges who exhibit and anyone added by hand — for the total.
+  const allAccepted = allApps.filter((a) => a.status === "accepted");
+  const partner = pairSharedBooths(allAccepted);
+  const juried = countBooths(apps.filter((a) => a.status === "accepted"), partner);
+  const directAccepted = allAccepted.filter((a) => a.directAdd);
+  const judgesExhibiting = directAccepted.filter((a) => staffEmails.has(a.email.toLowerCase())).length;
+  const addedArtists = directAccepted.length - judgesExhibiting;
+  const boothsTaken = countBooths(allAccepted, partner).booths;
 
   const stats = {
     total: apps.length,
-    accepted: apps.filter((a) => a.status === "accepted").length,
     waitlisted: apps.filter((a) => a.status === "waitlisted").length,
     rejected: apps.filter((a) => a.status === "rejected").length,
     pending: apps.filter((a) => a.status === "submitted" || a.status === "under_review").length,
@@ -78,6 +105,11 @@ export default async function AdminDashboard({
     id: a.id,
     name: a.name,
     medium: a.medium,
+    category: a.mediumCategory ?? "Uncategorized",
+    myVote: a.votes.find((v) => v.userId === myUserId)?.value ?? null,
+    sharesBoothWith: partner.has(a.id)
+      ? (allApps.find((o) => o.id === partner.get(a.id))?.name ?? null)
+      : null,
     submittedAt: a.createdAt.toISOString(),
     tally: tally(a.votes),
     status: a.status,
@@ -120,11 +152,27 @@ export default async function AdminDashboard({
         <section className="rounded-xl bg-white shadow-[var(--shadow-card)]">
           <div className="p-5 sm:p-6">
             <h2 className="font-display text-lg font-extrabold">Applications</h2>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               <StatTile label="Submissions" value={stats.total} accent="var(--color-ink)" />
               <StatTile label="To review" value={stats.pending} accent="var(--color-sky)" />
-              <StatTile label="Accepted" value={stats.accepted} accent="var(--color-fern-deep)" />
+              <StatTile label="Accepted booths" value={juried.booths} accent="var(--color-fern-deep)">
+                {juried.sharedPairs > 0 && (
+                  <p>
+                    {juried.artists} artists · {juried.sharedPairs} shared
+                  </p>
+                )}
+                <p>
+                  + {judgesExhibiting} {judgesExhibiting === 1 ? "judge" : "judges"} exhibiting
+                </p>
+                {addedArtists > 0 && (
+                  <p>
+                    + {addedArtists} added {addedArtists === 1 ? "artist" : "artists"}
+                  </p>
+                )}
+                <p className="font-bold text-ink">{boothsTaken} booths taken</p>
+              </StatTile>
               <StatTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" />
+              <StatTile label="Rejected" value={stats.rejected} accent="var(--color-poppy-deep)" />
               <StatTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" />
             </div>
           </div>

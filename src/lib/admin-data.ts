@@ -187,6 +187,11 @@ export async function getArtistForApplication(applicationId: number) {
 /** All jury members + admins, for per-judge vote columns. */
 /** The jury roster = users with the judge role. Admins/organizers are excluded
  *  (they run the console; they aren't scored jurors). */
+/** Every judge and admin (the staff allowlist). */
+export async function listStaff() {
+  return db.query.users.findMany({ columns: { id: true, email: true, role: true } });
+}
+
 export async function getJurors() {
   return db.query.users.findMany({ where: eq(users.role, "judge"), orderBy: [users.id] });
 }
@@ -219,7 +224,8 @@ export async function countPendingArtistReviews() {
 export type DecisionGroup = "accepted" | "waitlist";
 const GROUP_STATUSES: Record<DecisionGroup, string[]> = {
   accepted: ["accepted"],
-  waitlist: ["waitlisted", "rejected"],
+  // Rejected applicants (didn't meet our terms) never get the waitlist email.
+  waitlist: ["waitlisted"],
 };
 
 export async function getDecisionGroups(cycleId: number) {

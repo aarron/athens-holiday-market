@@ -109,7 +109,7 @@ export function AdminSearch() {
   );
 }
 
-function yearList(p: PersonHit, outcome: "accepted" | "waitlisted") {
+function yearList(p: PersonHit, outcome: "accepted" | "waitlisted" | "rejected") {
   return p.years.filter((y) => y.outcome === outcome).map((y) => y.year);
 }
 
@@ -117,6 +117,7 @@ function PersonCard({ p }: { p: PersonHit }) {
   const applied = p.years.map((y) => y.year);
   const accepted = yearList(p, "accepted");
   const waitlisted = yearList(p, "waitlisted");
+  const rejected = yearList(p, "rejected");
 
   return (
     <div className="rounded-lg border border-ink/10 bg-paper/40 p-3.5">
@@ -160,6 +161,7 @@ function PersonCard({ p }: { p: PersonHit }) {
         <HistoryLine label="Applied" years={applied} className="text-ink-soft" />
         {accepted.length > 0 && <HistoryLine label="Accepted" years={accepted} className="text-fern-deep" />}
         {waitlisted.length > 0 && <HistoryLine label="Waitlisted" years={waitlisted} className="text-tangerine-deep" />}
+        {rejected.length > 0 && <HistoryLine label="Rejected" years={rejected} className="text-poppy-deep" />}
       </div>
 
       {/* Quick links */}

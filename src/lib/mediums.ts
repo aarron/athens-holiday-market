@@ -21,15 +21,25 @@ export const MEDIUM_CATEGORIES = [
   "Home & Decor",
   "Upcycled",
   "Mixed Media & Sculpture",
+  "Non-profit",
   "Other",
 ] as const;
 
 export type MediumCategory = (typeof MEDIUM_CATEGORIES)[number];
 
+/**
+ * Categories an applicant can pick on the form. The market is hosted by a
+ * bakery, so we don't accept food or beverage vendors; "Food & Drink" stays in
+ * MEDIUM_CATEGORIES only so past years' applications keep their category.
+ */
+export const APPLY_CATEGORIES = MEDIUM_CATEGORIES.filter((c) => c !== "Food & Drink");
+
 // Keyword → category, checked in order (first match wins), so the primary craft
 // goes ahead of secondary materials. Word boundaries (\b) matter: an un-anchored
 // "tin" matches "pain*tin*g", which used to mis-file painters as Metalwork.
 const RULES: [RegExp, MediumCategory][] = [
+  // A non-profit's table is filed by who they are, not what they sell.
+  [/non-?profit|501\s?\(?c\)?\s?\(?3\)?|\bcharity\b|\bcharitable\b/i, "Non-profit"],
   [/ceramic|pottery|\bclay\b|stoneware|porcelain|mosaic|\bcone \d/i, "Ceramics & Pottery"],
   [/jewel|earring|necklace|bracelet|\bring(s|z)?\b|pendant|\bbead|pearl|\bsilver\b|gold.?fill|\benamel/i, "Jewelry"],
   [/stained glass|blown glass|fused glass|\bglass\b/i, "Glass"],

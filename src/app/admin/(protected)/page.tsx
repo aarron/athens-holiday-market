@@ -3,6 +3,7 @@ import { getCyclesWithCounts, listApplications, listStaff, tally } from "@/lib/a
 import { countBooths, pairSharedBooths } from "@/lib/booths";
 import { getJudgesExhibiting } from "@/lib/judges-exhibiting";
 import { JudgesExhibitingInput } from "@/components/admin/judges-exhibiting-input";
+import { StatFilterTile } from "@/components/admin/stat-filter-tile";
 import { displayStatus } from "@/lib/applications";
 import { getSessionUser } from "@/lib/admin-auth";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
@@ -13,27 +14,6 @@ import { AdminSearch } from "@/components/admin/admin-search";
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-function StatTile({
-  label,
-  value,
-  accent,
-  children,
-}: {
-  label: string;
-  value: number;
-  accent: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div className="font-display text-4xl font-extrabold tabular-nums" style={{ color: accent }}>
-        {value}
-      </div>
-      <div className="mt-1 text-sm font-medium text-ink-soft">{label}</div>
-      {children && <div className="mt-1.5 space-y-0.5 text-xs text-ink-soft">{children}</div>}
-    </div>
-  );
-}
 
 export default async function AdminDashboard({
   searchParams,
@@ -86,14 +66,14 @@ export default async function AdminDashboard({
   // count each not-yet-recorded judge as a booth.
   const judgesEntered = await getJudgesExhibiting(current.id);
   const judgesExhibiting = Math.max(judgesRecorded, judgesEntered ?? 0);
-  const boothsTaken = countBooths(allAccepted, partner).booths + (judgesExhibiting - judgesRecorded);
 
   const stats = {
     total: apps.length,
     waitlisted: apps.filter((a) => a.status === "waitlisted").length,
     rejected: apps.filter((a) => a.status === "rejected").length,
     pending: apps.filter((a) => a.status === "submitted" || a.status === "under_review").length,
-    paid: apps.filter((a) => a.boothFeePaid).length,
+    paid: apps.filter((a) => a.status === "accepted" && a.boothFeePaid).length,
+    unpaid: apps.filter((a) => a.status === "accepted" && !a.boothFeePaid).length,
   };
 
   const blendMap = new Map<string, { total: number; accepted: number }>();
@@ -159,10 +139,10 @@ export default async function AdminDashboard({
         <section className="rounded-xl bg-white shadow-[var(--shadow-card)]">
           <div className="p-5 sm:p-6">
             <h2 className="font-display text-lg font-extrabold">Applications</h2>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              <StatTile label="Submissions" value={stats.total} accent="var(--color-ink)" />
-              <StatTile label="To review" value={stats.pending} accent="var(--color-sky)" />
-              <StatTile label="Accepted booths" value={juried.booths} accent="var(--color-fern-deep)">
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+              <StatFilterTile label="Submissions" value={stats.total} accent="var(--color-ink)" filter={{}} />
+              <StatFilterTile label="To review" value={stats.pending} accent="var(--color-sky)" filter={{ status: "pending" }} />
+              <StatFilterTile label="Accepted booths" value={juried.booths} accent="var(--color-fern-deep)" filter={{ status: "accepted" }}>
                 {juried.sharedPairs > 0 && (
                   <p>
                     {juried.artists} artists · {juried.sharedPairs} shared
@@ -182,11 +162,11 @@ export default async function AdminDashboard({
                     + {addedArtists} added {addedArtists === 1 ? "artist" : "artists"}
                   </p>
                 )}
-                <p className="font-bold text-ink">{boothsTaken} booths taken</p>
-              </StatTile>
-              <StatTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" />
-              <StatTile label="Rejected" value={stats.rejected} accent="var(--color-poppy-deep)" />
-              <StatTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" />
+              </StatFilterTile>
+              <StatFilterTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" filter={{ status: "waitlisted" }} />
+              <StatFilterTile label="Rejected" value={stats.rejected} accent="var(--color-poppy-deep)" filter={{ status: "rejected" }} />
+              <StatFilterTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" filter={{ payment: "paid" }} />
+              <StatFilterTile label="Fees unpaid" value={stats.unpaid} accent="var(--color-ink-soft)" filter={{ payment: "unpaid" }} />
             </div>
           </div>
 

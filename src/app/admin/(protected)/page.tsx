@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getCyclesWithCounts, listApplications, listStaff, tally } from "@/lib/admin-data";
 import { countBooths, pairSharedBooths } from "@/lib/booths";
 import { displayStatus } from "@/lib/applications";
+import { currentCategory } from "@/lib/mediums";
 import { getSessionUser } from "@/lib/admin-auth";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
 import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
@@ -67,6 +68,7 @@ export default async function AdminDashboard({
   const allApps = (current.count > 0 ? await listApplications(current.id) : []).map((a) => ({
     ...a,
     status: displayStatus(a.status, current.year),
+    mediumCategory: currentCategory(a.mediumCategory),
   }));
   const apps = allApps.filter((a) => !a.directAdd);
 

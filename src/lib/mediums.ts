@@ -15,8 +15,7 @@ export const MEDIUM_CATEGORIES = [
   "Glass",
   "Metalwork",
   "Candles",
-  "Apothecary",
-  "Bath & Body",
+  "Bath, Body & Apothecary",
   "Food & Drink",
   "Home & Decor",
   "Upcycled",
@@ -32,6 +31,17 @@ export type MediumCategory = (typeof MEDIUM_CATEGORIES)[number];
  * bakery, so we don't accept food or beverage vendors; "Food & Drink" stays in
  * MEDIUM_CATEGORIES only so past years' applications keep their category.
  */
+/** Retired category names, mapped to the category that replaced them. */
+const RETIRED: Record<string, MediumCategory> = {
+  Apothecary: "Bath, Body & Apothecary",
+  "Bath & Body": "Bath, Body & Apothecary",
+};
+
+/** A stored category under its current name (older rows may carry a retired one). */
+export function currentCategory<T extends string | null | undefined>(category: T): T | MediumCategory {
+  return (category && RETIRED[category]) || category;
+}
+
 export const APPLY_CATEGORIES = MEDIUM_CATEGORIES.filter((c) => c !== "Food & Drink");
 
 // Keyword → category, checked in order (first match wins), so the primary craft
@@ -46,8 +56,7 @@ const RULES: [RegExp, MediumCategory][] = [
   [/leather/i, "Leather"],
   // Candle-primary work first, so "soy candles + apothecary" files as Candles.
   [/candle|wax ?melt|tea ?light/i, "Candles"],
-  [/apothecar|diffuser|salt soak|essential oil|incense|\belixir|tincture/i, "Apothecary"],
-  [/\bsoap\b|shea butter|sea moss|\bcbd\b|\bbalm\b|lotion|\bbath\b|body care|skin ?care|shampoo|lip ?balm/i, "Bath & Body"],
+  [/apothecar|diffuser|salt soak|essential oil|incense|\belixir|tincture|\bsoap\b|shea butter|sea moss|\bcbd\b|\bbalm\b|lotion|\bbath\b|body care|skin ?care|shampoo|lip ?balm/i, "Bath, Body & Apothecary"],
   [/\bteas?\b|\btreat|\bjam\b|jelly|honey|beekeep|baked|\bfood\b|chocolate|\bspice|\bherb|\bdrink|preserve|pickle|granola|sauce|\bcandy\b|confection|\bbaker|cookie|\bcake|macaron|\bcider\b|vinegar|\bpie(s)?\b/i, "Food & Drink"],
   [/photograph|\bphoto\b/i, "Photography"],
   [/paint|acrylic|\boil\b|watercolo|\bink\b|gouache|drawing|\bdraw\b|illustrat|\bart print|fine art|\bpastel/i, "Painting & Drawing"],

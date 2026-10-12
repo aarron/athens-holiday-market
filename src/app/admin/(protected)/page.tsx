@@ -66,6 +66,10 @@ export default async function AdminDashboard({
   // count each not-yet-recorded judge as a booth.
   const judgesEntered = await getJudgesExhibiting(current.id);
   const judgesExhibiting = Math.max(judgesRecorded, judgesEntered ?? 0);
+  // Every booth spoken for: all accepted artists with shared pairs counted
+  // once (this already includes judges and others added by hand once they're
+  // recorded), plus one booth per exhibiting judge not yet recorded.
+  const boothsTaken = countBooths(allAccepted, partner).booths + (judgesExhibiting - judgesRecorded);
 
   const stats = {
     total: apps.length,
@@ -142,12 +146,11 @@ export default async function AdminDashboard({
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
               <StatFilterTile label="Submissions" value={stats.total} accent="var(--color-ink)" filter={{}} />
               <StatFilterTile label="To review" value={stats.pending} accent="var(--color-sky)" filter={{ status: "pending" }} />
-              <StatFilterTile label="Accepted" value={juried.booths} accent="var(--color-fern-deep)" filter={{ status: "accepted" }}>
-                {juried.sharedPairs > 0 && (
-                  <p>
-                    {juried.artists} artists · {juried.sharedPairs} shared
-                  </p>
-                )}
+              <StatFilterTile label="Booths taken" value={boothsTaken} accent="var(--color-fern-deep)" filter={{ status: "accepted" }}>
+                <p>
+                  {juried.artists} accepted
+                  {juried.sharedPairs > 0 && ` · ${juried.sharedPairs} shared`}
+                </p>
                 <p>
                   {me?.role === "admin" && !isArchive ? (
                     <JudgesExhibitingInput cycleId={current.id} value={judgesExhibiting} />

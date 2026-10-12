@@ -53,10 +53,7 @@ export function StatFilterTile({
         }}
         style={
           active
-            ? {
-                backgroundColor: `color-mix(in srgb, ${accent} 9%, transparent)`,
-                boxShadow: `inset 0 -3px 0 ${accent}`,
-              }
+            ? { backgroundColor: `color-mix(in srgb, ${accent} 9%, transparent)` }
             : undefined
         }
         className={`block w-full rounded-lg px-3 pb-2.5 pt-2 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry ${

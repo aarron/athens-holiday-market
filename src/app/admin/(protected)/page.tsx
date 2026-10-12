@@ -143,7 +143,7 @@ export default async function AdminDashboard({
         <section className="rounded-xl bg-white shadow-[var(--shadow-card)]">
           <div className="p-5 sm:p-6">
             <h2 className="font-display text-lg font-extrabold">Applications</h2>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+            <div className="-mx-3 mt-3 grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-4 lg:grid-cols-7">
               <StatFilterTile label="Submissions" value={stats.total} accent="var(--color-ink)" filter={{}} />
               <StatFilterTile label="To review" value={stats.pending} accent="var(--color-sky)" filter={{ status: "pending" }} />
               <StatFilterTile label="Booths taken" value={boothsTaken} accent="var(--color-fern-deep)" filter={{ status: "accepted" }}>

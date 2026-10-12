@@ -38,6 +38,10 @@ export function StatFilterTile({
     return () => window.removeEventListener(FILTERS_CHANGED_EVENT, on);
   }, [filter]);
 
+  // The highlight lives inside each grid cell (padding, no negative margins),
+  // so it can never spill into the gap or crowd the neighbouring tile. The
+  // grid offsets the padding with a matching negative margin so the numbers
+  // still line up with the section's left edge.
   return (
     <div>
       <button
@@ -47,16 +51,24 @@ export function StatFilterTile({
           window.dispatchEvent(new CustomEvent(APPLY_FILTER_EVENT, { detail: filter }));
           document.getElementById("applications-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
-        className={`-mx-2 -my-1 w-[calc(100%+1rem)] rounded-lg px-2 py-1 text-left transition-colors hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-berry ${
-          active ? "bg-cream ring-2 ring-ink/15" : ""
+        style={
+          active
+            ? {
+                backgroundColor: `color-mix(in srgb, ${accent} 9%, transparent)`,
+                boxShadow: `inset 0 -3px 0 ${accent}`,
+              }
+            : undefined
+        }
+        className={`block w-full rounded-lg px-3 pb-2.5 pt-2 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry ${
+          active ? "" : "hover:bg-ink/[0.04]"
         }`}
       >
         <span className="block font-display text-4xl font-extrabold tabular-nums" style={{ color: accent }}>
           {value}
         </span>
-        <span className="mt-1 block text-sm font-medium text-ink-soft">{label}</span>
+        <span className={`mt-1 block text-sm font-medium ${active ? "text-ink" : "text-ink-soft"}`}>{label}</span>
       </button>
-      {children && <div className="mt-1.5 space-y-0.5 text-xs text-ink-soft">{children}</div>}
+      {children && <div className="mt-1.5 space-y-0.5 px-3 text-xs text-ink-soft">{children}</div>}
     </div>
   );
 }

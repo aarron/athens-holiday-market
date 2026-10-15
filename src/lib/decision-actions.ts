@@ -16,6 +16,7 @@ import { refreshAndNotifyPostingTeam } from "@/lib/social-kit-notify";
 import { logAdminEvent } from "@/lib/audit";
 import { chunk, personalize } from "@/lib/send-util";
 import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
+import { readDecisionDraft, writeDecisionDraft } from "@/lib/decision-draft-store";
 
 const schema = z.object({
   cycleId: z.number(),
@@ -216,6 +217,7 @@ export async function sendRejectionEmails(input: z.input<typeof rejectionSchema>
   const now = new Date();
   let sent = 0;
   const failed: string[] = [];
+  const sentOk: typeof toSend = [];
   for (const batch of chunk(toSend, 100)) {
     try {
       const res = await resend.batch.send(
@@ -236,6 +238,7 @@ export async function sendRejectionEmails(input: z.input<typeof rejectionSchema>
       );
       await db.batch(updates as [(typeof updates)[number], ...typeof updates]);
       sent += batch.length;
+      sentOk.push(...batch);
     } catch (err) {
       console.error("[decisions] rejection batch failed:", err);
       failed.push(...batch.map((e) => e.app.name));
@@ -244,6 +247,20 @@ export async function sendRejectionEmails(input: z.input<typeof rejectionSchema>
       );
       await db.batch(fails as [(typeof fails)[number], ...typeof fails]);
     }
+  }
+
+  // Keep a record of exactly what each person was sent (shown on the page),
+  // and drop their one-off edits now that those emails are out.
+  if (sentOk.length) {
+    const draft = (await readDecisionDraft(cycleId, "rejected")) ?? {};
+    const at = now.toISOString();
+    const sentRecord = { ...(draft.sent ?? {}) };
+    const people = { ...(draft.people ?? {}) };
+    for (const e of sentOk) {
+      sentRecord[String(e.app.id)] = { subject: e.subject, body: personalize(e.body, e.app.name), at };
+      delete people[String(e.app.id)];
+    }
+    await writeDecisionDraft(cycleId, "rejected", { ...draft, sent: sentRecord, people });
   }
 
   revalidatePath("/admin/broadcasts");

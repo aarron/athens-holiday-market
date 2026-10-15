@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ import {
   type RejectionReason,
 } from "@/lib/rejection";
 import { sendRejectionEmails } from "@/lib/decision-actions";
+import { saveDecisionDraft, resetDecisionDraft } from "@/lib/decision-drafts";
+import type { DecisionDraft } from "@/lib/decision-draft-store";
+import { useAutosave, saveLabel } from "@/components/admin/use-autosave";
 
 type Recipient = {
   id: number;
@@ -32,17 +35,51 @@ type Recipient = {
 /** One person's draft: their reason, and a hand-edited body if they have one. */
 type Draft = { reason: RejectionReason; custom: string | null };
 
-const DRAFT_KEY = (cycleId: number) => `ahm:rejection-drafts:${cycleId}`;
-
-export function RejectionSender({ cycleId, recipients }: { cycleId: number; recipients: Recipient[] }) {
+export function RejectionSender({
+  cycleId,
+  recipients,
+  draft,
+}: {
+  cycleId: number;
+  recipients: Recipient[];
+  /** Saved edits from the server (any computer), and what each person was sent. */
+  draft: DecisionDraft | null;
+}) {
   const router = useRouter();
-  const [subject, setSubject] = useState(REJECTION_TEMPLATE.subject);
-  const [template, setTemplate] = useState(REJECTION_TEMPLATE.body);
-  const [reasonText, setReasonText] = useState<Record<RejectionReason, string>>(
-    Object.fromEntries(REJECTION_REASONS.map((r) => [r.id, r.text])) as Record<RejectionReason, string>,
-  );
+  const defaultReasons = Object.fromEntries(REJECTION_REASONS.map((r) => [r.id, r.text])) as Record<RejectionReason, string>;
+  const [subject, setSubject] = useState(draft?.subject ?? REJECTION_TEMPLATE.subject);
+  const [template, setTemplate] = useState(draft?.body ?? REJECTION_TEMPLATE.body);
+  const [reasonText, setReasonText] = useState<Record<RejectionReason, string>>({
+    ...defaultReasons,
+    ...((draft?.reasonText ?? {}) as Partial<Record<RejectionReason, string>>),
+  });
   const [drafts, setDrafts] = useState<Record<number, Draft>>(() =>
-    Object.fromEntries(recipients.map((r) => [r.id, { reason: guessRejectionReason(r.medium, r.category), custom: null }])),
+    Object.fromEntries(
+      recipients.map((r) => {
+        const saved = draft?.people?.[String(r.id)];
+        return [
+          r.id,
+          {
+            reason: (saved?.reason as RejectionReason) ?? guessRejectionReason(r.medium, r.category),
+            custom: saved?.custom ?? null,
+          },
+        ];
+      }),
+    ),
+  );
+  const sentCopies = draft?.sent ?? {};
+  const [showSent, setShowSent] = useState<number | null>(null);
+
+  // Edits save to the server as you type, so they're there on any computer
+  // and still there after sending.
+  const { state: saveState } = useAutosave(
+    {
+      subject,
+      body: template,
+      reasonText,
+      people: Object.fromEntries(Object.entries(drafts).map(([id, d]) => [id, { reason: d.reason, custom: d.custom }])),
+    },
+    (v) => saveDecisionDraft(cycleId, "rejected", v),
   );
   const [open, setOpen] = useState<number | null>(null);
   const [preview, setPreview] = useState<number | null>(null);
@@ -50,29 +87,6 @@ export function RejectionSender({ cycleId, recipients }: { cycleId: number; reci
   const [confirmText, setConfirmText] = useState("");
   const [pending, start] = useTransition();
   const [error, setError] = useState("");
-  const [restored, setRestored] = useState(false);
-
-  // Keep work-in-progress across reloads (this is several hand-edited emails).
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY(cycleId));
-      if (raw) {
-        const d = JSON.parse(raw);
-        /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from storage */
-        if (d.subject) setSubject(d.subject);
-        if (d.template) setTemplate(d.template);
-        if (d.reasonText) setReasonText((p) => ({ ...p, ...d.reasonText }));
-        if (d.drafts) setDrafts((p) => ({ ...p, ...d.drafts }));
-        setRestored(true);
-        /* eslint-enable react-hooks/set-state-in-effect */
-      }
-    } catch {}
-  }, [cycleId]);
-  useEffect(() => {
-    try {
-      localStorage.setItem(DRAFT_KEY(cycleId), JSON.stringify({ subject, template, reasonText, drafts }));
-    } catch {}
-  }, [cycleId, subject, template, reasonText, drafts]);
 
   const bodyFor = (r: Recipient) => {
     const d = drafts[r.id];
@@ -100,12 +114,7 @@ export function RejectionSender({ cycleId, recipients }: { cycleId: number; reci
         cycleId,
         emails: notNotified.map((r) => ({ applicationId: r.id, reason: drafts[r.id].reason, subject, body: bodyFor(r) })),
       });
-      if (res && "ok" in res && res.ok) {
-        try {
-          localStorage.removeItem(DRAFT_KEY(cycleId));
-        } catch {}
-        router.push("/admin/broadcasts");
-      } else setError(res?.error ?? "Couldn't send.");
+      if (res && "ok" in res && res.ok) router.push("/admin/broadcasts"); else setError(res?.error ?? "Couldn't send.");
     });
   }
 
@@ -121,12 +130,29 @@ export function RejectionSender({ cycleId, recipients }: { cycleId: number; reci
           until you confirm at the bottom.
           {missing > 0 && ` ${missing} have no email on file and will be skipped.`}
           {alreadyNotified > 0 && ` ${alreadyNotified} already notified and will be skipped.`}
-          {restored && " Your unsent edits from earlier were restored."}
         </p>
       </div>
 
       <Card>
-        <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-ink-soft">The template</h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">The template</h2>
+          <div className="flex items-center gap-3 text-xs">
+            <span className={saveState === "error" ? "font-semibold text-poppy-deep" : "text-ink-soft"} aria-live="polite">
+              {saveLabel(saveState)}
+            </span>
+            <button
+              type="button"
+              className="font-semibold text-ink-soft hover:text-ink hover:underline"
+              onClick={async () => {
+                if (!confirm("Discard your edits and go back to the default template?")) return;
+                await resetDecisionDraft(cycleId, "rejected");
+                window.location.reload();
+              }}
+            >
+              Reset to default
+            </button>
+          </div>
+        </div>
         <Field label="Subject" className="mb-3">
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
         </Field>
@@ -182,7 +208,18 @@ export function RejectionSender({ cycleId, recipients }: { cycleId: number; reci
                     </div>
                   </div>
                   {done ? (
-                    <span className="text-xs font-semibold text-ink-soft">Notified ({r.decisionEmailStatus ?? "sent"})</span>
+                    <span className="flex items-center gap-3 text-xs font-semibold text-ink-soft">
+                      Notified ({r.decisionEmailStatus ?? "sent"})
+                      {sentCopies[String(r.id)] && (
+                        <button
+                          type="button"
+                          className="text-fern-deep hover:underline"
+                          onClick={() => setShowSent(showSent === r.id ? null : r.id)}
+                        >
+                          {showSent === r.id ? "Hide sent email" : "View sent email"}
+                        </button>
+                      )}
+                    </span>
                   ) : (
                     <div className="flex flex-wrap items-center gap-2">
                       <select
@@ -207,6 +244,17 @@ export function RejectionSender({ cycleId, recipients }: { cycleId: number; reci
                     </div>
                   )}
                 </div>
+                {done && showSent === r.id && sentCopies[String(r.id)] && (
+                  <div className="mt-3 overflow-hidden rounded-lg border border-ink/10">
+                    <div className="border-b border-ink/10 bg-cream-soft px-4 py-2 text-sm">
+                      <strong>Subject:</strong> {sentCopies[String(r.id)].subject}
+                      <span className="ml-2 text-ink-soft">
+                        · sent {new Date(sentCopies[String(r.id)].at).toLocaleString()}
+                      </span>
+                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: emailShell(renderMarkdown(sentCopies[String(r.id)].body)) }} />
+                  </div>
+                )}
                 {needsFill && !done && (
                   <p className="mt-2 text-sm font-semibold text-poppy-deep">
                     Fill in the reason for {r.name.split(" ")[0]} before sending.

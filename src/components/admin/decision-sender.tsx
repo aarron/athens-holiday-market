@@ -10,6 +10,8 @@ import { StatusMessage } from "@/components/ui/status-message";
 import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { sendDecisionBatch } from "@/lib/decision-actions";
 import { fillBoothFee } from "@/lib/booth-fee-copy";
+import { saveDecisionDraft, resetDecisionDraft } from "@/lib/decision-drafts";
+import { useAutosave, saveLabel } from "@/components/admin/use-autosave";
 
 type Recipient = {
   id: number;
@@ -44,6 +46,8 @@ export function DecisionSender({
   const router = useRouter();
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
+  // Edits save to the server as you type (any computer, survives reloads).
+  const { state: saveState } = useAutosave({ subject, body }, (v) => saveDecisionDraft(cycleId, group, v));
   const [checked, setChecked] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -107,6 +111,22 @@ export function DecisionSender({
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">The email</h2>
+          <span className="ml-auto mr-4 flex items-center gap-3 text-xs">
+            <span className={saveState === "error" ? "font-semibold text-poppy-deep" : "text-ink-soft"} aria-live="polite">
+              {saveLabel(saveState)}
+            </span>
+            <button
+              type="button"
+              className="font-semibold text-ink-soft hover:text-ink hover:underline"
+              onClick={async () => {
+                if (!confirm("Discard your edits and go back to the default email?")) return;
+                await resetDecisionDraft(cycleId, group);
+                window.location.reload();
+              }}
+            >
+              Reset to default
+            </button>
+          </span>
           <button
             onClick={() => setShowPreview((v) => !v)}
             className="text-sm font-semibold text-fern-deep hover:underline"

@@ -7,6 +7,7 @@ import { getCyclesWithCounts, getDecisionRecipients } from "@/lib/admin-data";
 import { getBroadcastTemplates } from "@/lib/broadcast-templates";
 import { DecisionSender } from "@/components/admin/decision-sender";
 import { RejectionSender } from "@/components/admin/rejection-sender";
+import { readDecisionDraft } from "@/lib/decision-draft-store";
 
 export const metadata: Metadata = { title: "Send decisions", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -35,7 +36,10 @@ export default async function DecisionGroupPage({
     list[0];
   if (!cycle) notFound();
 
-  const recipients = await getDecisionRecipients(cycle.id, group);
+  const [recipients, draft] = await Promise.all([
+    getDecisionRecipients(cycle.id, group),
+    readDecisionDraft(cycle.id, group),
+  ]);
   const templateId = group === "accepted" ? "accepted" : group === "nonprofit" ? "nonprofit-accepted" : "waitlist";
   const template = getBroadcastTemplates().find((t) => t.id === templateId)!;
 
@@ -60,14 +64,14 @@ export default async function DecisionGroupPage({
           </p>
         </div>
       ) : group === "rejected" ? (
-        <RejectionSender cycleId={cycle.id} recipients={recipients} />
+        <RejectionSender cycleId={cycle.id} recipients={recipients} draft={draft} />
       ) : (
         <DecisionSender
           cycleId={cycle.id}
           group={group}
           recipients={recipients}
-          subject={template.subject}
-          body={template.body}
+          subject={draft?.subject ?? template.subject}
+          body={draft?.body ?? template.body}
         />
       )}
     </div>

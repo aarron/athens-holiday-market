@@ -20,7 +20,7 @@ export const REJECTION_REASONS: { id: RejectionReason; label: string; text: stri
   {
     id: "nonprofit",
     label: "Non-profit booth (limited space)",
-    text: `Our courtyard has room for only a small number of booths, and this year we've had to give every one of them to individual artists selling their own work, so we weren't able to offer a non-profit booth.`,
+    text: `Each year we're able to host just two non-profits, at no charge, and this year's two spaces are already filled. We'd be glad to hear from you again next year.`,
   },
   {
     id: "other",

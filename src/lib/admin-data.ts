@@ -1,4 +1,5 @@
-import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { asc, desc, eq, isNotNull, or, sql } from "drizzle-orm";
+import { isNonprofitCategory } from "@/lib/nonprofit";
 import { db } from "@/db";
 import { applications, cycles, users, artists, broadcasts, broadcastRecipients } from "@/db/schema";
 import type { Tally } from "@/components/admin/badges";
@@ -221,38 +222,60 @@ export async function countPendingArtistReviews() {
   return row?.n ?? 0;
 }
 
-export type DecisionGroup = "accepted" | "waitlist" | "rejected";
-const GROUP_STATUSES: Record<DecisionGroup, string[]> = {
-  accepted: ["accepted"],
-  // Rejected applicants (didn't meet our terms) never get the waitlist email.
-  waitlist: ["waitlisted"],
-  // Rejected applicants get their own email that explains why (see lib/rejection.ts).
-  rejected: ["rejected"],
-};
+export type DecisionGroup = "accepted" | "nonprofit" | "waitlist" | "rejected";
+
+type DecisionCandidate = { status: string; directAdd: boolean; mediumCategory: string | null };
+
+/**
+ * Who belongs in each decision email. Non-profits are accepted but get their
+ * own email (no booth fee), so they're carved out of "accepted". Direct-adds
+ * got a personal invite instead of a jury decision and are left out — except
+ * non-profits, which are often added by hand and still need their email.
+ */
+function inDecisionGroup(g: DecisionGroup, a: DecisionCandidate): boolean {
+  const np = isNonprofitCategory(a.mediumCategory);
+  switch (g) {
+    case "accepted":
+      return a.status === "accepted" && !np && !a.directAdd;
+    case "nonprofit":
+      return a.status === "accepted" && np;
+    case "waitlist":
+      return a.status === "waitlisted" && !a.directAdd;
+    case "rejected":
+      return a.status === "rejected" && !a.directAdd;
+  }
+}
 
 export async function getDecisionGroups(cycleId: number) {
   const apps = await db
-    .select({ status: applications.status, sent: applications.decisionSentAt })
+    .select({
+      status: applications.status,
+      directAdd: applications.directAdd,
+      mediumCategory: applications.mediumCategory,
+      sent: applications.decisionSentAt,
+    })
     .from(applications)
-    // Direct-adds got a personal invite, not a jury decision — keep them out.
-    .where(and(eq(applications.cycleId, cycleId), eq(applications.directAdd, false)));
+    .where(eq(applications.cycleId, cycleId));
   const build = (g: DecisionGroup) => {
-    const set = apps.filter((a) => GROUP_STATUSES[g].includes(a.status));
+    const set = apps.filter((a) => inDecisionGroup(g, a));
     return { total: set.length, notified: set.filter((a) => a.sent).length };
   };
-  return { accepted: build("accepted"), waitlist: build("waitlist"), rejected: build("rejected") };
+  return {
+    accepted: build("accepted"),
+    nonprofit: build("nonprofit"),
+    waitlist: build("waitlist"),
+    rejected: build("rejected"),
+  };
 }
 
 export async function getDecisionRecipients(cycleId: number, group: DecisionGroup) {
-  const apps = await db.query.applications.findMany({
-    where: and(
-      eq(applications.cycleId, cycleId),
-      eq(applications.directAdd, false),
-      inArray(applications.status, GROUP_STATUSES[group] as ("accepted" | "waitlisted" | "rejected")[]),
-    ),
-    with: { votes: { columns: { value: true } } },
-    orderBy: [asc(applications.name)],
-  });
+  const apps = (
+    await db.query.applications.findMany({
+      where: eq(applications.cycleId, cycleId),
+      with: { votes: { columns: { value: true } } },
+      orderBy: [asc(applications.name)],
+    })
+  ).filter((a) => inDecisionGroup(group, a));
   return apps.map((a) => ({
     id: a.id,
     name: a.name,

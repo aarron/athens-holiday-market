@@ -23,6 +23,7 @@ type Recipient = {
 
 const GROUP_COPY = {
   accepted: { verb: "accepted into", accent: "var(--color-fern-deep)", tone: "bg-fern-soft" },
+  nonprofit: { verb: "accepted as a non-profit (no booth fee) into", accent: "var(--color-sky-deep)", tone: "bg-sky-soft" },
   waitlist: { verb: "placed on the waitlist for", accent: "var(--color-tangerine)", tone: "bg-tangerine-soft" },
 } as const;
 
@@ -34,7 +35,7 @@ export function DecisionSender({
   body: initialBody,
 }: {
   cycleId: number;
-  group: "accepted" | "waitlist";
+  group: "accepted" | "nonprofit" | "waitlist";
   recipients: Recipient[];
   subject: string;
   body: string;
@@ -186,7 +187,7 @@ export function DecisionSender({
           />
           <span>
             I&apos;ve reviewed all {targetCount} recipients and their votes, and confirm this{" "}
-            <strong>{group === "accepted" ? "acceptance" : "waitlist"}</strong> email should go to
+            <strong>{group === "waitlist" ? "waitlist" : group === "nonprofit" ? "non-profit acceptance" : "acceptance"}</strong> email should go to
             them.
           </span>
         </label>
@@ -209,7 +210,7 @@ export function DecisionSender({
             onClick={onSend}
             style={{ backgroundColor: copy.accent }}
           >
-            {`Send ${targetCount} ${group === "accepted" ? "acceptance" : "waitlist"} email${targetCount === 1 ? "" : "s"}`}
+            {`Send ${targetCount} ${group === "waitlist" ? "waitlist" : group === "nonprofit" ? "non-profit acceptance" : "acceptance"} email${targetCount === 1 ? "" : "s"}`}
           </Button>
         </div>
         {error && <StatusMessage tone="error" className="mt-2">{error}</StatusMessage>}

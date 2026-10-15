@@ -21,9 +21,11 @@ export const APPLICATION_STATUS: Record<string, StatusStyle> = {
   rejected: { label: "Rejected", cls: "bg-poppy-soft text-poppy-deep" },
 };
 
-export const BOOTH_FEE_STATUS: Record<"paid" | "unpaid", StatusStyle> = {
+export const BOOTH_FEE_STATUS: Record<"paid" | "unpaid" | "waived", StatusStyle> = {
   paid: { label: "Paid", cls: "bg-fern-soft text-fern-deeper" },
   unpaid: { label: "Unpaid", cls: "bg-tangerine-soft text-tangerine-deep" },
+  // Non-profit booths are free.
+  waived: { label: "No fee", cls: "bg-sky-soft text-sky-deep" },
 };
 
 /** Composed-email lifecycle (broadcasts) — carries icons. */

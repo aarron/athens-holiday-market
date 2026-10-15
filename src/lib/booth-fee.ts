@@ -1,10 +1,14 @@
 import "server-only";
-import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, cycles } from "@/db/schema";
 import { site } from "@/lib/site";
 import { createBoothFeeInvoice, paypalConfigured } from "@/lib/paypal";
 import { sendBoothFeeReminder } from "@/lib/emails";
+import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
+
+/** Non-profits never pay a booth fee (see lib/nonprofit.ts). */
+const notNonprofit = or(isNull(applications.mediumCategory), ne(applications.mediumCategory, NONPROFIT_CATEGORY));
 
 const AMOUNT = site.applications.boothFee;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -27,6 +31,9 @@ export async function invoiceApplication(
   if (!paypalConfigured()) return { ok: false, error: "PayPal is not configured." };
   if (app.paypalInvoiceId) return { ok: true, already: true };
   if (invalidEmail(app.email)) return { ok: false, error: "No valid email on file." };
+  // Last line of defence: whatever the caller, a non-profit is never invoiced.
+  const cat = await db.query.applications.findFirst({ where: eq(applications.id, app.id), columns: { mediumCategory: true } });
+  if (cat?.mediumCategory === NONPROFIT_CATEGORY) return { ok: false, error: "Non-profits don't pay a booth fee." };
 
   const res = await createBoothFeeInvoice({
     name: app.name,
@@ -52,7 +59,7 @@ export async function invoiceAcceptedWithoutInvoice(cycleId: number) {
   const rows = await db
     .select({ id: applications.id, name: applications.name, email: applications.email, paypalInvoiceId: applications.paypalInvoiceId })
     .from(applications)
-    .where(and(eq(applications.cycleId, cycleId), eq(applications.status, "accepted")));
+    .where(and(eq(applications.cycleId, cycleId), eq(applications.status, "accepted"), notNonprofit));
 
   let invoiced = 0;
   let skipped = 0;
@@ -70,6 +77,7 @@ export async function remindApplication(appId: number) {
   const app = await db.query.applications.findFirst({ where: eq(applications.id, appId) });
   if (!app) return { error: "Not found." };
   if (app.boothFeePaid) return { error: "Booth fee is already paid." };
+  if (app.mediumCategory === NONPROFIT_CATEGORY) return { error: "Non-profits don't pay a booth fee." };
   if (invalidEmail(app.email)) return { error: "No valid email on file." };
   const r = await sendBoothFeeReminder(app.email, app.name, AMOUNT, app.paypalInvoiceUrl);
   if (r && "error" in r) return { error: "Couldn't send the reminder email." };
@@ -97,6 +105,7 @@ export async function runBoothFeeReminders(now = new Date()) {
         eq(applications.status, "accepted"),
         eq(applications.boothFeePaid, false),
         isNotNull(applications.boothFeeInvoicedAt),
+        notNonprofit,
       ),
     );
 

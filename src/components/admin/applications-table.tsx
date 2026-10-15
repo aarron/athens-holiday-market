@@ -21,6 +21,8 @@ export type Row = {
   tally: Tally;
   status: string;
   boothFeePaid: boolean;
+  /** Non-profit booth — no fee, so it's in neither payment filter. */
+  nonprofit: boolean;
   photo: string | null;
 };
 
@@ -125,8 +127,8 @@ export function ApplicationsTable({
       if (voteFilter === "needs_my_vote" && r.myVote !== null) return false;
       if (categoryFilter !== "all" && r.category !== categoryFilter) return false;
       // payment (only meaningful for accepted artists)
-      if (paymentFilter === "paid" && !(status === "accepted" && r.boothFeePaid)) return false;
-      if (paymentFilter === "unpaid" && !(status === "accepted" && !r.boothFeePaid)) return false;
+      if (paymentFilter === "paid" && !(status === "accepted" && !r.nonprofit && r.boothFeePaid)) return false;
+      if (paymentFilter === "unpaid" && !(status === "accepted" && !r.nonprofit && !r.boothFeePaid)) return false;
       return true;
     });
     out.sort((a, b) => {
@@ -336,7 +338,7 @@ export function ApplicationsTable({
                   />
                 </td>
                 <td className="px-5 py-4">
-                  <BoothFeeBadge paid={r.boothFeePaid} status={r.status} />
+                  <BoothFeeBadge paid={r.boothFeePaid} status={statusOf(r)} waived={r.nonprofit} />
                 </td>
               </tr>
             ))}

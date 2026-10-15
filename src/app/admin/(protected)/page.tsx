@@ -4,6 +4,7 @@ import { countBooths, pairSharedBooths } from "@/lib/booths";
 import { getJudgesExhibiting } from "@/lib/judges-exhibiting";
 import { JudgesExhibitingInput } from "@/components/admin/judges-exhibiting-input";
 import { StatFilterTile } from "@/components/admin/stat-filter-tile";
+import { isNonprofitCategory } from "@/lib/nonprofit";
 import { displayStatus } from "@/lib/applications";
 import { getSessionUser } from "@/lib/admin-auth";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
@@ -76,8 +77,9 @@ export default async function AdminDashboard({
     waitlisted: apps.filter((a) => a.status === "waitlisted").length,
     rejected: apps.filter((a) => a.status === "rejected").length,
     pending: apps.filter((a) => a.status === "submitted" || a.status === "under_review").length,
-    paid: apps.filter((a) => a.status === "accepted" && a.boothFeePaid).length,
-    unpaid: apps.filter((a) => a.status === "accepted" && !a.boothFeePaid).length,
+    // Non-profits don't pay, so they're in neither fee count.
+    paid: apps.filter((a) => a.status === "accepted" && !isNonprofitCategory(a.mediumCategory) && a.boothFeePaid).length,
+    unpaid: apps.filter((a) => a.status === "accepted" && !isNonprofitCategory(a.mediumCategory) && !a.boothFeePaid).length,
   };
 
   const blendMap = new Map<string, { total: number; accepted: number }>();
@@ -105,6 +107,7 @@ export default async function AdminDashboard({
     tally: tally(a.votes),
     status: a.status,
     boothFeePaid: a.boothFeePaid,
+    nonprofit: isNonprofitCategory(a.mediumCategory),
     photo: a.photos[0]?.url ?? null,
   }));
 

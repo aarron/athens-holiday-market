@@ -16,20 +16,25 @@ export function AddArtistForm() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [nonprofit, setNonprofit] = useState(false);
   const [msg, setMsg] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [pending, start] = useTransition();
 
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await addDirectArtist({ name, email });
+      const r = await addDirectArtist({ name, email, nonprofit });
       if (r && "ok" in r && r.ok) {
         setMsg({
           tone: "success",
-          text: `Invite ${r.resent ? "re-sent" : "sent"} to ${email} — they'll get a link to complete their profile.`,
+          text:
+            "nonprofit" in r && r.nonprofit
+              ? `${name} added as a non-profit booth. Send their acceptance from Email & Text → Non-profits.`
+              : `Invite ${r.resent ? "re-sent" : "sent"} to ${email} — they'll get a link to complete their profile.`,
         });
         setName("");
         setEmail("");
+        setNonprofit(false);
       } else {
         setMsg({ tone: "error", text: r?.error ?? "Couldn't add that artist." });
       }
@@ -54,10 +59,24 @@ export function AddArtistForm() {
           <Input id="add-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jamie@email.com" />
         </Field>
       </div>
+      <label className="mt-3 flex items-start gap-2.5 text-sm">
+        <input
+          type="checkbox"
+          checked={nonprofit}
+          onChange={(e) => setNonprofit(e.target.checked)}
+          className="mt-0.5 h-4.5 w-4.5 accent-sky-deep"
+        />
+        <span>
+          <span className="font-semibold">Non-profit booth</span>
+          <span className="block text-ink-soft">
+            No booth fee. Skips the invite email — send their acceptance from Email &amp; Text instead.
+          </span>
+        </span>
+      </label>
       {msg && <StatusMessage tone={msg.tone} className="mt-3">{msg.text}</StatusMessage>}
       <div className="mt-4 flex items-center gap-2">
         <Button variant="create" size="sm" loading={pending} disabled={!name || !email} onClick={submit}>
-          Add &amp; send invite
+          {nonprofit ? "Add non-profit" : <>Add &amp; send invite</>}
         </Button>
         <Button variant="ghost" size="sm" disabled={pending} onClick={() => { setOpen(false); setMsg(null); }}>
           Cancel

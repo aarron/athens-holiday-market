@@ -2,7 +2,7 @@
 
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { applications } from "@/db/schema";
@@ -14,10 +14,11 @@ import { invoiceAcceptedWithoutInvoice } from "@/lib/booth-fee";
 import { refreshAndNotifyPostingTeam } from "@/lib/social-kit-notify";
 import { logAdminEvent } from "@/lib/audit";
 import { chunk, personalize } from "@/lib/send-util";
+import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
 
 const schema = z.object({
   cycleId: z.number(),
-  group: z.enum(["accepted", "waitlist"]),
+  group: z.enum(["accepted", "nonprofit", "waitlist"]),
   subject: z.string().trim().min(1).max(200),
   body: z.string().trim().min(1).max(20000),
   // Off by default: only email applicants who haven't been notified yet, so a
@@ -28,6 +29,8 @@ const schema = z.object({
 
 const GROUP_STATUSES: Record<string, ("accepted" | "waitlisted" | "rejected")[]> = {
   accepted: ["accepted"],
+  // Non-profits are accepted too, but get their own no-fee email (see below).
+  nonprofit: ["accepted"],
   // Rejected applicants (didn't meet our terms) never get the waitlist email.
   waitlist: ["waitlisted"],
 };
@@ -44,6 +47,11 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
   // Default: skip anyone already notified. `decisionSentAt` is only set on a
   // successful send (see failure branch below), so failed sends are retried.
   if (!resendAll) conds.push(isNull(applications.decisionSentAt));
+  // Non-profits are carved out of the regular acceptance email (and its
+  // invoice) and get their own. NULL categories are regular artists.
+  if (group === "nonprofit") conds.push(eq(applications.mediumCategory, NONPROFIT_CATEGORY));
+  if (group === "accepted")
+    conds.push(or(isNull(applications.mediumCategory), ne(applications.mediumCategory, NONPROFIT_CATEGORY))!);
   const apps = await db
     .select({ id: applications.id, name: applications.name, email: applications.email })
     .from(applications)
@@ -69,7 +77,7 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
       // batch send matches the single decision email and gives a clear next step.
       html: emailShell(
         renderMarkdown(personalize(body, a.name)) +
-          (group === "accepted" ? artistPageCtaBlock(a.email) : ""),
+          (group === "accepted" || group === "nonprofit" ? artistPageCtaBlock(a.email) : ""),
       ),
     }));
     try {

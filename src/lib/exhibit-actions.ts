@@ -16,6 +16,7 @@ import { categorizeMedium } from "@/lib/mediums";
 import { cleanName } from "@/lib/clean";
 import { normalizePhone, validateWebsite, validateSocial } from "@/lib/validate";
 import { site } from "@/lib/site";
+import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
 
 async function activeCycle() {
   return db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
@@ -26,7 +27,7 @@ async function activeCycle() {
  * `medium`/`description` are required columns, so the stub seeds them empty —
  * the invitee fills them in via the completion form.
  */
-async function ensureDirectApplication(cycleId: number, name: string, emailLower: string) {
+async function ensureDirectApplication(cycleId: number, name: string, emailLower: string, nonprofit = false) {
   const existing = await db.query.applications.findFirst({
     where: and(eq(applications.cycleId, cycleId), eq(sql`lower(${applications.email})`, emailLower)),
   });
@@ -39,7 +40,9 @@ async function ensureDirectApplication(cycleId: number, name: string, emailLower
       email: emailLower,
       status: "accepted",
       directAdd: true,
-      medium: "",
+      // A non-profit is marked by its category (lib/nonprofit.ts): no booth fee.
+      medium: nonprofit ? NONPROFIT_CATEGORY : "",
+      mediumCategory: nonprofit ? NONPROFIT_CATEGORY : null,
       description: "",
     })
     .returning();
@@ -49,6 +52,7 @@ async function ensureDirectApplication(cycleId: number, name: string, emailLower
 const addSchema = z.object({
   name: z.string().trim().min(1, "Add a name.").max(200),
   email: z.string().trim().toLowerCase().email("Enter a valid email."),
+  nonprofit: z.boolean().optional().default(false),
 });
 
 /**
@@ -63,13 +67,26 @@ export async function addDirectArtist(input: z.input<typeof addSchema>) {
   const cycle = await activeCycle();
   if (!cycle) return { error: "No active market cycle." };
 
-  const { name, email } = parsed.data;
-  const { app, created } = await ensureDirectApplication(cycle.id, name, email);
+  const { name, email, nonprofit } = parsed.data;
+  const { app, created } = await ensureDirectApplication(cycle.id, name, email, nonprofit);
   // Don't hijack a real juried applicant's row.
   if (!created && !app.directAdd) {
     return { error: "That email already has an application this year — open it from the list instead." };
   }
 
+  if (nonprofit) {
+    // No invite now — they get the non-profit acceptance email (with the
+    // link to build their page) from Email & Text, alongside any others.
+    await logAdminEvent({
+      action: "artist.invite",
+      targetType: "application",
+      targetId: app.id,
+      summary: `Added non-profit booth ${name} <${email}> (no booth fee)`,
+    });
+    revalidatePath("/admin/artists");
+    revalidatePath("/admin/broadcasts");
+    return { ok: true, applicationId: app.id, resent: !created, nonprofit: true };
+  }
   const raw = await createMagicToken(email);
   await sendArtistInvite(email, name, `${publicEnv.siteUrl}/auth/verify?token=${raw}&next=/artist/finish`);
   await logAdminEvent({

@@ -24,7 +24,7 @@ export default async function DecisionGroupPage({
   await requireAdmin();
   const { group } = await params;
   const { year } = await searchParams;
-  if (group !== "accepted" && group !== "waitlist" && group !== "rejected") notFound();
+  if (group !== "accepted" && group !== "nonprofit" && group !== "waitlist" && group !== "rejected") notFound();
 
   const list = await getCyclesWithCounts();
   const withApps = list.filter((c) => c.count > 0);
@@ -36,7 +36,8 @@ export default async function DecisionGroupPage({
   if (!cycle) notFound();
 
   const recipients = await getDecisionRecipients(cycle.id, group);
-  const template = getBroadcastTemplates().find((t) => t.id === (group === "accepted" ? "accepted" : "waitlist"))!;
+  const templateId = group === "accepted" ? "accepted" : group === "nonprofit" ? "nonprofit-accepted" : "waitlist";
+  const template = getBroadcastTemplates().find((t) => t.id === templateId)!;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -46,7 +47,8 @@ export default async function DecisionGroupPage({
           Send decisions
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">
-          {group === "accepted" ? "Acceptance" : group === "waitlist" ? "Waitlist" : "Rejection"} emails
+          {{ accepted: "Acceptance", nonprofit: "Non-profit acceptance", waitlist: "Waitlist", rejected: "Rejection" }[group]}{" "}
+          emails
         </h1>
         <p className="mt-1 text-ink-soft">{cycle.name}</p>
       </div>

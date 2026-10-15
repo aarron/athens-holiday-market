@@ -25,7 +25,8 @@ export function SendBadge({ status }: { status: string }) {
 }
 
 /** Booth fee — only meaningful once accepted. */
-export function BoothFeeBadge({ paid, status }: { paid: boolean; status: string }) {
+export function BoothFeeBadge({ paid, status, waived = false }: { paid: boolean; status: string; waived?: boolean }) {
   if (status !== "accepted") return <span className="text-ink-soft/40">—</span>;
+  if (waived) return <Badge style={BOOTH_FEE_STATUS.waived} />;
   return <Badge style={paid ? BOOTH_FEE_STATUS.paid : BOOTH_FEE_STATUS.unpaid} />;
 }

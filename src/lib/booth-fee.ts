@@ -6,12 +6,50 @@ import { site } from "@/lib/site";
 import { createBoothFeeInvoice, paypalConfigured } from "@/lib/paypal";
 import { sendBoothFeeReminder } from "@/lib/emails";
 import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
+import { pairSharedBooths } from "@/lib/booths";
+import { formatUsd } from "@/lib/money";
 
 /** Non-profits never pay a booth fee (see lib/nonprofit.ts). */
 const notNonprofit = or(isNull(applications.mediumCategory), ne(applications.mediumCategory, NONPROFIT_CATEGORY));
 
 const AMOUNT = site.applications.boothFee;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+export type FeeShare = { amount: number; partnerName: string | null };
+
+/**
+ * Each accepted artist's booth fee for a cycle. Two accepted artists who share
+ * a booth (matched by pairSharedBooths, the same pairing the dashboard shows)
+ * each pay half; everyone else pays the full fee. Used by the invoice, the
+ * reminders and the acceptance email so the amount always agrees.
+ */
+export async function feeSharesForCycle(cycleId: number): Promise<Map<number, FeeShare>> {
+  const accepted = await db
+    .select({
+      id: applications.id,
+      name: applications.name,
+      businessName: applications.businessName,
+      email: applications.email,
+      shareBooth: applications.shareBooth,
+      shareBoothWith: applications.shareBoothWith,
+    })
+    .from(applications)
+    .where(and(eq(applications.cycleId, cycleId), eq(applications.status, "accepted"), notNonprofit));
+  const partner = pairSharedBooths(accepted);
+  const byId = new Map(accepted.map((a) => [a.id, a]));
+  return new Map(
+    accepted.map((a) => {
+      const p = partner.get(a.id);
+      return [a.id, p ? { amount: AMOUNT / 2, partnerName: byId.get(p)?.name ?? null } : { amount: AMOUNT, partnerName: null }];
+    }),
+  );
+}
+
+async function feeShareFor(appId: number): Promise<FeeShare> {
+  const app = await db.query.applications.findFirst({ where: eq(applications.id, appId), columns: { cycleId: true } });
+  if (!app) return { amount: AMOUNT, partnerName: null };
+  return (await feeSharesForCycle(app.cycleId)).get(appId) ?? { amount: AMOUNT, partnerName: null };
+}
 
 type InvoiceableApp = { id: number; name: string; email: string; paypalInvoiceId: string | null };
 
@@ -35,12 +73,17 @@ export async function invoiceApplication(
   const cat = await db.query.applications.findFirst({ where: eq(applications.id, app.id), columns: { mediumCategory: true } });
   if (cat?.mediumCategory === NONPROFIT_CATEGORY) return { ok: false, error: "Non-profits don't pay a booth fee." };
 
+  const share = await feeShareFor(app.id);
   const res = await createBoothFeeInvoice({
     name: app.name,
     email: app.email,
-    amount: AMOUNT,
-    itemLabel: `Booth fee — ${cycleYear} ${site.name}`,
-    memo: `Your $${AMOUNT} booth fee for the ${cycleYear} ${site.name} (covers both nights). Thank you for being part of the market!`,
+    amount: share.amount,
+    itemLabel: share.partnerName
+      ? `Shared booth fee (half) — ${cycleYear} ${site.name}`
+      : `Booth fee — ${cycleYear} ${site.name}`,
+    memo: share.partnerName
+      ? `Your ${formatUsd(share.amount)} half of the ${formatUsd(AMOUNT)} booth you're sharing with ${share.partnerName} at the ${cycleYear} ${site.name} (covers both nights). Thank you for being part of the market!`
+      : `Your ${formatUsd(AMOUNT)} booth fee for the ${cycleYear} ${site.name} (covers both nights). Thank you for being part of the market!`,
   });
   if (!res.ok) return res;
 
@@ -79,7 +122,7 @@ export async function remindApplication(appId: number) {
   if (app.boothFeePaid) return { error: "Booth fee is already paid." };
   if (app.mediumCategory === NONPROFIT_CATEGORY) return { error: "Non-profits don't pay a booth fee." };
   if (invalidEmail(app.email)) return { error: "No valid email on file." };
-  const r = await sendBoothFeeReminder(app.email, app.name, AMOUNT, app.paypalInvoiceUrl);
+  const r = await sendBoothFeeReminder(app.email, app.name, (await feeShareFor(app.id)).amount, app.paypalInvoiceUrl);
   if (r && "error" in r) return { error: "Couldn't send the reminder email." };
   return { ok: true };
 }
@@ -117,7 +160,7 @@ export async function runBoothFeeReminders(now = new Date()) {
     const due = weeks >= 2 ? 2 : weeks >= 1 ? 1 : 0;
     if (due <= a.reminderCount) continue;
 
-    const r = await sendBoothFeeReminder(a.email, a.name, AMOUNT, a.invoiceUrl);
+    const r = await sendBoothFeeReminder(a.email, a.name, (await feeShareFor(a.id)).amount, a.invoiceUrl);
     if (r && "error" in r) continue;
     await db
       .update(applications)

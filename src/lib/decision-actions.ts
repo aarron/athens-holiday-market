@@ -10,7 +10,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { resend, EMAIL_FROM } from "@/lib/resend-client";
 import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { artistPageCtaBlock } from "@/lib/emails";
-import { invoiceAcceptedWithoutInvoice } from "@/lib/booth-fee";
+import { invoiceAcceptedWithoutInvoice, feeSharesForCycle, type FeeShare } from "@/lib/booth-fee";
+import { fillBoothFee } from "@/lib/booth-fee-copy";
 import { refreshAndNotifyPostingTeam } from "@/lib/social-kit-notify";
 import { logAdminEvent } from "@/lib/audit";
 import { chunk, personalize } from "@/lib/send-util";
@@ -66,6 +67,9 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     };
   }
 
+  // Each accepted artist's own fee (half for a shared booth) for {{booth_fee}}.
+  const shares: Map<number, FeeShare> = group === "accepted" ? await feeSharesForCycle(cycleId) : new Map();
+
   const now = new Date();
   let sent = 0;
   for (const batch of chunk(valid, 100)) {
@@ -76,7 +80,7 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
       // Accepted artists always get the "build your page" CTA appended, so the
       // batch send matches the single decision email and gives a clear next step.
       html: emailShell(
-        renderMarkdown(personalize(body, a.name)) +
+        renderMarkdown(personalize(fillBoothFee(body, shares.get(a.id)), a.name)) +
           (group === "accepted" || group === "nonprofit" ? artistPageCtaBlock(a.email) : ""),
       ),
     }));

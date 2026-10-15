@@ -64,7 +64,9 @@ The BCB Art Collective`,
 
 Congratulations! You've been accepted into the ${year} ${site.name} at Big City Bread. We had SO many great applicants this year — you're one of the chosen few!
 
-Your **$75 booth fee** is due via PayPal by the payment deadline. Watch for a PayPal payment request in the next few days and follow the prompts. We'll email you a confirmation once payment is received.
+{{shared_booth_note}}
+
+Your **{{booth_fee}} booth fee** is due via PayPal by the payment deadline. Watch for a PayPal payment request in the next few days and follow the prompts. We'll email you a confirmation once payment is received.
 
 There is a waiting list for this event. If you don't pay by the deadline, your space will be offered to another artist.
 

@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { StatusMessage } from "@/components/ui/status-message";
 import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { sendDecisionBatch } from "@/lib/decision-actions";
+import { fillBoothFee } from "@/lib/booth-fee-copy";
 
 type Recipient = {
   id: number;
@@ -62,7 +63,10 @@ export function DecisionSender({
     () =>
       emailShell(
         renderMarkdown(
-          (body || "…").replace(/\{\{\s*first_name\s*\}\}/gi, recipients[0]?.name.split(" ")[0] ?? "Friend"),
+          fillBoothFee(body || "…", undefined).replace(
+            /\{\{\s*first_name\s*\}\}/gi,
+            recipients[0]?.name.split(" ")[0] ?? "Friend",
+          ),
         ),
       ),
     [body, recipients],
@@ -113,7 +117,15 @@ export function DecisionSender({
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
         </Field>
         <Field
-          label={<>Message <span className="font-normal text-ink-soft/70">— {"{{first_name}}"} is personalized</span></>}
+          label={
+            <>
+              Message{" "}
+              <span className="font-normal text-ink-soft/70">
+                — {"{{first_name}}"} is personalized; {"{{booth_fee}}"} is $75, or $37.50 each for artists sharing a
+                booth, who also get {"{{shared_booth_note}}"} naming their partner
+              </span>
+            </>
+          }
         >
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="font-mono" />
         </Field>

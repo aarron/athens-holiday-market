@@ -9,3 +9,11 @@ export const NONPROFIT_CATEGORY = "Non-profit";
 export const NONPROFIT_SPOTS_PER_YEAR = 2;
 
 export const isNonprofitCategory = (category: string | null | undefined) => category === NONPROFIT_CATEGORY;
+
+/**
+ * On artist pages the marker is the medium: a non-profit's page is created
+ * with medium "Non-profit" (see ensureArtistForApplication), which public
+ * pages already file under the Non-profit category.
+ */
+export const isNonprofitMedium = (medium: string | null | undefined) =>
+  (medium ?? "").trim().toLowerCase() === NONPROFIT_CATEGORY.toLowerCase();

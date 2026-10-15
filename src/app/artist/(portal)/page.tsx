@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import { requireArtistAccess } from "@/lib/admin-auth";
 import { isStaff } from "@/lib/roles";
+import { isNonprofitMedium } from "@/lib/nonprofit";
 import { db } from "@/db";
 import { artists } from "@/db/schema";
 import { site } from "@/lib/site";
@@ -51,7 +52,9 @@ export default async function ArtistPortalPage() {
   const heroPhoto = initial.photoUrls[0] ?? null;
   const canShare = !!heroPhoto;
 
-  const first = artist.name.split(" ")[0];
+  const nonprofit = isNonprofitMedium(artist.medium);
+  // An organization is greeted by its full name ("Welcome, Sweet Olive Farm").
+  const first = nonprofit ? artist.name : artist.name.split(" ")[0];
   const info = site.artistInfo;
   const pill = "inline-flex items-center gap-1.5 rounded-full border-2 border-ink/15 px-3.5 py-1.5 text-sm font-semibold transition-colors hover:bg-cream";
   const sectionTitle = "flex items-center gap-1.5 font-display text-sm font-bold uppercase tracking-[0.14em] text-teal-deep";
@@ -170,7 +173,7 @@ export default async function ArtistPortalPage() {
 
       {/* Your page (editor) */}
       <div id="edit" className="scroll-mt-20">
-        <ArtistEditor initial={initial} status={status} slug={artist.slug} published={artist.published} selfPublish={isStaff(user.role)} />
+        <ArtistEditor initial={initial} status={status} slug={artist.slug} published={artist.published} selfPublish={isStaff(user.role)} nonprofit={nonprofit} />
       </div>
     </div>
   );

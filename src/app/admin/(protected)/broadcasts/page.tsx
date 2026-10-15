@@ -90,7 +90,18 @@ function DecisionCard({
   );
 }
 
-export default async function EmailHubPage() {
+export default async function EmailHubPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sent?: string; group?: string; invoicing?: string }>;
+}) {
+  const sp = await searchParams;
+  const sentCount = Number(sp.sent);
+  const sentLabel: Record<string, string> = {
+    accepted: "acceptance",
+    nonprofit: "non-profit acceptance",
+    waitlist: "waitlist",
+  };
   await requireAdmin();
   const [broadcasts, cycle, textSends, scheduled, receipts] = await Promise.all([
     listBroadcasts(),
@@ -328,6 +339,24 @@ export default async function EmailHubPage() {
         <h1 className="text-3xl font-extrabold">Email &amp; Text</h1>
         <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
       </div>
+
+      {Number.isFinite(sentCount) && sentCount > 0 && sp.group && sentLabel[sp.group] && (
+        <div role="status" className="rounded-xl bg-fern-soft px-5 py-3.5 text-sm">
+          <p className="font-semibold text-fern-deep">
+            ✓ Sent {sentCount} {sentLabel[sp.group]} email{sentCount === 1 ? "" : "s"}.
+          </p>
+          {sp.invoicing === "1" && (
+            <p className="mt-0.5 text-ink-soft">
+              Booth-fee invoices are being created in PayPal in the background — about a minute for everyone. When
+              they&apos;re done, it&apos;s noted in{" "}
+              <Link href="/admin/activity" className="font-semibold link">
+                Activity
+              </Link>
+              .
+            </p>
+          )}
+        </div>
+      )}
 
       <SectionTabs tabs={tabs} initial="email" />
     </div>

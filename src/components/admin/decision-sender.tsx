@@ -79,7 +79,8 @@ export function DecisionSender({
     setError("");
     start(async () => {
       const r = await sendDecisionBatch({ cycleId, group, subject, body, resendAll });
-      if (r && "ok" in r && r.ok) router.push("/admin/decisions");
+      if (r && "ok" in r && r.ok)
+        router.push(`/admin/broadcasts?sent=${r.count}&group=${group}${r.invoicing ? "&invoicing=1" : ""}`);
       else setError(r?.error ?? "Couldn't send.");
     });
   }

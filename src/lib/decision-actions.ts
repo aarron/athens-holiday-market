@@ -38,7 +38,7 @@ const GROUP_STATUSES: Record<string, ("accepted" | "waitlisted" | "rejected")[]>
 
 
 export async function sendDecisionBatch(input: z.input<typeof schema>) {
-  await requireAdmin();
+  const me = await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: "Please add a subject and message." };
   if (!resend) return { error: "Email isn't configured." };
@@ -117,20 +117,37 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     }
   }
 
-  // Auto-send booth-fee invoices to the accepted group as they're notified.
-  // Best-effort: a PayPal hiccup must never fail the decision emails.
-  let invoiced = 0;
+  // Booth-fee invoices and the posting-team spotlight zip run in the
+  // background (after the response), so the admin gets an answer as soon as
+  // the emails are out. Invoicing ~50 artists through PayPal one at a time
+  // takes over a minute; doing it in-line left the Send button spinning.
+  // Best-effort: a PayPal hiccup never affects the decision emails, and the
+  // result is recorded in the Activity log.
   if (group === "accepted") {
-    try {
-      const r = await invoiceAcceptedWithoutInvoice(cycleId);
-      invoiced = r.invoiced;
-    } catch (e) {
-      console.error("[decisions] booth-fee auto-invoice failed:", e);
-    }
-    // Build the branded spotlight zip and (first time only) email the posting
-    // team its download link. Deferred to after() so rendering ~2 images per
-    // accepted artist never delays the admin's response.
     after(async () => {
+      try {
+        const r = await invoiceAcceptedWithoutInvoice(cycleId);
+        await logAdminEvent({
+          action: "booth_fee.invoice",
+          targetType: "cycle",
+          targetId: cycleId,
+          actorEmail: me.email,
+          summary: r.configured
+            ? `Sent ${r.invoiced} booth-fee invoice${r.invoiced === 1 ? "" : "s"} after the acceptance emails${r.skipped ? ` (${r.skipped} skipped: already invoiced or no valid email)` : ""}`
+            : "Booth-fee invoices NOT sent: PayPal isn't configured",
+        });
+      } catch (e) {
+        console.error("[decisions] booth-fee auto-invoice failed:", e);
+        await logAdminEvent({
+          action: "booth_fee.invoice",
+          targetType: "cycle",
+          targetId: cycleId,
+          actorEmail: me.email,
+          summary: `Booth-fee invoicing after acceptance emails FAILED: ${e instanceof Error ? e.message : String(e)}`,
+        });
+      }
+      // Build the branded spotlight zip and (first time only) email the
+      // posting team its download link.
       await refreshAndNotifyPostingTeam(cycleId);
     });
   }
@@ -141,9 +158,9 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     action: "decision.send",
     targetType: "cycle",
     targetId: cycleId,
-    summary: `Sent ${sent} ${group} decision email${sent === 1 ? "" : "s"}${resendAll ? " (incl. re-sends)" : ""}${invoiced ? `, invoiced ${invoiced}` : ""}`,
+    summary: `Sent ${sent} ${group} decision email${sent === 1 ? "" : "s"}${resendAll ? " (incl. re-sends)" : ""}${group === "accepted" ? "; booth-fee invoices sending in the background" : ""}`,
   });
-  return { ok: true, count: sent, invoiced };
+  return { ok: true, count: sent, invoicing: group === "accepted" };
 }
 
 /* --------------------------------------------------------------- rejections */

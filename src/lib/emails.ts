@@ -438,3 +438,42 @@ export async function sendDecisionEmail(to: string, name: string, decision: Deci
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
+
+/**
+ * "Payment received" — sent once, automatically, when PayPal reports an
+ * accepted artist's booth-fee invoice paid (see /api/paypal/webhook). Copy
+ * approved by Aarron on 2026-10-15. `amount` is the artist's own fee ($75, or
+ * $37.50 for a shared booth).
+ */
+export async function sendBoothFeePaid(to: string, name: string, amount: number) {
+  if (!resend) return { skipped: true as const };
+  const first = (name || "").trim().split(/\s+/)[0] || "there";
+  const day1 = site.event.days[0].label;
+  const day2 = site.event.days[1].label;
+  const inner = `
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(first)},</p>
+    <p style="margin:0 0 14px;line-height:1.6">We've received your <strong>${formatUsd(amount)} booth fee</strong> — thank you! Your space at the ${site.event.year} ${site.name} is all set.</p>
+    <p style="margin:0 0 14px;line-height:1.6">As always, booth fees are donated to local charity.</p>
+    <p style="margin:0 0 8px;line-height:1.6"><strong>What's next</strong></p>
+    <ul style="margin:0 0 18px;padding-left:20px;line-height:1.7">
+      <li><strong>Your artist page:</strong> if you haven't built it yet, now's a great time — it's how shoppers find you before the market.</li>
+      <li><strong>Setup details</strong> will come by email closer to the event.</li>
+      <li><strong>Dates:</strong> ${day1} &amp; ${day2}, ${site.event.timeLabel}, in the Big City Bread courtyard.</li>
+    </ul>
+    ${ctaButton(`${site.url}/artist/login`, "Build your artist page →")}
+    <p style="margin:0 0 14px;line-height:1.6">See you in December!</p>
+    <p style="margin:0;line-height:1.6">— Ansley, Brent, Jamie, Jim, Ryan and (in our hearts) Kenneth</p>`;
+  try {
+    const res = await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Payment received — see you at the ${site.name}!`,
+      html: wrap(inner),
+    });
+    if (res.error) console.error("[emails] booth-fee-paid rejected by Resend:", to, res.error);
+    return res;
+  } catch (e) {
+    console.error("[emails] failed to send booth-fee-paid:", e);
+    return { error: true as const };
+  }
+}

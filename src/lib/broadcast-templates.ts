@@ -93,7 +93,7 @@ ${signoff}`,
 
 We're delighted to welcome you as one of this year's two non-profit booths at the ${year} ${site.name} at Big City Bread.
 
-**There's no booth fee for non-profits** — nothing to pay, and you won't receive a PayPal invoice.
+**There's no booth fee for non-profits.**
 
 An email with setup instructions will follow closer to the event.
 

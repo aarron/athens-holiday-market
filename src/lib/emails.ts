@@ -401,7 +401,19 @@ function ctaButton(href: string, label: string) {
  * so an accepted artist always gets the same prominent next step — log in and
  * build their page — no matter which path notified them.
  */
-export function artistPageCtaBlock(to: string) {
+export function artistPageCtaBlock(to: string, opts: { nonprofit?: boolean } = {}) {
+  // Non-profits have a page too, but it's about the organization, and many
+  // (added directly, not via the application) have no photos or words yet.
+  if (opts.nonprofit) {
+    return `<div style="margin:16px 0 0;padding:16px 18px;background:#f1f7ec;border-radius:10px">
+    <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — set up your page on our site.</strong>
+    Shoppers can find you in our directory before the market. Log in with this email address
+    (<strong>${escapeHtml(to)}</strong>), tell visitors about your organization and what they'll find at your table,
+    add a few photos, and submit it for us to publish.</p>
+    ${ctaButton(`${site.url}/artist/login`, "Set up your page →")}
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">The button emails you a one-time login link — no password needed.</p>
+  </div>`;
+  }
   return `<div style="margin:16px 0 0;padding:16px 18px;background:#f1f7ec;border-radius:10px">
     <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — build your artist page.</strong>
     We've started it for you with your application photos and words. Log in with this email address

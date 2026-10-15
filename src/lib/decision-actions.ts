@@ -81,7 +81,9 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
       // batch send matches the single decision email and gives a clear next step.
       html: emailShell(
         renderMarkdown(personalize(fillBoothFee(body, shares.get(a.id)), a.name)) +
-          (group === "accepted" || group === "nonprofit" ? artistPageCtaBlock(a.email) : ""),
+          (group === "accepted" || group === "nonprofit"
+            ? artistPageCtaBlock(a.email, { nonprofit: group === "nonprofit" })
+            : ""),
       ),
     }));
     try {

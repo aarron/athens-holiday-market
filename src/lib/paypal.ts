@@ -15,8 +15,28 @@ const CLIENT_ID = process.env.PAYPAL_CLIENT_ID ?? "";
 const CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET ?? "";
 const WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID ?? "";
 
+/** Production must never bill in sandbox: test invoices reach no one. */
+const SANDBOX_IN_PRODUCTION = ENV === "sandbox" && process.env.VERCEL_ENV === "production";
+
 export function paypalConfigured(): boolean {
-  return !!(CLIENT_ID && CLIENT_SECRET);
+  return !!(CLIENT_ID && CLIENT_SECRET) && !SANDBOX_IN_PRODUCTION;
+}
+
+export type PaypalStatus =
+  | { state: "connected"; mode: "live" | "sandbox"; webhook: boolean }
+  | { state: "sandbox-in-production" | "missing-keys" | "auth-failed"; mode: "live" | "sandbox"; webhook: boolean };
+
+/** Which PayPal the site talks to, and whether its keys work. Creates nothing. */
+export async function paypalStatus(): Promise<PaypalStatus> {
+  const base = { mode: ENV, webhook: !!WEBHOOK_ID } as const;
+  if (SANDBOX_IN_PRODUCTION) return { ...base, state: "sandbox-in-production" };
+  if (!CLIENT_ID || !CLIENT_SECRET) return { ...base, state: "missing-keys" };
+  try {
+    await getAccessToken();
+    return { ...base, state: "connected" };
+  } catch {
+    return { ...base, state: "auth-failed" };
+  }
 }
 
 // Cache the OAuth token in-process until shortly before it expires.

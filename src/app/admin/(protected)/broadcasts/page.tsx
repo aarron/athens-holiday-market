@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
+import { paypalStatus } from "@/lib/paypal";
 import { listBroadcasts, broadcastReceiptSummaries, listTextSends } from "@/lib/broadcast-data";
 import { getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
 import { getScheduledSends } from "@/lib/scheduled-sends";
@@ -103,12 +104,13 @@ export default async function EmailHubPage({
     waitlist: "waitlist",
   };
   await requireAdmin();
-  const [broadcasts, cycle, textSends, scheduled, receipts] = await Promise.all([
+  const [broadcasts, cycle, textSends, scheduled, receipts, paypal] = await Promise.all([
     listBroadcasts(),
     getActiveCycle(),
     listTextSends(),
     getScheduledSends(),
     broadcastReceiptSummaries(),
+    paypalStatus(),
   ]);
 
   const groups = cycle ? await getDecisionGroups(cycle.id) : null;
@@ -339,6 +341,25 @@ export default async function EmailHubPage({
         <h1 className="text-3xl font-extrabold">Email &amp; Text</h1>
         <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
       </div>
+
+      {paypal.state === "connected" && paypal.mode === "live" ? (
+        <p className="text-sm text-ink-soft">
+          <span className="font-semibold text-fern-deep">PayPal: live and connected.</span>
+          {!paypal.webhook && " The payment webhook ID is missing, so payments won't be marked paid automatically."}
+        </p>
+      ) : (
+        <div role="alert" className="rounded-xl bg-poppy-soft px-5 py-3.5 text-sm text-poppy-deep">
+          <p className="font-semibold">
+            {paypal.state === "sandbox-in-production"
+              ? "PayPal is in sandbox (test) mode, so booth-fee invoicing is switched off. Set PAYPAL_ENV to live with live keys."
+              : paypal.state === "missing-keys"
+                ? "PayPal keys aren't set, so booth-fee invoicing is switched off."
+                : paypal.state === "auth-failed"
+                  ? `PayPal rejected the ${paypal.mode} keys. Check the client ID and secret.`
+                  : "PayPal is in sandbox (test) mode. Invoices won't reach anyone."}
+          </p>
+        </div>
+      )}
 
       {Number.isFinite(sentCount) && sentCount > 0 && sp.group && sentLabel[sp.group] && (
         <div role="status" className="rounded-xl bg-fern-soft px-5 py-3.5 text-sm">

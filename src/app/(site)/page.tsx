@@ -22,7 +22,12 @@ const CATEGORIES: { label: string; color: string; img: string; pos?: string }[] 
   { label: "Woodwork", color: "var(--color-berry)", img: "/photos/categories/woodwork.jpg" },
   // Portrait photo of hanging bags — bias the crop lower so the bags show, not the straps.
   { label: "Leather & Bags", color: "var(--color-chartreuse)", img: "/photos/categories/leather.jpg", pos: "center 72%" },
-  { label: "Tea & Treats", color: "var(--color-poppy)", img: "/photos/categories/treats.jpg" },
+  // A 2026 artist's work (Mandy Latimer), served from Blob storage like artist pages.
+  {
+    label: "Bath, Body & Apothecary",
+    color: "var(--color-poppy)",
+    img: "https://uwqbnrbwvaadtaoc.public.blob.vercel-storage.com/20260206_103631-gto5SSvpBy9HIPlkomPOdTrqE863ql.jpg",
+  },
 ];
 
 const MARQUEE = [

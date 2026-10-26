@@ -6,6 +6,7 @@ import { JudgesExhibitingInput } from "@/components/admin/judges-exhibiting-inpu
 import { StatFilterTile } from "@/components/admin/stat-filter-tile";
 import { isNonprofitCategory } from "@/lib/nonprofit";
 import { displayStatus } from "@/lib/applications";
+import { currentCategory } from "@/lib/mediums";
 import { getSessionUser } from "@/lib/admin-auth";
 import { ApplicationsTable, type Row } from "@/components/admin/applications-table";
 import { MediumBlend, type BlendRow } from "@/components/admin/medium-blend";
@@ -50,6 +51,7 @@ export default async function AdminDashboard({
   const allApps = (current.count > 0 ? await listApplications(current.id) : []).map((a) => ({
     ...a,
     status: displayStatus(a.status, current.year),
+    mediumCategory: currentCategory(a.mediumCategory),
   }));
   const apps = allApps.filter((a) => !a.directAdd);
 

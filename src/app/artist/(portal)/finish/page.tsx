@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { applications } from "@/db/schema";
 import { site } from "@/lib/site";
 import { ApplicationForm } from "@/components/application-form";
+import { currentCategory } from "@/lib/mediums";
 
 export const metadata: Metadata = { title: "Complete your profile", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export default async function ArtistFinishPage() {
     facebook: socials.facebook ?? "",
     tiktok: socials.tiktok ?? "",
     medium: app?.medium ?? "",
-    mediumCategory: app?.mediumCategory ?? "",
+    mediumCategory: currentCategory(app?.mediumCategory) ?? "",
     description: app?.description ?? "",
     bio: app?.bio ?? "",
     shareBooth: (app?.shareBooth ? "yes" : "no") as "yes" | "no",

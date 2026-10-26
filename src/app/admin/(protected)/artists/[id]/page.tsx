@@ -46,14 +46,14 @@ export default async function AdminArtistReview({ params }: { params: Promise<{ 
 
       {pc ? (
         <div className="mt-6 space-y-6">
-          <div className="rounded-xl border-2 border-tangerine/40 bg-tangerine-soft/40 p-5">
-            <p className="font-display font-bold text-tangerine-deep">Submitted for review</p>
-            <p className="mt-1 text-sm text-ink-soft">
-              Review the artist&apos;s submission below. Approving replaces their live page.
-            </p>
-            <div className="mt-4">
-              <ReviewControls artistId={artist.id} />
+          <div className="flex flex-col gap-4 rounded-xl border-l-4 border-tangerine bg-white p-5 shadow-[var(--shadow-card)] lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="font-display font-bold text-tangerine-deep">Submitted for review</p>
+              <p className="mt-1 text-sm text-ink-soft">
+                Review the submission below. Approving replaces their live page.
+              </p>
             </div>
+            <ReviewControls artistId={artist.id} />
           </div>
 
           {/* Photos */}

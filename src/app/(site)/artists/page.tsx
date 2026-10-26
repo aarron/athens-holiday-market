@@ -4,7 +4,7 @@ import { listPublishedArtists } from "@/lib/artists-data";
 import { BlobImage } from "@/components/blob-image";
 import { Flower } from "@/components/brand";
 import { site } from "@/lib/site";
-import { categorizeMedium } from "@/lib/mediums";
+import { artistHeading } from "@/lib/mediums";
 import { cleanName } from "@/lib/clean";
 
 export const metadata: Metadata = {
@@ -62,7 +62,7 @@ export default async function ArtistsPage() {
                   {cleanName(a.name)}
                 </h2>
                 {(() => {
-                  const cat = categorizeMedium(a.medium);
+                  const cat = artistHeading(a);
                   return cat !== "Other" ? <p className="text-sm text-ink-soft">{cat}</p> : null;
                 })()}
               </Link>

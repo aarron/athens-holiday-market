@@ -15,7 +15,7 @@ import {
   XIcon,
   GlobeIcon,
 } from "@/components/icons";
-import { categorizeMedium } from "@/lib/mediums";
+import { artistHeading } from "@/lib/mediums";
 import { isNonprofitMedium } from "@/lib/nonprofit";
 import { cleanName, cleanUrl, sanitizeSocials } from "@/lib/clean";
 
@@ -48,7 +48,7 @@ export async function generateMetadata({
   if (!artist || !artist.published) return { title: "Artist not found" };
   const desc =
     (artist.statement ?? artist.bio)?.slice(0, 155) ??
-    `${cleanName(artist.name)} — ${categorizeMedium(artist.medium)} at the ${site.name}.`;
+    `${cleanName(artist.name)} — ${artistHeading(artist)} at the ${site.name}.`;
   return {
     title: cleanName(artist.name),
     description: desc,
@@ -104,8 +104,8 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         {/* Info */}
         <div className="lg:sticky lg:top-24">
           <h1 className="text-4xl font-extrabold sm:text-5xl">{cleanName(artist.name)}</h1>
-          {categorizeMedium(artist.medium) !== "Other" && (
-            <p className="mt-2 text-lg font-bold text-fern-deep">{categorizeMedium(artist.medium)}</p>
+          {artistHeading(artist) !== "Other" && (
+            <p className="mt-2 text-lg font-bold text-fern-deep">{artistHeading(artist)}</p>
           )}
 
           {artist.statement && (

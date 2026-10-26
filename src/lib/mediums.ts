@@ -78,3 +78,18 @@ export function categorizeMedium(text: string | null | undefined): MediumCategor
   for (const [re, cat] of RULES) if (re.test(t)) return cat;
   return "Other";
 }
+
+/**
+ * Headings an artist asked for in their own words, by page slug. The heading
+ * under an artist's name is otherwise their medium's category, which can
+ * mislabel mixed or unusual work.
+ */
+const HEADING_OVERRIDES: Record<string, string> = {
+  // Asked 2026-10: hand-builder, not a wheel potter; also makes body care.
+  "anita-brannon": "Hand-Built Ceramics & Natural Body Care",
+};
+
+/** The heading shown under an artist's name ("Other" means show none). */
+export function artistHeading(artist: { slug: string; medium: string | null | undefined }): string {
+  return HEADING_OVERRIDES[artist.slug] ?? categorizeMedium(artist.medium);
+}

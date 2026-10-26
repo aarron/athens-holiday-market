@@ -367,3 +367,36 @@ export async function sendArtistLink(email: string) {
   const res = await sendMagicLink(email, `${publicEnv.siteUrl}/auth/verify?token=${raw}`);
   return { ok: true, skipped: !!(res && "skipped" in res) };
 }
+
+/**
+ * Mark an application as one of the year's non-profit booths (or undo it).
+ * The "Non-profit" category is the single marker (see lib/nonprofit.ts): it
+ * exempts the booth fee and routes the acceptance to the non-profit email.
+ * Refuses to switch on if a booth-fee invoice already went out, since that
+ * has to be cancelled in PayPal first.
+ */
+export async function setNonprofit(applicationId: number, on: boolean) {
+  await requireAdmin();
+  const { NONPROFIT_CATEGORY } = await import("@/lib/nonprofit");
+  const { categorizeMedium } = await import("@/lib/mediums");
+  const app = await db.query.applications.findFirst({
+    where: eq(applications.id, applicationId),
+    columns: { name: true, medium: true, mediumCategory: true, paypalInvoiceId: true, boothFeePaid: true },
+  });
+  if (!app) return { error: "Not found." };
+  if (on && app.paypalInvoiceId)
+    return { error: "A booth-fee invoice was already sent. Cancel it in PayPal, then try again." };
+  const fallback = categorizeMedium(app.medium);
+  const next = on ? NONPROFIT_CATEGORY : fallback === NONPROFIT_CATEGORY ? "Other" : fallback;
+  await db.update(applications).set({ mediumCategory: next, updatedAt: sql`now()` }).where(eq(applications.id, applicationId));
+  revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath("/admin");
+  revalidatePath("/admin/broadcasts");
+  await logAdminEvent({
+    action: "application.nonprofit",
+    targetType: "application",
+    targetId: applicationId,
+    summary: `${app.name}: ${on ? "marked as a non-profit booth (no fee)" : `no longer a non-profit (category ${next})`}`,
+  });
+  return { ok: true as const };
+}

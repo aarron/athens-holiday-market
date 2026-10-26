@@ -2,7 +2,7 @@
 
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { applications } from "@/db/schema";
@@ -10,14 +10,17 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { resend, EMAIL_FROM } from "@/lib/resend-client";
 import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { artistPageCtaBlock } from "@/lib/emails";
-import { invoiceAcceptedWithoutInvoice } from "@/lib/booth-fee";
+import { invoiceAcceptedWithoutInvoice, feeSharesForCycle, type FeeShare } from "@/lib/booth-fee";
+import { fillBoothFee } from "@/lib/booth-fee-copy";
 import { refreshAndNotifyPostingTeam } from "@/lib/social-kit-notify";
 import { logAdminEvent } from "@/lib/audit";
 import { chunk, personalize } from "@/lib/send-util";
+import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
+import { readDecisionDraft, writeDecisionDraft } from "@/lib/decision-draft-store";
 
 const schema = z.object({
   cycleId: z.number(),
-  group: z.enum(["accepted", "waitlist"]),
+  group: z.enum(["accepted", "nonprofit", "waitlist"]),
   subject: z.string().trim().min(1).max(200),
   body: z.string().trim().min(1).max(20000),
   // Off by default: only email applicants who haven't been notified yet, so a
@@ -28,13 +31,15 @@ const schema = z.object({
 
 const GROUP_STATUSES: Record<string, ("accepted" | "waitlisted" | "rejected")[]> = {
   accepted: ["accepted"],
+  // Non-profits are accepted too, but get their own no-fee email (see below).
+  nonprofit: ["accepted"],
   // Rejected applicants (didn't meet our terms) never get the waitlist email.
   waitlist: ["waitlisted"],
 };
 
 
 export async function sendDecisionBatch(input: z.input<typeof schema>) {
-  await requireAdmin();
+  const me = await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: "Please add a subject and message." };
   if (!resend) return { error: "Email isn't configured." };
@@ -44,6 +49,11 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
   // Default: skip anyone already notified. `decisionSentAt` is only set on a
   // successful send (see failure branch below), so failed sends are retried.
   if (!resendAll) conds.push(isNull(applications.decisionSentAt));
+  // Non-profits are carved out of the regular acceptance email (and its
+  // invoice) and get their own. NULL categories are regular artists.
+  if (group === "nonprofit") conds.push(eq(applications.mediumCategory, NONPROFIT_CATEGORY));
+  if (group === "accepted")
+    conds.push(or(isNull(applications.mediumCategory), ne(applications.mediumCategory, NONPROFIT_CATEGORY))!);
   const apps = await db
     .select({ id: applications.id, name: applications.name, email: applications.email })
     .from(applications)
@@ -58,6 +68,9 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     };
   }
 
+  // Each accepted artist's own fee (half for a shared booth) for {{booth_fee}}.
+  const shares: Map<number, FeeShare> = group === "accepted" ? await feeSharesForCycle(cycleId) : new Map();
+
   const now = new Date();
   let sent = 0;
   for (const batch of chunk(valid, 100)) {
@@ -68,8 +81,10 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
       // Accepted artists always get the "build your page" CTA appended, so the
       // batch send matches the single decision email and gives a clear next step.
       html: emailShell(
-        renderMarkdown(personalize(body, a.name)) +
-          (group === "accepted" ? artistPageCtaBlock(a.email) : ""),
+        renderMarkdown(personalize(fillBoothFee(body, shares.get(a.id)), a.name)) +
+          (group === "accepted" || group === "nonprofit"
+            ? artistPageCtaBlock(a.email, { nonprofit: group === "nonprofit" })
+            : ""),
       ),
     }));
     try {
@@ -103,20 +118,37 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     }
   }
 
-  // Auto-send booth-fee invoices to the accepted group as they're notified.
-  // Best-effort: a PayPal hiccup must never fail the decision emails.
-  let invoiced = 0;
+  // Booth-fee invoices and the posting-team spotlight zip run in the
+  // background (after the response), so the admin gets an answer as soon as
+  // the emails are out. Invoicing ~50 artists through PayPal one at a time
+  // takes over a minute; doing it in-line left the Send button spinning.
+  // Best-effort: a PayPal hiccup never affects the decision emails, and the
+  // result is recorded in the Activity log.
   if (group === "accepted") {
-    try {
-      const r = await invoiceAcceptedWithoutInvoice(cycleId);
-      invoiced = r.invoiced;
-    } catch (e) {
-      console.error("[decisions] booth-fee auto-invoice failed:", e);
-    }
-    // Build the branded spotlight zip and (first time only) email the posting
-    // team its download link. Deferred to after() so rendering ~2 images per
-    // accepted artist never delays the admin's response.
     after(async () => {
+      try {
+        const r = await invoiceAcceptedWithoutInvoice(cycleId);
+        await logAdminEvent({
+          action: "booth_fee.invoice",
+          targetType: "cycle",
+          targetId: cycleId,
+          actorEmail: me.email,
+          summary: r.configured
+            ? `Sent ${r.invoiced} booth-fee invoice${r.invoiced === 1 ? "" : "s"} after the acceptance emails${r.skipped ? ` (${r.skipped} skipped: already invoiced or no valid email)` : ""}`
+            : "Booth-fee invoices NOT sent: PayPal isn't configured",
+        });
+      } catch (e) {
+        console.error("[decisions] booth-fee auto-invoice failed:", e);
+        await logAdminEvent({
+          action: "booth_fee.invoice",
+          targetType: "cycle",
+          targetId: cycleId,
+          actorEmail: me.email,
+          summary: `Booth-fee invoicing after acceptance emails FAILED: ${e instanceof Error ? e.message : String(e)}`,
+        });
+      }
+      // Build the branded spotlight zip and (first time only) email the
+      // posting team its download link.
       await refreshAndNotifyPostingTeam(cycleId);
     });
   }
@@ -127,7 +159,121 @@ export async function sendDecisionBatch(input: z.input<typeof schema>) {
     action: "decision.send",
     targetType: "cycle",
     targetId: cycleId,
-    summary: `Sent ${sent} ${group} decision email${sent === 1 ? "" : "s"}${resendAll ? " (incl. re-sends)" : ""}${invoiced ? `, invoiced ${invoiced}` : ""}`,
+    summary: `Sent ${sent} ${group} decision email${sent === 1 ? "" : "s"}${resendAll ? " (incl. re-sends)" : ""}${group === "accepted" ? "; booth-fee invoices sending in the background" : ""}`,
   });
-  return { ok: true, count: sent, invoiced };
+  return { ok: true, count: sent, invoicing: group === "accepted" };
+}
+
+/* --------------------------------------------------------------- rejections */
+
+const rejectionSchema = z.object({
+  cycleId: z.number(),
+  emails: z
+    .array(
+      z.object({
+        applicationId: z.number(),
+        reason: z.enum(["competes", "nonprofit", "other"]),
+        subject: z.string().trim().min(1).max(200),
+        body: z.string().trim().min(1).max(20000),
+      }),
+    )
+    .min(1)
+    .max(200),
+});
+
+/**
+ * Send rejection emails. Each recipient's subject and body arrive already
+ * composed (template + reason paragraph, possibly hand-edited), so every
+ * person gets exactly what the admin reviewed. Only applications that are
+ * still marked rejected in this cycle are emailed.
+ */
+export async function sendRejectionEmails(input: z.input<typeof rejectionSchema>) {
+  await requireAdmin();
+  const parsed = rejectionSchema.safeParse(input);
+  if (!parsed.success) return { error: "Every email needs a subject and a message." };
+  if (!resend) return { error: "Email isn't configured." };
+  const { cycleId, emails } = parsed.data;
+
+  const { hasUnfilledPlaceholder } = await import("@/lib/rejection");
+  const unfilled = emails.filter((e) => hasUnfilledPlaceholder(e.body));
+  if (unfilled.length) return { error: `${unfilled.length} email(s) still have a [placeholder] to fill in.` };
+
+  const apps = await db
+    .select({ id: applications.id, name: applications.name, email: applications.email })
+    .from(applications)
+    .where(
+      and(
+        eq(applications.cycleId, cycleId),
+        eq(applications.status, "rejected"),
+        inArray(applications.id, emails.map((e) => e.applicationId)),
+      ),
+    );
+  const byId = new Map(apps.map((a) => [a.id, a]));
+  const toSend = emails
+    .map((e) => ({ ...e, app: byId.get(e.applicationId) }))
+    .filter((e): e is typeof e & { app: NonNullable<typeof e.app> } => !!e.app && !e.app.email.endsWith("@no-email.invalid"));
+  if (!toSend.length) return { error: "None of these applicants are still marked rejected with an email on file." };
+
+  const now = new Date();
+  let sent = 0;
+  const failed: string[] = [];
+  const sentOk: typeof toSend = [];
+  for (const batch of chunk(toSend, 100)) {
+    try {
+      const res = await resend.batch.send(
+        batch.map((e) => ({
+          from: EMAIL_FROM,
+          to: e.app.email,
+          subject: e.subject,
+          html: emailShell(renderMarkdown(personalize(e.body, e.app.name))),
+        })),
+      );
+      const raw = (res as { data?: { data?: { id: string }[] } | { id: string }[] }).data;
+      const ids = Array.isArray(raw) ? raw : (raw?.data ?? []);
+      const updates = batch.map((e, i) =>
+        db
+          .update(applications)
+          .set({ decisionGroup: "rejected", decisionResendId: ids[i]?.id ?? null, decisionEmailStatus: "sent", decisionSentAt: now })
+          .where(eq(applications.id, e.app.id)),
+      );
+      await db.batch(updates as [(typeof updates)[number], ...typeof updates]);
+      sent += batch.length;
+      sentOk.push(...batch);
+    } catch (err) {
+      console.error("[decisions] rejection batch failed:", err);
+      failed.push(...batch.map((e) => e.app.name));
+      const fails = batch.map((e) =>
+        db.update(applications).set({ decisionGroup: "rejected", decisionEmailStatus: "failed" }).where(eq(applications.id, e.app.id)),
+      );
+      await db.batch(fails as [(typeof fails)[number], ...typeof fails]);
+    }
+  }
+
+  // Keep a record of exactly what each person was sent (shown on the page),
+  // and drop their one-off edits now that those emails are out.
+  if (sentOk.length) {
+    const draft = (await readDecisionDraft(cycleId, "rejected")) ?? {};
+    const at = now.toISOString();
+    const sentRecord = { ...(draft.sent ?? {}) };
+    const people = { ...(draft.people ?? {}) };
+    for (const e of sentOk) {
+      sentRecord[String(e.app.id)] = { subject: e.subject, body: personalize(e.body, e.app.name), at };
+      delete people[String(e.app.id)];
+    }
+    await writeDecisionDraft(cycleId, "rejected", { ...draft, sent: sentRecord, people });
+  }
+
+  revalidatePath("/admin/broadcasts");
+  revalidatePath("/admin/decisions/rejected");
+  revalidatePath("/admin");
+  await logAdminEvent({
+    action: "decision.send",
+    targetType: "cycle",
+    targetId: cycleId,
+    summary: `Sent ${sent} rejection email${sent === 1 ? "" : "s"} (${toSend
+      .map((e) => `${e.app.name}: ${e.reason}`)
+      .join("; ")})${failed.length ? `; FAILED: ${failed.join(", ")}` : ""}`,
+  });
+  if (failed.length) return { error: `Sent ${sent}, but these failed and can be retried: ${failed.join(", ")}.` };
+  return { ok: true, count: sent };
 }

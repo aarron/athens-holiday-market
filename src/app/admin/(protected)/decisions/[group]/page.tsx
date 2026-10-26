@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getCyclesWithCounts, getDecisionRecipients } from "@/lib/admin-data";
 import { getBroadcastTemplates } from "@/lib/broadcast-templates";
 import { DecisionSender } from "@/components/admin/decision-sender";
+import { RejectionSender } from "@/components/admin/rejection-sender";
+import { readDecisionDraft } from "@/lib/decision-draft-store";
 
 export const metadata: Metadata = { title: "Send decisions", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -23,7 +25,7 @@ export default async function DecisionGroupPage({
   await requireAdmin();
   const { group } = await params;
   const { year } = await searchParams;
-  if (group !== "accepted" && group !== "waitlist") notFound();
+  if (group !== "accepted" && group !== "nonprofit" && group !== "waitlist" && group !== "rejected") notFound();
 
   const list = await getCyclesWithCounts();
   const withApps = list.filter((c) => c.count > 0);
@@ -34,8 +36,11 @@ export default async function DecisionGroupPage({
     list[0];
   if (!cycle) notFound();
 
-  const recipients = await getDecisionRecipients(cycle.id, group);
-  const templateId = group === "accepted" ? "accepted" : "waitlist";
+  const [recipients, draft] = await Promise.all([
+    getDecisionRecipients(cycle.id, group),
+    readDecisionDraft(cycle.id, group),
+  ]);
+  const templateId = group === "accepted" ? "accepted" : group === "nonprofit" ? "nonprofit-accepted" : "waitlist";
   const template = getBroadcastTemplates().find((t) => t.id === templateId)!;
 
   return (
@@ -46,7 +51,8 @@ export default async function DecisionGroupPage({
           Send decisions
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">
-          {group === "accepted" ? "Acceptance" : "Waitlist"} emails
+          {{ accepted: "Acceptance", nonprofit: "Non-profit acceptance", waitlist: "Waitlist", rejected: "Rejection" }[group]}{" "}
+          emails
         </h1>
         <p className="mt-1 text-ink-soft">{cycle.name}</p>
       </div>
@@ -57,13 +63,15 @@ export default async function DecisionGroupPage({
             No applicants in this group yet. Set decisions on the applications first.
           </p>
         </div>
+      ) : group === "rejected" ? (
+        <RejectionSender cycleId={cycle.id} recipients={recipients} draft={draft} />
       ) : (
         <DecisionSender
           cycleId={cycle.id}
           group={group}
           recipients={recipients}
-          subject={template.subject}
-          body={template.body}
+          subject={draft?.subject ?? template.subject}
+          body={draft?.body ?? template.body}
         />
       )}
     </div>

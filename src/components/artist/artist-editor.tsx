@@ -47,6 +47,7 @@ export function ArtistEditor({
   slug,
   published,
   selfPublish = false,
+  nonprofit = false,
 }: {
   initial: Initial;
   status: "draft" | "pending" | "published";
@@ -54,6 +55,8 @@ export function ArtistEditor({
   published: boolean;
   /** Staff (admins/judges) publish their own page without review. */
   selfPublish?: boolean;
+  /** A non-profit's page: about the organization, not an artist's work. */
+  nonprofit?: boolean;
 }) {
   const [statement, setStatement] = useState(initial.statement);
   const [bio, setBio] = useState(initial.bio);
@@ -114,7 +117,7 @@ export function ArtistEditor({
     <div className="space-y-6">
       {/* Status banner */}
       <div>
-        <h1 className="text-3xl font-extrabold">Your artist page</h1>
+        <h1 className="text-3xl font-extrabold">{nonprofit ? "Your page" : "Your artist page"}</h1>
         <p className="mt-1 text-ink-soft">
           {initial.name}
           {initial.medium ? ` · ${initial.medium}` : ""}
@@ -128,7 +131,7 @@ export function ArtistEditor({
 
       {/* Photos */}
       <Card
-        title="Photos of your work"
+        title={nonprofit ? "Photos" : "Photos of your work"}
         titleSize="lg"
         hint={`Up to ${MAX_PHOTOS}. Drag & drop or click to add. These appear on your public page.`}
         bodyClassName="space-y-3"
@@ -208,32 +211,48 @@ export function ArtistEditor({
 
       {/* Artist statement — about the work */}
       <Card
-        title="Artist statement"
+        title={nonprofit ? "About your organization" : "Artist statement"}
         titleSize="lg"
-        hint="About your work — what you make and what makes it special. This is the main text on your page. 40–120 words works well."
+        hint={
+          nonprofit
+            ? "Who you are, what you do, and who you serve. This is the main text on your page. 40–120 words works well."
+            : "About your work — what you make and what makes it special. This is the main text on your page. 40–120 words works well."
+        }
         bodyClassName="space-y-3"
       >
         <ProofreadField
           value={statement}
           onChange={setStatement}
           rows={6}
-          placeholder="Example: I throw functional stoneware in small batches — mugs, bowls, and vases meant for everyday use. Each piece is wheel-thrown and glazed by hand, so no two are quite alike."
+          placeholder={
+            nonprofit
+              ? "Example: We're an Athens non-profit that [what you do] for [who you serve]. Here's why it matters…"
+              : "Example: I throw functional stoneware in small batches — mugs, bowls, and vases meant for everyday use. Each piece is wheel-thrown and glazed by hand, so no two are quite alike."
+          }
           textareaClassName={TEXTAREA}
         />
       </Card>
 
       {/* Artist bio — about the person */}
       <Card
-        title="Artist bio"
+        title={nonprofit ? "At the market" : "Artist bio"}
         titleSize="lg"
-        hint="About you — where you're based, how you started, what you love about making. (Optional, but a nice touch.)"
+        hint={
+          nonprofit
+            ? "What visitors will find at your table — information, items for sale, ways to volunteer or give. (Optional.)"
+            : "About you — where you're based, how you started, what you love about making. (Optional, but a nice touch.)"
+        }
         bodyClassName="space-y-3"
       >
         <ProofreadField
           value={bio}
           onChange={setBio}
           rows={4}
-          placeholder="Example: I'm a potter based in Athens. I fell for clay in a community studio ten years ago and haven't stopped since."
+          placeholder={
+            nonprofit
+              ? "Example: Stop by for handmade gifts our participants made, and to learn how to volunteer."
+              : "Example: I'm a potter based in Athens. I fell for clay in a community studio ten years ago and haven't stopped since."
+          }
           textareaClassName={TEXTAREA}
         />
       </Card>

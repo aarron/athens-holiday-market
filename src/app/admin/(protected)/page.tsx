@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { getCyclesWithCounts, listApplications, listStaff, tally } from "@/lib/admin-data";
 import { countBooths, pairSharedBooths } from "@/lib/booths";
+import { getJudgesExhibiting } from "@/lib/judges-exhibiting";
+import { JudgesExhibitingInput } from "@/components/admin/judges-exhibiting-input";
+import { StatFilterTile } from "@/components/admin/stat-filter-tile";
+import { isNonprofitCategory } from "@/lib/nonprofit";
 import { displayStatus } from "@/lib/applications";
 import { currentCategory } from "@/lib/mediums";
 import { getSessionUser } from "@/lib/admin-auth";
@@ -12,27 +16,6 @@ import { AdminSearch } from "@/components/admin/admin-search";
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-function StatTile({
-  label,
-  value,
-  accent,
-  children,
-}: {
-  label: string;
-  value: number;
-  accent: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div className="font-display text-4xl font-extrabold tabular-nums" style={{ color: accent }}>
-        {value}
-      </div>
-      <div className="mt-1 text-sm font-medium text-ink-soft">{label}</div>
-      {children && <div className="mt-1.5 space-y-0.5 text-xs text-ink-soft">{children}</div>}
-    </div>
-  );
-}
 
 export default async function AdminDashboard({
   searchParams,
@@ -79,16 +62,26 @@ export default async function AdminDashboard({
   const partner = pairSharedBooths(allAccepted);
   const juried = countBooths(apps.filter((a) => a.status === "accepted"), partner);
   const directAccepted = allAccepted.filter((a) => a.directAdd);
-  const judgesExhibiting = directAccepted.filter((a) => staffEmails.has(a.email.toLowerCase())).length;
-  const addedArtists = directAccepted.length - judgesExhibiting;
-  const boothsTaken = countBooths(allAccepted, partner).booths;
+  const judgesRecorded = directAccepted.filter((a) => staffEmails.has(a.email.toLowerCase())).length;
+  const addedArtists = directAccepted.length - judgesRecorded;
+  // Admins can enter how many judges are exhibiting before those judges build
+  // their pages; use the larger of that and the judges actually recorded, and
+  // count each not-yet-recorded judge as a booth.
+  const judgesEntered = await getJudgesExhibiting(current.id);
+  const judgesExhibiting = Math.max(judgesRecorded, judgesEntered ?? 0);
+  // Every booth spoken for: all accepted artists with shared pairs counted
+  // once (this already includes judges and others added by hand once they're
+  // recorded), plus one booth per exhibiting judge not yet recorded.
+  const boothsTaken = countBooths(allAccepted, partner).booths + (judgesExhibiting - judgesRecorded);
 
   const stats = {
     total: apps.length,
     waitlisted: apps.filter((a) => a.status === "waitlisted").length,
     rejected: apps.filter((a) => a.status === "rejected").length,
     pending: apps.filter((a) => a.status === "submitted" || a.status === "under_review").length,
-    paid: apps.filter((a) => a.boothFeePaid).length,
+    // Non-profits don't pay, so they're in neither fee count.
+    paid: apps.filter((a) => a.status === "accepted" && !isNonprofitCategory(a.mediumCategory) && a.boothFeePaid).length,
+    unpaid: apps.filter((a) => a.status === "accepted" && !isNonprofitCategory(a.mediumCategory) && !a.boothFeePaid).length,
   };
 
   const blendMap = new Map<string, { total: number; accepted: number }>();
@@ -116,6 +109,7 @@ export default async function AdminDashboard({
     tally: tally(a.votes),
     status: a.status,
     boothFeePaid: a.boothFeePaid,
+    nonprofit: isNonprofitCategory(a.mediumCategory),
     photo: a.photos[0]?.url ?? null,
   }));
 
@@ -154,28 +148,33 @@ export default async function AdminDashboard({
         <section className="rounded-xl bg-white shadow-[var(--shadow-card)]">
           <div className="p-5 sm:p-6">
             <h2 className="font-display text-lg font-extrabold">Applications</h2>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              <StatTile label="Submissions" value={stats.total} accent="var(--color-ink)" />
-              <StatTile label="To review" value={stats.pending} accent="var(--color-sky)" />
-              <StatTile label="Accepted booths" value={juried.booths} accent="var(--color-fern-deep)">
-                {juried.sharedPairs > 0 && (
-                  <p>
-                    {juried.artists} artists · {juried.sharedPairs} shared
-                  </p>
-                )}
+            <div className="-mx-3 mt-3 grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-4 lg:grid-cols-7">
+              <StatFilterTile label="Submissions" value={stats.total} accent="var(--color-ink)" filter={{}} />
+              <StatFilterTile label="To review" value={stats.pending} accent="var(--color-sky)" filter={{ status: "pending" }} />
+              <StatFilterTile label="Booths taken" value={boothsTaken} accent="var(--color-fern-deep)" filter={{ status: "accepted" }}>
                 <p>
-                  + {judgesExhibiting} {judgesExhibiting === 1 ? "judge" : "judges"} exhibiting
+                  {juried.artists} accepted
+                  {juried.sharedPairs > 0 && ` · ${juried.sharedPairs} shared`}
+                </p>
+                <p>
+                  {me?.role === "admin" && !isArchive ? (
+                    <JudgesExhibitingInput cycleId={current.id} value={judgesExhibiting} />
+                  ) : (
+                    <>
+                      + {judgesExhibiting} {judgesExhibiting === 1 ? "judge" : "judges"} exhibiting
+                    </>
+                  )}
                 </p>
                 {addedArtists > 0 && (
                   <p>
                     + {addedArtists} added {addedArtists === 1 ? "artist" : "artists"}
                   </p>
                 )}
-                <p className="font-bold text-ink">{boothsTaken} booths taken</p>
-              </StatTile>
-              <StatTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" />
-              <StatTile label="Rejected" value={stats.rejected} accent="var(--color-poppy-deep)" />
-              <StatTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" />
+              </StatFilterTile>
+              <StatFilterTile label="Waitlisted" value={stats.waitlisted} accent="var(--color-tangerine)" filter={{ status: "waitlisted" }} />
+              <StatFilterTile label="Rejected" value={stats.rejected} accent="var(--color-poppy-deep)" filter={{ status: "rejected" }} />
+              <StatFilterTile label="Fees paid" value={stats.paid} accent="var(--color-berry)" filter={{ payment: "paid" }} />
+              <StatFilterTile label="Fees unpaid" value={stats.unpaid} accent="var(--color-ink-soft)" filter={{ payment: "unpaid" }} />
             </div>
           </div>
 

@@ -64,7 +64,9 @@ The BCB Art Collective`,
 
 Congratulations! You've been accepted into the ${year} ${site.name} at Big City Bread. We had SO many great applicants this year — you're one of the chosen few!
 
-Your **$75 booth fee** is due via PayPal by the payment deadline. Watch for a PayPal payment request in the next few days and follow the prompts. We'll email you a confirmation once payment is received.
+{{shared_booth_note}}
+
+Your **{{booth_fee}} booth fee** is due via PayPal by the payment deadline. Watch for a PayPal payment request in the next few days and follow the prompts. We'll email you a confirmation once payment is received.
 
 There is a waiting list for this event. If you don't pay by the deadline, your space will be offered to another artist.
 
@@ -80,6 +82,33 @@ An email with setup instructions will follow closer to the event.
 - **Weather:** rain or shine, no refunds for weather.
 
 Booth fees are donated to local charity. Now get to work making lots of great art to sell!
+
+${signoff}`,
+    },
+    {
+      // Draft for the organizers to edit before sending: the acceptance email
+      // for the year's two non-profit booths — same logistics, no booth fee.
+      id: "nonprofit-accepted",
+      name: "Non-profit accepted (no booth fee)",
+      subject: `You're in! ${site.name} ${year} 🎉`,
+      body: `Hi {{first_name}},
+
+We're delighted to welcome you as one of this year's two non-profit booths at the ${year} ${site.name} at Big City Bread.
+
+**There's no booth fee for non-profits.**
+
+An email with setup instructions will follow closer to the event.
+
+**Important info**
+
+- **Dates:** ${day1} & ${day2}, ${time}
+- **Your space:** a 6'×3' outdoor space with little wiggle room. No tents. Booths are assigned at check-in; your Thursday space is also your Friday space.
+- **Bring:** all tables, chairs, tablecloths, lighting, extension cords, and anything else for your table.
+- **Be present** during sale hours, and set up / take down BOTH nights.
+- **Lighting:** it's a night market and it gets dark — a well-lit table draws people in.
+- **Weather:** rain or shine.
+
+We're so glad to have you with us.
 
 ${signoff}`,
     },

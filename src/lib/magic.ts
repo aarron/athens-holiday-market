@@ -1,4 +1,5 @@
 import "server-only";
+import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
 import { createHash, randomBytes } from "crypto";
 import { and, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/db";
@@ -87,15 +88,18 @@ export async function ensureArtistForApplication(applicationId: number) {
   });
   if (!app) return null;
 
-  const base = slugify(app.name) || `artist-${applicationId}`;
+  // A non-profit's page is the organization's, not the contact person's.
+  const nonprofit = app.mediumCategory === NONPROFIT_CATEGORY;
+  const pageName = nonprofit ? app.businessName?.trim() || app.name : app.name;
+  const base = slugify(pageName) || `artist-${applicationId}`;
   let slug = base;
   let i = 1;
   while (await db.query.artists.findFirst({ where: eq(artists.slug, slug) })) slug = `${base}-${++i}`;
 
   const values = {
     applicationId,
-    name: app.name,
-    medium: app.medium,
+    name: pageName,
+    medium: nonprofit ? NONPROFIT_CATEGORY : app.medium,
     // The application captures both up front: statement (about the work),
     // bio (about the artist). Seed both so the page is nearly done.
     statement: app.description,

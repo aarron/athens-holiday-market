@@ -25,6 +25,8 @@ import {
 } from "@/components/admin/controls";
 import { PhotoGallery } from "@/components/admin/photo-gallery";
 import { BoothFeeInvoice } from "@/components/admin/booth-fee-invoice";
+import { NonprofitToggle } from "@/components/admin/nonprofit-toggle";
+import { isNonprofitCategory } from "@/lib/nonprofit";
 import { Card } from "@/components/ui/card";
 import { paypalConfigured } from "@/lib/paypal";
 import { BackIcon, ExternalIcon, ArrowRightIcon } from "@/components/icons";
@@ -307,9 +309,18 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
             <Card>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">Booth fee</h2>
-                <BoothFeeBadge paid={app.boothFeePaid} status={app.status} />
+                <BoothFeeBadge paid={app.boothFeePaid} status={app.status} waived={isNonprofitCategory(app.mediumCategory)} />
               </div>
+              <NonprofitToggle applicationId={app.id} on={isNonprofitCategory(app.mediumCategory)} />
+              {isNonprofitCategory(app.mediumCategory) ? (
+                <p className="mt-4 rounded-lg bg-sky-soft px-3 py-2.5 text-sm text-sky-deep">
+                  Non-profit booths are free. No invoice or payment reminders will be sent.
+                </p>
+              ) : (
+              <>
+              <div className="mt-4">
               <BoothFeePaidToggle applicationId={app.id} status={app.status} paid={app.boothFeePaid} />
+              </div>
               <div className="mt-5 border-t border-ink/10 pt-5">
                 <BoothFeeInvoice
                   applicationId={app.id}
@@ -321,6 +332,8 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
                   configured={paypalConfigured()}
                 />
               </div>
+              </>
+              )}
             </Card>
           )}
 

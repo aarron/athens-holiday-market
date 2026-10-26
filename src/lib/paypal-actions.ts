@@ -19,6 +19,7 @@ export async function sendBoothFeeInvoice(applicationId: number) {
       name: applications.name,
       email: applications.email,
       status: applications.status,
+      category: applications.mediumCategory,
       paypalInvoiceId: applications.paypalInvoiceId,
       year: cycles.year,
     })
@@ -29,6 +30,7 @@ export async function sendBoothFeeInvoice(applicationId: number) {
 
   if (!app) return { error: "Not found." };
   if (app.status !== "accepted") return { error: "Only accepted artists are invoiced." };
+  if (app.category === "Non-profit") return { error: "Non-profits don't pay a booth fee." };
 
   const res = await invoiceApplication(app, app.year);
   if (!res.ok) return { error: res.error };

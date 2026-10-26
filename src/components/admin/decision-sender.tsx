@@ -9,6 +9,9 @@ import { Card } from "@/components/ui/card";
 import { StatusMessage } from "@/components/ui/status-message";
 import { emailShell, renderMarkdown } from "@/lib/email-shell";
 import { sendDecisionBatch } from "@/lib/decision-actions";
+import { fillBoothFee } from "@/lib/booth-fee-copy";
+import { saveDecisionDraft, resetDecisionDraft } from "@/lib/decision-drafts";
+import { useAutosave, saveLabel } from "@/components/admin/use-autosave";
 
 type Recipient = {
   id: number;
@@ -23,6 +26,7 @@ type Recipient = {
 
 const GROUP_COPY = {
   accepted: { verb: "accepted into", accent: "var(--color-fern-deep)", tone: "bg-fern-soft" },
+  nonprofit: { verb: "accepted as a non-profit (no booth fee) into", accent: "var(--color-sky-deep)", tone: "bg-sky-soft" },
   waitlist: { verb: "placed on the waitlist for", accent: "var(--color-tangerine)", tone: "bg-tangerine-soft" },
 } as const;
 
@@ -34,7 +38,7 @@ export function DecisionSender({
   body: initialBody,
 }: {
   cycleId: number;
-  group: "accepted" | "waitlist";
+  group: "accepted" | "nonprofit" | "waitlist";
   recipients: Recipient[];
   subject: string;
   body: string;
@@ -42,6 +46,8 @@ export function DecisionSender({
   const router = useRouter();
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
+  // Edits save to the server as you type (any computer, survives reloads).
+  const { state: saveState } = useAutosave({ subject, body }, (v) => saveDecisionDraft(cycleId, group, v));
   const [checked, setChecked] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -61,7 +67,10 @@ export function DecisionSender({
     () =>
       emailShell(
         renderMarkdown(
-          (body || "…").replace(/\{\{\s*first_name\s*\}\}/gi, recipients[0]?.name.split(" ")[0] ?? "Friend"),
+          fillBoothFee(body || "…", undefined).replace(
+            /\{\{\s*first_name\s*\}\}/gi,
+            recipients[0]?.name.split(" ")[0] ?? "Friend",
+          ),
         ),
       ),
     [body, recipients],
@@ -74,7 +83,8 @@ export function DecisionSender({
     setError("");
     start(async () => {
       const r = await sendDecisionBatch({ cycleId, group, subject, body, resendAll });
-      if (r && "ok" in r && r.ok) router.push("/admin/decisions");
+      if (r && "ok" in r && r.ok)
+        router.push(`/admin/broadcasts?sent=${r.count}&group=${group}${r.invoicing ? "&invoicing=1" : ""}`);
       else setError(r?.error ?? "Couldn't send.");
     });
   }
@@ -101,6 +111,22 @@ export function DecisionSender({
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">The email</h2>
+          <span className="ml-auto mr-4 flex items-center gap-3 text-xs">
+            <span className={saveState === "error" ? "font-semibold text-poppy-deep" : "text-ink-soft"} aria-live="polite">
+              {saveLabel(saveState)}
+            </span>
+            <button
+              type="button"
+              className="font-semibold text-ink-soft hover:text-ink hover:underline"
+              onClick={async () => {
+                if (!confirm("Discard your edits and go back to the default email?")) return;
+                await resetDecisionDraft(cycleId, group);
+                window.location.reload();
+              }}
+            >
+              Reset to default
+            </button>
+          </span>
           <button
             onClick={() => setShowPreview((v) => !v)}
             className="text-sm font-semibold text-fern-deep hover:underline"
@@ -112,7 +138,15 @@ export function DecisionSender({
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
         </Field>
         <Field
-          label={<>Message <span className="font-normal text-ink-soft/70">— {"{{first_name}}"} is personalized</span></>}
+          label={
+            <>
+              Message{" "}
+              <span className="font-normal text-ink-soft/70">
+                — {"{{first_name}}"} is personalized; {"{{booth_fee}}"} is $75, or $37.50 each for artists sharing a
+                booth, who also get {"{{shared_booth_note}}"} naming their partner
+              </span>
+            </>
+          }
         >
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="font-mono" />
         </Field>
@@ -186,7 +220,7 @@ export function DecisionSender({
           />
           <span>
             I&apos;ve reviewed all {targetCount} recipients and their votes, and confirm this{" "}
-            <strong>{group === "accepted" ? "acceptance" : "waitlist"}</strong> email should go to
+            <strong>{group === "waitlist" ? "waitlist" : group === "nonprofit" ? "non-profit acceptance" : "acceptance"}</strong> email should go to
             them.
           </span>
         </label>
@@ -209,7 +243,7 @@ export function DecisionSender({
             onClick={onSend}
             style={{ backgroundColor: copy.accent }}
           >
-            {`Send ${targetCount} ${group === "accepted" ? "acceptance" : "waitlist"} email${targetCount === 1 ? "" : "s"}`}
+            {`Send ${targetCount} ${group === "waitlist" ? "waitlist" : group === "nonprofit" ? "non-profit acceptance" : "acceptance"} email${targetCount === 1 ? "" : "s"}`}
           </Button>
         </div>
         {error && <StatusMessage tone="error" className="mt-2">{error}</StatusMessage>}

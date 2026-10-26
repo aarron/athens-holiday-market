@@ -1,4 +1,5 @@
 import { resend, EMAIL_FROM } from "@/lib/resend-client";
+import { formatUsd } from "@/lib/money";
 import { site } from "@/lib/site";
 import { emailShell as wrap } from "@/lib/email-shell";
 
@@ -116,12 +117,12 @@ export async function sendArtistPageReminder(to: string, name: string) {
 export async function sendBoothFeeReminder(to: string, name: string, amount: number, invoiceUrl: string | null) {
   if (!resend) return { skipped: true as const };
   const payButton = invoiceUrl
-    ? `<p style="margin:0 0 18px"><a href="${invoiceUrl}" style="display:inline-block;background:#d21c96;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:700">Pay your $${amount} booth fee →</a></p>`
+    ? `<p style="margin:0 0 18px"><a href="${invoiceUrl}" style="display:inline-block;background:#d21c96;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:700">Pay your ${formatUsd(amount)} booth fee →</a></p>`
     : `<p style="margin:0 0 14px;line-height:1.6">Look for the PayPal invoice in your inbox (check spam too) and follow the Pay Now button.</p>`;
   const inner = `
     <h1 style="margin:0 0 12px;font-size:22px">A quick reminder about your booth fee</h1>
     <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, we're so glad you'll be at the ${site.event.year} ${site.name}!
-      Your <strong>$${amount} booth fee</strong> is still showing as unpaid, and your space is held until it's in.</p>
+      Your <strong>${formatUsd(amount)} booth fee</strong> is still showing as unpaid, and your space is held until it's in.</p>
     ${payButton}
     <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Already paid? Thank you — you can ignore this, it may have crossed in the mail.
       Questions? Just reply to this email.</p>`;
@@ -400,7 +401,19 @@ function ctaButton(href: string, label: string) {
  * so an accepted artist always gets the same prominent next step — log in and
  * build their page — no matter which path notified them.
  */
-export function artistPageCtaBlock(to: string) {
+export function artistPageCtaBlock(to: string, opts: { nonprofit?: boolean } = {}) {
+  // Non-profits have a page too, but it's about the organization, and many
+  // (added directly, not via the application) have no photos or words yet.
+  if (opts.nonprofit) {
+    return `<div style="margin:16px 0 0;padding:16px 18px;background:#f1f7ec;border-radius:10px">
+    <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — set up your page on our site.</strong>
+    Shoppers can find you in our directory before the market. Log in with this email address
+    (<strong>${escapeHtml(to)}</strong>), tell visitors about your organization and what they'll find at your table,
+    add a few photos, and submit it for us to publish.</p>
+    ${ctaButton(`${site.url}/artist/login`, "Set up your page →")}
+    <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">The button emails you a one-time login link — no password needed.</p>
+  </div>`;
+  }
   return `<div style="margin:16px 0 0;padding:16px 18px;background:#f1f7ec;border-radius:10px">
     <p style="margin:0 0 10px;line-height:1.6"><strong>Next step — build your artist page.</strong>
     We've started it for you with your application photos and words. Log in with this email address
@@ -436,4 +449,43 @@ export async function sendDecisionEmail(to: string, name: string, decision: Deci
 
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+/**
+ * "Payment received" — sent once, automatically, when PayPal reports an
+ * accepted artist's booth-fee invoice paid (see /api/paypal/webhook). Copy
+ * approved by Aarron on 2026-10-15. `amount` is the artist's own fee ($75, or
+ * $37.50 for a shared booth).
+ */
+export async function sendBoothFeePaid(to: string, name: string, amount: number) {
+  if (!resend) return { skipped: true as const };
+  const first = (name || "").trim().split(/\s+/)[0] || "there";
+  const day1 = site.event.days[0].label;
+  const day2 = site.event.days[1].label;
+  const inner = `
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(first)},</p>
+    <p style="margin:0 0 14px;line-height:1.6">We've received your <strong>${formatUsd(amount)} booth fee</strong> — thank you! Your space at the ${site.event.year} ${site.name} is all set.</p>
+    <p style="margin:0 0 14px;line-height:1.6">As always, booth fees are donated to local charity.</p>
+    <p style="margin:0 0 8px;line-height:1.6"><strong>What's next</strong></p>
+    <ul style="margin:0 0 18px;padding-left:20px;line-height:1.7">
+      <li><strong>Your artist page:</strong> if you haven't built it yet, now's a great time — it's how shoppers find you before the market.</li>
+      <li><strong>Setup details</strong> will come by email closer to the event.</li>
+      <li><strong>Dates:</strong> ${day1} &amp; ${day2}, ${site.event.timeLabel}, in the Big City Bread courtyard.</li>
+    </ul>
+    ${ctaButton(`${site.url}/artist/login`, "Build your artist page →")}
+    <p style="margin:0 0 14px;line-height:1.6">See you in December!</p>
+    <p style="margin:0;line-height:1.6">— Ansley, Brent, Jamie, Jim, Ryan and (in our hearts) Kenneth</p>`;
+  try {
+    const res = await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: `Payment received — see you at the ${site.name}!`,
+      html: wrap(inner),
+    });
+    if (res.error) console.error("[emails] booth-fee-paid rejected by Resend:", to, res.error);
+    return res;
+  } catch (e) {
+    console.error("[emails] failed to send booth-fee-paid:", e);
+    return { error: true as const };
+  }
 }

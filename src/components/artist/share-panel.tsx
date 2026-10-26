@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isNonprofitMedium } from "@/lib/nonprofit";
 import { site } from "@/lib/site";
 import { makeShareCard, type ShareCardKind as Kind } from "@/lib/share-card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,9 @@ export function SharePanel({
 
   const pageUrl = `${site.url}/artists/${slug}`;
   const captions = [
-    `I'll be at the ${site.name}! Come find my ${medium.toLowerCase() || "work"} in the Big City Bread courtyard, ${DATE_LABEL}. See my booth → ${pageUrl} ${site.social.hashtag}`,
+    isNonprofitMedium(medium)
+      ? `We'll be at the ${site.name}! Come visit our table in the Big City Bread courtyard, ${DATE_LABEL}. More → ${pageUrl} ${site.social.hashtag}`
+      : `I'll be at the ${site.name}! Come find my ${medium.toLowerCase() || "work"} in the Big City Bread courtyard, ${DATE_LABEL}. See my booth → ${pageUrl} ${site.social.hashtag}`,
     `Counting down to the ${site.name} 🎁 Handmade goods and a courtyard full of local makers, ${DATE_LABEL} at Big City Bread. Come say hi at my booth → ${pageUrl} ${site.social.hashtag} ${site.social.instagram}`,
   ];
 

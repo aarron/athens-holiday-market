@@ -26,11 +26,6 @@ export const MEDIUM_CATEGORIES = [
 
 export type MediumCategory = (typeof MEDIUM_CATEGORIES)[number];
 
-/**
- * Categories an applicant can pick on the form. The market is hosted by a
- * bakery, so we don't accept food or beverage vendors; "Food & Drink" stays in
- * MEDIUM_CATEGORIES only so past years' applications keep their category.
- */
 /** Retired category names, mapped to the category that replaced them. */
 const RETIRED: Record<string, MediumCategory> = {
   Apothecary: "Bath, Body & Apothecary",
@@ -42,6 +37,11 @@ export function currentCategory<T extends string | null | undefined>(category: T
   return (category && RETIRED[category]) || category;
 }
 
+/**
+ * Categories an applicant can pick on the form. The market is hosted by a
+ * bakery, so we don't accept food or beverage vendors; "Food & Drink" stays in
+ * MEDIUM_CATEGORIES only so past years' applications keep their category.
+ */
 export const APPLY_CATEGORIES = MEDIUM_CATEGORIES.filter((c) => c !== "Food & Drink");
 
 // Keyword → category, checked in order (first match wins), so the primary craft

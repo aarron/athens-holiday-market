@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { StatusBadge, BoothFeeBadge, VoteTally, type Tally } from "@/components/admin/badges";
 import { SafeImg } from "@/components/admin/safe-img";
 import { ChevronUpIcon, ChevronDownIcon } from "@/components/icons";
 import { setStatus } from "@/lib/admin-actions";
+import { APPLY_FILTER_EVENT, FILTERS_CHANGED_EVENT, type QuickFilter } from "@/components/admin/stat-filter-tile";
 
 export type Row = {
   id: number;
@@ -20,6 +21,8 @@ export type Row = {
   tally: Tally;
   status: string;
   boothFeePaid: boolean;
+  /** Non-profit booth — no fee, so it's in neither payment filter. */
+  nonprofit: boolean;
   photo: string | null;
 };
 
@@ -39,6 +42,7 @@ const PAYMENT_OPTIONS = [
 
 const VOTE_OPTIONS = [
   { value: "all", label: "Any votes" },
+  { value: "needs_my_vote", label: "Needs my vote" },
   { value: "all_yes", label: "All yes" },
   { value: "no_yes", label: "No yeses" },
   { value: "my_maybe", label: "My maybes" },
@@ -120,10 +124,11 @@ export function ApplicationsTable({
       if (voteFilter === "all_yes" && !(yes > 0 && maybe === 0 && no === 0)) return false;
       if (voteFilter === "no_yes" && !(yes === 0 && maybe + no > 0)) return false;
       if (voteFilter === "my_maybe" && r.myVote !== "maybe") return false;
+      if (voteFilter === "needs_my_vote" && r.myVote !== null) return false;
       if (categoryFilter !== "all" && r.category !== categoryFilter) return false;
       // payment (only meaningful for accepted artists)
-      if (paymentFilter === "paid" && !(status === "accepted" && r.boothFeePaid)) return false;
-      if (paymentFilter === "unpaid" && !(status === "accepted" && !r.boothFeePaid)) return false;
+      if (paymentFilter === "paid" && !(status === "accepted" && !r.nonprofit && r.boothFeePaid)) return false;
+      if (paymentFilter === "unpaid" && !(status === "accepted" && !r.nonprofit && !r.boothFeePaid)) return false;
       return true;
     });
     out.sort((a, b) => {
@@ -152,6 +157,33 @@ export function ApplicationsTable({
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, q, statusFilter, paymentFilter, voteFilter, categoryFilter, sortCol, dir, overrides]);
+
+  // Stat tiles above the table apply a filter on click; reset the other
+  // dimensions so the list matches the tile's number.
+  useEffect(() => {
+    const on = (e: Event) => {
+      const f = (e as CustomEvent<QuickFilter>).detail;
+      setQ("");
+      setVoteFilter("all");
+      setCategoryFilter("all");
+      setStatusFilter(f.status ?? "all");
+      setPaymentFilter(f.payment ?? "all");
+    };
+    window.addEventListener(APPLY_FILTER_EVENT, on);
+    return () => window.removeEventListener(APPLY_FILTER_EVENT, on);
+  }, []);
+  // ...and tell the tiles which one (if any) the current filters correspond to.
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(FILTERS_CHANGED_EVENT, {
+        detail: {
+          status: statusFilter,
+          payment: paymentFilter,
+          other: !!q.trim() || voteFilter !== "all" || categoryFilter !== "all",
+        },
+      }),
+    );
+  }, [q, statusFilter, paymentFilter, voteFilter, categoryFilter]);
 
   const hasFilters =
     q || statusFilter !== "all" || paymentFilter !== "all" || voteFilter !== "all" || categoryFilter !== "all";
@@ -185,7 +217,10 @@ export function ApplicationsTable({
   );
 
   return (
-    <div className={bare ? "border-t border-ink/10" : "rounded-xl bg-white shadow-[var(--shadow-card)]"}>
+    <div
+      id="applications-table"
+      className={`scroll-mt-4 ${bare ? "border-t border-ink/10" : "rounded-xl bg-white shadow-[var(--shadow-card)]"}`}
+    >
       <div className="flex flex-wrap items-center gap-3 border-b border-ink/10 p-4">
         <input
           value={q}
@@ -303,7 +338,7 @@ export function ApplicationsTable({
                   />
                 </td>
                 <td className="px-5 py-4">
-                  <BoothFeeBadge paid={r.boothFeePaid} status={r.status} />
+                  <BoothFeeBadge paid={r.boothFeePaid} status={statusOf(r)} waived={r.nonprofit} />
                 </td>
               </tr>
             ))}

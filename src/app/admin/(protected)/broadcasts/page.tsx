@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
+import { paypalStatus } from "@/lib/paypal";
 import { listBroadcasts, broadcastReceiptSummaries, listTextSends } from "@/lib/broadcast-data";
 import { getActiveCycle, getDecisionGroups } from "@/lib/admin-data";
 import { getScheduledSends } from "@/lib/scheduled-sends";
@@ -90,21 +91,37 @@ function DecisionCard({
   );
 }
 
-export default async function EmailHubPage() {
+export default async function EmailHubPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sent?: string; group?: string; invoicing?: string }>;
+}) {
+  const sp = await searchParams;
+  const sentCount = Number(sp.sent);
+  const sentLabel: Record<string, string> = {
+    accepted: "acceptance",
+    nonprofit: "non-profit acceptance",
+    waitlist: "waitlist",
+  };
   await requireAdmin();
-  const [broadcasts, cycle, textSends, scheduled, receipts] = await Promise.all([
+  const [broadcasts, cycle, textSends, scheduled, receipts, paypal] = await Promise.all([
     listBroadcasts(),
     getActiveCycle(),
     listTextSends(),
     getScheduledSends(),
     broadcastReceiptSummaries(),
+    paypalStatus(),
   ]);
 
   const groups = cycle ? await getDecisionGroups(cycle.id) : null;
   const totalToNotify = groups
-    ? groups.accepted.total - groups.accepted.notified + (groups.waitlist.total - groups.waitlist.notified)
+    ? groups.accepted.total - groups.accepted.notified +
+      (groups.nonprofit.total - groups.nonprofit.notified) +
+      (groups.waitlist.total - groups.waitlist.notified) +
+      (groups.rejected.total - groups.rejected.notified)
     : 0;
-  const hasDecisions = !!groups && groups.accepted.total + groups.waitlist.total > 0;
+  const hasDecisions =
+    !!groups && groups.accepted.total + groups.nonprofit.total + groups.waitlist.total + groups.rejected.total > 0;
   const yq = cycle ? `?year=${cycle.year}` : "";
 
   const decisionsPanel = hasDecisions && groups && (
@@ -123,15 +140,19 @@ export default async function EmailHubPage() {
               {totalToNotify} to notify
             </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <DecisionCard href={`/admin/decisions/accepted${yq}`} title="Accepted" total={groups.accepted.total} notified={groups.accepted.notified} accent="var(--color-fern-deep)" />
+            <DecisionCard href={`/admin/decisions/nonprofit${yq}`} title="Non-profits" total={groups.nonprofit.total} notified={groups.nonprofit.notified} accent="var(--color-sky-deep)" />
             <DecisionCard href={`/admin/decisions/waitlist${yq}`} title="Waitlist" total={groups.waitlist.total} notified={groups.waitlist.notified} accent="var(--color-tangerine)" />
+            <DecisionCard href={`/admin/decisions/rejected${yq}`} title="Rejected" total={groups.rejected.total} notified={groups.rejected.notified} accent="var(--color-poppy-deep)" />
           </div>
         </section>
       ) : (
         <section className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-fern-soft px-5 py-3 text-sm">
           <span className="font-semibold text-fern-deep">
-            ✓ All decisions sent — {groups.accepted.total} accepted, {groups.waitlist.total} waitlisted notified.
+            ✓ All decisions sent — {groups.accepted.total} accepted, {groups.nonprofit.total} non-profit,{" "}
+            {groups.waitlist.total} waitlisted,{" "}
+            {groups.rejected.total} rejected notified.
           </span>
           <Link href={`/admin/decisions/accepted${yq}`} className="font-semibold link">
             Review
@@ -320,6 +341,43 @@ export default async function EmailHubPage() {
         <h1 className="text-3xl font-extrabold">Email &amp; Text</h1>
         <p className="mt-1 text-ink-soft">Decisions, announcements, and event-day texts.</p>
       </div>
+
+      {paypal.state === "connected" && paypal.mode === "live" ? (
+        <p className="text-sm text-ink-soft">
+          <span className="font-semibold text-fern-deep">PayPal: live and connected.</span>
+          {!paypal.webhook && " The payment webhook ID is missing, so payments won't be marked paid automatically."}
+        </p>
+      ) : (
+        <div role="alert" className="rounded-xl bg-poppy-soft px-5 py-3.5 text-sm text-poppy-deep">
+          <p className="font-semibold">
+            {paypal.state === "sandbox-in-production"
+              ? "PayPal is in sandbox (test) mode, so booth-fee invoicing is switched off. Set PAYPAL_ENV to live with live keys."
+              : paypal.state === "missing-keys"
+                ? "PayPal keys aren't set, so booth-fee invoicing is switched off."
+                : paypal.state === "auth-failed"
+                  ? `PayPal rejected the ${paypal.mode} keys. Check the client ID and secret.`
+                  : "PayPal is in sandbox (test) mode. Invoices won't reach anyone."}
+          </p>
+        </div>
+      )}
+
+      {Number.isFinite(sentCount) && sentCount > 0 && sp.group && sentLabel[sp.group] && (
+        <div role="status" className="rounded-xl bg-fern-soft px-5 py-3.5 text-sm">
+          <p className="font-semibold text-fern-deep">
+            ✓ Sent {sentCount} {sentLabel[sp.group]} email{sentCount === 1 ? "" : "s"}.
+          </p>
+          {sp.invoicing === "1" && (
+            <p className="mt-0.5 text-ink-soft">
+              Booth-fee invoices are being created in PayPal in the background — about a minute for everyone. When
+              they&apos;re done, it&apos;s noted in{" "}
+              <Link href="/admin/activity" className="font-semibold link">
+                Activity
+              </Link>
+              .
+            </p>
+          )}
+        </div>
+      )}
 
       <SectionTabs tabs={tabs} initial="email" />
     </div>

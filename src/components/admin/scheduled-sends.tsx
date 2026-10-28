@@ -11,6 +11,8 @@ const STATUS: Record<SendStatus, { cls: string; label: string }> = {
   missed: { cls: "bg-poppy-soft text-poppy-deep", label: "Not sent" },
   "pending-decision": { cls: "bg-cream text-ink-soft", label: "After acceptance" },
   canceled: { cls: "bg-ink/10 text-ink-soft", label: "Canceled" },
+  "none-needed": { cls: "bg-ink/10 text-ink-soft", label: "Nobody needed it" },
+  "needs-approval": { cls: "bg-tangerine-soft text-tangerine-deep", label: "Copy needs approval" },
 };
 
 function shortDate(iso: string) {
@@ -38,7 +40,7 @@ function ChannelPill({ channel }: { channel: string }) {
 }
 
 export function ScheduledSends({ data }: { data: Data }) {
-  const { announcements, artistReminders, artistReminderSubject, cronSchedule } = data;
+  const { announcements, triggered, artistReminders, artistReminderSubject, cronSchedule } = data;
 
   return (
     <section>
@@ -72,11 +74,47 @@ export function ScheduledSends({ data }: { data: Data }) {
                   <td className="px-5 py-4 text-ink-soft">{a.audience}</td>
                   <td className="px-5 py-4">{a.topic}</td>
                   <td className="px-5 py-4"><StatusPill status={a.status} sentAt={a.sentAt} /></td>
-                  <td className="px-5 py-4 text-right"><CancelSendButton id={a.id} status={a.status} /></td>
+                  <td className="px-5 py-4 text-right">
+                    {a.cancelable !== false && <CancelSendButton id={a.id} status={a.status} />}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Triggered — sent when something happens, not on a date */}
+      <div className="mt-6">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-display text-sm font-bold uppercase tracking-wide text-ink-soft">
+            Sent when something happens
+          </h3>
+          <p className="text-xs text-ink-soft">No date — each goes out when its trigger fires</p>
+        </div>
+        <div className="overflow-hidden rounded-xl bg-white shadow-[var(--shadow-card)]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-ink/10 text-xs uppercase tracking-wide text-ink-soft">
+                  <th className="px-5 py-4 font-semibold">Email</th>
+                  <th className="px-5 py-4 font-semibold">Sent when</th>
+                  <th className="px-5 py-4 font-semibold">To whom</th>
+                  <th className="px-5 py-4 font-semibold">Channel</th>
+                </tr>
+              </thead>
+              <tbody>
+                {triggered.map((t) => (
+                  <tr key={t.topic} className="border-b border-ink/5 last:border-0 align-top">
+                    <td className="px-5 py-4 font-semibold">{t.topic}</td>
+                    <td className="px-5 py-4 text-ink-soft">{t.trigger}</td>
+                    <td className="px-5 py-4 text-ink-soft">{t.audience}</td>
+                    <td className="px-5 py-4"><ChannelPill channel={t.channel} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

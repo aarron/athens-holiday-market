@@ -6,6 +6,7 @@ import { runApplicationReminders } from "@/lib/application-reminders";
 import { runNprFlagpoleReminder } from "@/lib/npr-flagpole-reminder";
 import { runScheduledBroadcasts } from "@/lib/broadcast-send";
 import { runBoothFeeReminders } from "@/lib/booth-fee";
+import { runArtistLogisticsEmails } from "@/lib/artist-logistics";
 import { runProspectScoutingCron } from "@/lib/prospect-research";
 
 export const runtime = "nodejs";
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
     ["nprFlagpole", runNprFlagpoleReminder],
     ["scheduledBroadcasts", runScheduledBroadcasts],
     ["boothFeeReminders", runBoothFeeReminders],
+    ["artistLogistics", runArtistLogisticsEmails],
     ["prospectScouting", runProspectScoutingCron],
   ] as const;
 

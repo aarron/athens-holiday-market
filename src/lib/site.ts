@@ -27,6 +27,8 @@ export const site = {
       "Pack extension cords and gaffer tape; power is limited, so battery/LED lighting is safest.",
       "Break down after 9pm each night and leave your space clean.",
     ],
+    // Who artists call or text with questions (in the week-of email).
+    contact: { name: "Jamie Voivedich", phone: "706.340.1973" },
     boothMapUrl: null as string | null, // e.g. "/artist-info/booth-map.png"
     menuUrl: null as string | null, // Big City Bread event-menu link or PDF
     menuNote:

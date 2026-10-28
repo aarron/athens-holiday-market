@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { applications, cycles } from "@/db/schema";
+import { applications, cycles, settings } from "@/db/schema";
 import { site } from "@/lib/site";
 import { createBoothFeeInvoice, paypalConfigured } from "@/lib/paypal";
 import { emailSent, sendBoothFeeReminder } from "@/lib/emails";
@@ -18,6 +18,10 @@ const AMOUNT = site.applications.boothFee;
 function todayInAthens(now: Date): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(now);
 }
+
+/** The admin "cancel" flag for one of this year's booth-fee reminders. */
+export const boothFeeReminderSkipKey = (kind: "due" | "overdue") =>
+  `send_skip:booth_fee_reminder:${site.event.year}:${kind}`;
 
 /** This year's booth-fee due date and the day after, as YYYY-MM-DD. */
 export function boothFeeDueDates(year: number) {
@@ -149,6 +153,11 @@ export async function runBoothFeeReminders(now = new Date()) {
   const { due: dueDate, dayAfter } = boothFeeDueDates(Number(today.slice(0, 4)));
   const stage = today === dueDate ? 1 : today === dayAfter ? 2 : 0;
   if (stage === 0) return { sent: 0, note: `not a reminder day (due ${dueDate})` };
+  // Admin canceled this reminder from the Automations tab.
+  const skip = await db.query.settings.findFirst({
+    where: eq(settings.key, boothFeeReminderSkipKey(stage === 1 ? "due" : "overdue")),
+  });
+  if (skip?.value) return { sent: 0, note: "canceled by admin" };
   const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true), columns: { id: true } });
   if (!cycle) return { sent: 0, note: "no active cycle" };
 

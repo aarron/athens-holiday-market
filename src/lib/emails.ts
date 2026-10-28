@@ -191,15 +191,33 @@ export async function sendBoothFeeReminder(
 export const CONTACT_TO = process.env.CONTACT_FORM_TO || "";
 
 /** Event-day logistics for an accepted artist (setup, booth, what to bring). */
-export async function sendArtistLogistics(to: string, name: string) {
-  if (!resend) return { skipped: true as const };
+export type ArtistLogisticsKind = "setup" | "week";
+
+/**
+ * Setup details for accepted artists. "setup" goes out Nov 15; "week" the
+ * Monday before the market, leading with who to call or text. Both list the
+ * setup details from site.artistInfo, so they stay in step with the hub.
+ */
+export function artistLogisticsEmail(name: string, kind: ArtistLogisticsKind = "setup") {
   const setup = site.artistInfo.setup
     .map((s) => `<li style="margin:0 0 6px;line-height:1.6">${escapeHtml(s)}</li>`)
     .join("");
-  const inner = `
+  const { contact } = site.artistInfo;
+  const tel = `+1${contact.phone.replace(/\D/g, "")}`;
+  const intro =
+    kind === "week"
+      ? `
+    <h1 style="margin:0 0 12px;font-size:23px">See you this week! 🎄</h1>
+    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, the ${site.event.year} ${site.name} is this
+      ${site.event.days[0].label.split(",")[0]} and ${site.event.days[1].label.split(",")[0]}, and we can't wait to see you.</p>
+    <p style="margin:0 0 16px;padding:14px 16px;background:#fbf6ea;border-radius:8px;line-height:1.6">If you have any
+      questions, please call or text ${escapeHtml(contact.name)} at
+      <a href="tel:${tel}" style="color:#3f7d22;font-weight:700;text-decoration:none">${escapeHtml(contact.phone)}</a>.</p>`
+      : `
     <h1 style="margin:0 0 12px;font-size:23px">Getting ready for the market 🎪</h1>
     <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, we can't wait to see you at the ${site.event.year}
-      ${site.name}! Here's what you need for event day.</p>
+      ${site.name}! Here's what you need for event day.</p>`;
+  const inner = `${intro}
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px">
       <tr><td style="padding:2px 0;line-height:1.6"><strong>When:</strong> ${site.event.days[0].label} &amp; ${site.event.days[1].label}, ${site.event.timeLabel}</td></tr>
       <tr><td style="padding:2px 0;line-height:1.6"><strong>Where:</strong> ${site.location.name}, ${site.location.street}, ${site.location.city}</td></tr>
@@ -209,13 +227,18 @@ export async function sendArtistLogistics(to: string, name: string) {
     <p style="margin:0 0 14px;line-height:1.6">${escapeHtml(site.artistInfo.menuNote)}</p>
     <p style="margin:0 0 18px"><a href="${site.url}/artist" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open your artist hub →</a></p>
     <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Your hub always has the latest — booth layout, setup times, and the Big City Bread menu. Log in with this email address.</p>`;
+  return {
+    subject:
+      kind === "week" ? `See you this week at the ${site.name}!` : `Event-day details for the ${site.name}`,
+    html: wrap(inner),
+  };
+}
+
+/** Email one accepted artist their setup details (admin's manual button). */
+export async function sendArtistLogistics(to: string, name: string) {
+  if (!resend) return { skipped: true as const };
   try {
-    return await resend.emails.send({
-      from: EMAIL_FROM,
-      to,
-      subject: `Event-day details for the ${site.name}`,
-      html: wrap(inner),
-    });
+    return await resend.emails.send({ from: EMAIL_FROM, to, ...artistLogisticsEmail(name, "setup") });
   } catch (e) {
     console.error("[emails] failed to send artist logistics:", e);
     return { error: true as const };

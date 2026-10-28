@@ -17,6 +17,10 @@ function skipKey(id: string): string | null {
   if (id === "npr-flagpole") return `send_skip:npr_flagpole_reminder:${site.event.year}`;
   if (id.startsWith("apply:")) return `send_skip:application_reminder:${site.event.year}:${id.slice("apply:".length)}`;
   if (id.startsWith("artist:")) return `send_skip:artist_reminder:${id.slice("artist:".length)}`;
+  if (id === "booth-fee:due" || id === "booth-fee:overdue")
+    return `send_skip:booth_fee_reminder:${site.event.year}:${id.slice("booth-fee:".length)}`;
+  if (id === "logistics:setup" || id === "logistics:week")
+    return `send_skip:artist_logistics:${site.event.year}:${id.slice("logistics:".length)}`;
   return null;
 }
 

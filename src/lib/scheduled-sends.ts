@@ -1,13 +1,21 @@
 import "server-only";
 import { and, eq, inArray, like } from "drizzle-orm";
 import { db } from "@/db";
-import { applications, artists, cycles, settings } from "@/db/schema";
+import { applications, artists, broadcasts, cycles, settings } from "@/db/schema";
 import { subscriberListSize, countForSegment } from "@/lib/broadcast-data";
 import { eventReminderPlan } from "@/lib/event-reminders";
 import { applicationReminderPlan, applicationReminderFlagKey } from "@/lib/application-reminders";
+import {
+  ARTIST_LOGISTICS_COPY_APPROVED,
+  artistLogisticsPlan,
+  artistLogisticsFlagKey,
+  artistLogisticsRecipients,
+} from "@/lib/artist-logistics";
+import { boothFeeDueDates, boothFeeReminderSkipKey } from "@/lib/booth-fee";
+import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
 import { site } from "@/lib/site";
 
-export type SendStatus = "sent" | "scheduled" | "window" | "missed" | "pending-decision" | "canceled";
+export type SendStatus = "sent" | "scheduled" | "window" | "missed" | "pending-decision" | "canceled" | "none-needed" | "needs-approval";
 
 export type ScheduledSend = {
   id: string;
@@ -18,7 +26,12 @@ export type ScheduledSend = {
   whenSort: string;
   status: SendStatus;
   sentAt: string | null;
+  /** Canceled from this tab (false: managed elsewhere, e.g. a broadcast). */
+  cancelable?: boolean;
 };
+
+/** Emails that go out when something happens, rather than on a date. */
+export type TriggeredSend = { topic: string; trigger: string; audience: string; channel: "Email" | "SMS" };
 
 export type ArtistReminderRow = {
   id: string;
@@ -59,8 +72,10 @@ export async function getScheduledSends(now: Date = new Date()) {
   const nprKey = `npr_flagpole_reminder:${site.event.year}`;
   const applyPlan = applicationReminderPlan();
   const applyKeys = applyPlan.map((p) => applicationReminderFlagKey(p.kind));
+  const logisticsPlan = artistLogisticsPlan();
+  const logisticsKeys = logisticsPlan.map((p) => artistLogisticsFlagKey(p.kind));
   const flagRows = await db.query.settings.findMany({
-    where: inArray(settings.key, [...eventKeys, nprKey, ...applyKeys]),
+    where: inArray(settings.key, [...eventKeys, nprKey, ...applyKeys, ...logisticsKeys]),
   });
   const flags = new Map(flagRows.map((r) => [r.key, r]));
 
@@ -139,10 +154,89 @@ export async function getScheduledSends(now: Date = new Date()) {
     sentAt: nprSent && nprFlag?.updatedAt ? nprFlag.updatedAt.toISOString() : null,
   });
 
+  // ── Setup-details emails → every accepted artist ──
+  const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
+  const acceptedCount = (await artistLogisticsRecipients()).length;
+  for (const p of logisticsPlan) {
+    const key = artistLogisticsFlagKey(p.kind);
+    const flag = flags.get(key);
+    const sent = !!flag?.value;
+    const canceled = skips.has(`send_skip:${key}`);
+    announcements.push({
+      id: `logistics:${p.kind}`,
+      topic: `${p.subject}${p.kind === "week" ? ` (with ${site.artistInfo.contact.name}'s number for questions)` : ""}`,
+      channel: "Email",
+      audience: `Accepted artists · ${acceptedCount}`,
+      when: fmtDate(p.sendDate),
+      whenSort: p.sendDate,
+      status: sent
+        ? "sent"
+        : canceled ? "canceled"
+        : !ARTIST_LOGISTICS_COPY_APPROVED ? "needs-approval"
+        : p.sendDate >= today ? "scheduled" : "missed",
+      sentAt: sent && flag?.updatedAt ? flag.updatedAt.toISOString() : null,
+    });
+  }
+
+  // ── Booth-fee reminders → accepted artists who haven't paid ──
+  if (cycle) {
+    const fees = await db
+      .select({ paid: applications.boothFeePaid, n: applications.boothFeeReminderCount, cat: applications.mediumCategory, invoicedAt: applications.boothFeeInvoicedAt })
+      .from(applications)
+      .where(and(eq(applications.cycleId, cycle.id), eq(applications.status, "accepted")));
+    const billed = fees.filter((f) => f.cat !== NONPROFIT_CATEGORY && f.invoicedAt);
+    const unpaid = billed.filter((f) => !f.paid).length;
+    const { due, dayAfter } = boothFeeDueDates(site.event.year);
+    const rows = [
+      { kind: "due" as const, date: due, stage: 1, topic: `Your ${site.name} booth fee is due today` },
+      { kind: "overdue" as const, date: dayAfter, stage: 2, topic: `Your ${site.name} booth fee was due yesterday` },
+    ];
+    for (const r of rows) {
+      const sentTo = billed.filter((f) => f.n >= r.stage).length;
+      const canceled = skips.has(boothFeeReminderSkipKey(r.kind));
+      const status: SendStatus = canceled
+        ? "canceled"
+        : today < r.date ? "scheduled"
+        : sentTo > 0 ? "sent"
+        : today === r.date ? "scheduled"
+        : "none-needed";
+      announcements.push({
+        id: `booth-fee:${r.kind}`,
+        topic: r.topic,
+        channel: "Email",
+        audience:
+          status === "sent"
+            ? `Artists who hadn't paid · sent to ${sentTo}`
+            : `Artists who haven't paid by then · ${unpaid} unpaid now`,
+        when: fmtDate(r.date),
+        whenSort: r.date,
+        status,
+        sentAt: null,
+      });
+    }
+  }
+
+  // ── One-off broadcasts an admin scheduled ──
+  const queued = await db.query.broadcasts.findMany({ where: eq(broadcasts.status, "scheduled") });
+  for (const b of queued) {
+    if (!b.scheduledFor) continue;
+    const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(b.scheduledFor);
+    announcements.push({
+      id: `broadcast:${b.id}`,
+      topic: b.subject,
+      channel: "Email",
+      audience: `Broadcast · ${b.segment} (cancel it from the broadcast list)`,
+      when: fmtDate(date),
+      whenSort: date,
+      status: "scheduled",
+      sentAt: null,
+      cancelable: false,
+    });
+  }
+
   announcements.sort((a, b) => a.whenSort.localeCompare(b.whenSort));
 
   // ── Artist-page reminders → per accepted artist, ~7 days after acceptance ──
-  const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true) });
   const artistReminders: ArtistReminderRow[] = [];
   if (cycle) {
     const rows = await db
@@ -192,9 +286,22 @@ export async function getScheduledSends(now: Date = new Date()) {
     artistReminders.sort((a, b) => Number(a.status === "sent") - Number(b.status === "sent"));
   }
 
+  const triggered: TriggeredSend[] = [
+    { topic: "Application received", trigger: "Right after someone applies", audience: "The applicant", channel: "Email" },
+    { topic: "Booth-fee invoice (from PayPal)", trigger: "Right after acceptance emails are sent", audience: "Accepted artists (not non-profits)", channel: "Email" },
+    { topic: "Payment received", trigger: "When PayPal reports a booth fee paid", audience: "That artist", channel: "Email" },
+    { topic: "Your share images are ready", trigger: "When an artist's page goes live or is submitted, or 7 days after acceptance", audience: "Each accepted artist, once", channel: "Email" },
+    { topic: "Spotlight images for posting", trigger: "First acceptance send of the year", audience: "Social posting team", channel: "Email" },
+    { topic: "Artist page to review", trigger: "When an artist submits their page", audience: "Admins", channel: "Email" },
+    { topic: "Your artist page is live", trigger: "When an admin approves an artist's page", audience: "That artist", channel: "Email" },
+    { topic: "Contact form message", trigger: "When someone uses the Contact form", audience: "The team inbox", channel: "Email" },
+    { topic: "Text opt-in record", trigger: "When someone signs up for texts", audience: "The team inbox (consent record)", channel: "Email" },
+  ];
+
   return {
-    cronSchedule: "Runs daily at 9:00am ET",
+    cronSchedule: "Runs daily at 10:00am ET (9:00am after daylight saving ends)",
     announcements,
+    triggered,
     artistReminders,
     artistReminderSubject: `Don't forget to set up your ${site.name} artist page`,
   };

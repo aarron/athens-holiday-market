@@ -24,11 +24,11 @@ export function artistLogisticsPlan() {
 }
 
 /**
- * Aarron approves artist email copy before it can send. Flip to true once he
- * has approved both versions; until then the cron sends nothing and the
- * Automations tab says the copy needs approval.
+ * Aarron approves artist email copy before it can send. While false, the cron
+ * sends nothing and the Automations tab says the copy needs approval.
+ * Approved by Aarron on Oct 28, 2026 (both versions).
  */
-export const ARTIST_LOGISTICS_COPY_APPROVED = false;
+export const ARTIST_LOGISTICS_COPY_APPROVED = true;
 
 export const artistLogisticsFlagKey = (kind: ArtistLogisticsKind) => `artist_logistics:${site.event.year}:${kind}`;
 

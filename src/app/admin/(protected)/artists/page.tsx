@@ -48,7 +48,12 @@ export default async function AdminArtists({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <h1 className="text-3xl font-extrabold">Artist pages</h1>
-        <EditMyArtistPageButton />
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/artist-hub" className="text-sm font-semibold link">
+            Preview the artist hub
+          </Link>
+          <EditMyArtistPageButton />
+        </div>
       </div>
 
       <p className="text-sm text-ink-soft">

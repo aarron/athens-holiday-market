@@ -6,6 +6,7 @@ import { SafeImg } from "@/components/admin/safe-img";
 import { AddArtistForm } from "@/components/admin/add-artist-form";
 import { EditMyArtistPageButton } from "@/components/admin/edit-my-artist-page-button";
 import { ArtistRowActions } from "@/components/admin/artist-row-actions";
+import { readKitDownloads, kitDownloadTotal } from "@/lib/social-kit-downloads";
 
 export const metadata: Metadata = { title: "Artists", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -24,8 +25,8 @@ export default async function AdminArtists({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab } = await searchParams;
-  const artists = await listArtistsForAdmin();
-  const me = await getSessionUser();
+  const [artists, me, kits] = await Promise.all([listArtistsForAdmin(), getSessionUser(), readKitDownloads()]);
+  const kitArtists = artists.filter((a) => kits.has(a.id)).length;
   const isAdmin = me?.role === "admin";
 
   // Buckets are mutually exclusive: a submission awaiting review takes priority
@@ -49,6 +50,11 @@ export default async function AdminArtists({
         <h1 className="text-3xl font-extrabold">Artist pages</h1>
         <EditMyArtistPageButton />
       </div>
+
+      <p className="text-sm text-ink-soft">
+        <strong className="text-ink">{kitArtists}</strong> of {artists.length} artists have downloaded their share
+        images (counted since Oct 28, 2026).
+      </p>
 
       {isAdmin && <AddArtistForm />}
 
@@ -118,6 +124,20 @@ export default async function AdminArtists({
                   <p className="truncate text-sm text-ink-soft">{a.medium}</p>
                 </div>
                 <div className="relative z-10 flex flex-wrap items-center justify-end gap-2">
+                  {(() => {
+                    const k = kits.get(a.id);
+                    if (!k) return null;
+                    const n = kitDownloadTotal(k);
+                    const last = new Date(k.last).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
+                    return (
+                      <span
+                        className="rounded-full bg-sky-soft px-2.5 py-0.5 text-xs font-bold text-sky-deep"
+                        title={`Share images downloaded ${n} time${n === 1 ? "" : "s"}, last on ${last}`}
+                      >
+                        Kit ↓ {n}
+                      </span>
+                    );
+                  })()}
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${s.cls}`}>
                     {s.label}
                   </span>

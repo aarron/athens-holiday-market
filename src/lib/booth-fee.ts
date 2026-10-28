@@ -13,7 +13,19 @@ import { formatUsd } from "@/lib/money";
 const notNonprofit = or(isNull(applications.mediumCategory), ne(applications.mediumCategory, NONPROFIT_CATEGORY));
 
 const AMOUNT = site.applications.boothFee;
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Today's date in Athens as YYYY-MM-DD. */
+function todayInAthens(now: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(now);
+}
+
+/** This year's booth-fee due date and the day after, as YYYY-MM-DD. */
+export function boothFeeDueDates(year: number) {
+  const { month, day } = site.applications.boothFeeDue;
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const due = new Date(Date.UTC(year, month - 1, day));
+  return { due: iso(due), dayAfter: iso(new Date(due.getTime() + 86_400_000)) };
+}
 
 export type FeeShare = { amount: number; partnerName: string | null };
 
@@ -128,11 +140,18 @@ export async function remindApplication(appId: number) {
 }
 
 /**
- * Daily cron: nudge accepted artists whose invoice is still unpaid — once at
- * ~1 week and again at ~2 weeks after invoicing. `boothFeeReminderCount` tracks
- * which nudges have gone out so none repeat.
+ * Daily cron: remind accepted artists whose invoice is still unpaid, on the
+ * due date (Oct 31) and the day after, in Athens time. `boothFeeReminderCount`
+ * records which went out (1 = due date, 2 = day after) so none repeat.
  */
 export async function runBoothFeeReminders(now = new Date()) {
+  const today = todayInAthens(now);
+  const { due: dueDate, dayAfter } = boothFeeDueDates(Number(today.slice(0, 4)));
+  const stage = today === dueDate ? 1 : today === dayAfter ? 2 : 0;
+  if (stage === 0) return { sent: 0, note: `not a reminder day (due ${dueDate})` };
+  const cycle = await db.query.cycles.findFirst({ where: eq(cycles.isActive, true), columns: { id: true } });
+  if (!cycle) return { sent: 0, note: "no active cycle" };
+
   const rows = await db
     .select({
       id: applications.id,
@@ -145,6 +164,7 @@ export async function runBoothFeeReminders(now = new Date()) {
     .from(applications)
     .where(
       and(
+        eq(applications.cycleId, cycle.id),
         eq(applications.status, "accepted"),
         eq(applications.boothFeePaid, false),
         isNotNull(applications.boothFeeInvoicedAt),
@@ -155,16 +175,13 @@ export async function runBoothFeeReminders(now = new Date()) {
   let sent = 0;
   for (const a of rows) {
     if (!a.invoicedAt || invalidEmail(a.email)) continue;
-    const weeks = Math.floor((now.getTime() - new Date(a.invoicedAt).getTime()) / WEEK_MS);
-    // Next due nudge: 1 after >=1 week, 2 after >=2 weeks. Stop at 2.
-    const due = weeks >= 2 ? 2 : weeks >= 1 ? 1 : 0;
-    if (due <= a.reminderCount) continue;
+    if (a.reminderCount >= stage) continue;
 
     const r = await sendBoothFeeReminder(a.email, a.name, (await feeShareFor(a.id)).amount, a.invoiceUrl);
     if (!emailSent(r)) continue;
     await db
       .update(applications)
-      .set({ boothFeeReminderCount: due, updatedAt: sql`now()` })
+      .set({ boothFeeReminderCount: stage, updatedAt: sql`now()` })
       .where(eq(applications.id, a.id));
     sent++;
   }

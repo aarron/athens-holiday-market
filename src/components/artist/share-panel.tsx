@@ -4,6 +4,7 @@ import { useState } from "react";
 import { isNonprofitMedium } from "@/lib/nonprofit";
 import { site } from "@/lib/site";
 import { makeShareCard, type ShareCardKind as Kind } from "@/lib/share-card";
+import { recordKitDownload } from "@/lib/artist-actions";
 import { Button } from "@/components/ui/button";
 import { StatusMessage } from "@/components/ui/status-message";
 
@@ -53,6 +54,9 @@ export function SharePanel({
         a.click();
         URL.revokeObjectURL(url);
       }
+      // Count it for the admin (fire-and-forget; a cancelled share throws
+      // AbortError above and isn't counted).
+      void recordKitDownload(kind);
     } catch (e) {
       if ((e as Error)?.name !== "AbortError") setErr("Couldn't make the image. Please try again.");
     } finally {

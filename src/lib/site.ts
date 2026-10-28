@@ -74,6 +74,9 @@ export const site = {
     maxPhotoMb: 10,
     // Booth fee billed to accepted artists via PayPal invoice ($ total, both nights).
     boothFee: 75,
+    // Booth fees are due Oct 31 every year. Unpaid artists get a reminder that
+    // day and the day after (lib/booth-fee.ts, daily cron).
+    boothFeeDue: { month: 10, day: 31 },
   },
   nav: [
     { href: "/", label: "Home" },

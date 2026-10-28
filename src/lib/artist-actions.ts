@@ -63,3 +63,21 @@ export async function submitArtistDraft(input: ArtistDraftInput) {
   revalidatePath("/admin/artists");
   return { ok: true };
 }
+
+/**
+ * Count a share-image download from the portal (the image is drawn in the
+ * browser, so this is the only signal). Never throws: tracking must not get
+ * in the way of the download.
+ */
+export async function recordKitDownload(kind: string) {
+  if (kind !== "square" && kind !== "story") return;
+  try {
+    const { artist } = await requireArtistAccess();
+    const { addKitDownload } = await import("@/lib/social-kit-downloads");
+    await addKitDownload(artist.id, kind);
+  } catch (e) {
+    // requireArtistAccess redirects (throws) for a signed-out visitor; ignore.
+    if ((e as { digest?: string })?.digest?.startsWith("NEXT_REDIRECT")) return;
+    console.error("[social-kit] couldn't record download:", e);
+  }
+}

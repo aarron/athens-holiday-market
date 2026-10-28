@@ -22,7 +22,7 @@ export const site = {
   // (booth map image, Big City Bread event menu) when they're ready.
   artistInfo: {
     setup: [
-      "Load-in is the afternoon of Thursday, December 10, before doors at 5pm — exact window to be confirmed.",
+      "Setup is 3–4:45pm on Thursday, December 10, before doors open at 5pm.",
       "Bring your own table, tent weights, and lighting — it's an evening market, so plan to light your booth.",
       "Pack extension cords and gaffer tape; power is limited, so battery/LED lighting is safest.",
       "Break down after 9pm each night and leave your space clean.",

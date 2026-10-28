@@ -172,11 +172,11 @@ const faqs: FaqItem[] = [
     ),
   },
   {
-    q: "When is setup and load-in?",
+    q: "When is setup?",
     a: (
       <p>
-        Load-in is the afternoon of {site.event.days[0].label}, and again on {site.event.days[1].label}
-        , at 3:00pm. Check in with Jamie to get your parking pass and booth number. Plan to break down
+        Setup is 3–4:45pm on {site.event.days[0].label}, and again on {site.event.days[1].label} at
+        3:00pm. Check in with Jamie to get your parking pass and booth number. Plan to break down
         after 9pm each night and leave your space clean.
       </p>
     ),

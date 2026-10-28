@@ -3,7 +3,7 @@ import { ClockIcon, MapPinIcon, ExternalIcon, GiftIcon } from "@/components/icon
 
 /**
  * The artist hub's event-day section: when and where, booth map, setup and
- * load-in, food ordering. Shared by the hub and the admin preview, so what
+ * food ordering. Shared by the hub and the admin preview, so what
  * staff review is exactly what artists see. Setup lines live in
  * site.artistInfo and also go out in the setup-details emails.
  */
@@ -52,7 +52,7 @@ export function EventDayEssentials() {
 
       <div className="mt-6">
         <h3 className={sectionTitle}>
-          <ClockIcon size={16} aria-hidden /> Setup &amp; load-in
+          <ClockIcon size={16} aria-hidden /> Setup
         </h3>
         <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-ink-soft">
           {info.setup.map((s) => (

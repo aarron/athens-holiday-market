@@ -222,7 +222,7 @@ export function artistLogisticsEmail(name: string, kind: ArtistLogisticsKind = "
       <tr><td style="padding:2px 0;line-height:1.6"><strong>When:</strong> ${site.event.days[0].label} &amp; ${site.event.days[1].label}, ${site.event.timeLabel}</td></tr>
       <tr><td style="padding:2px 0;line-height:1.6"><strong>Where:</strong> ${site.location.name}, ${site.location.street}, ${site.location.city}</td></tr>
     </table>
-    <p style="margin:0 0 6px;font-weight:700">Setup &amp; load-in</p>
+    <p style="margin:0 0 6px;font-weight:700">Setup</p>
     <ul style="margin:0 0 14px;padding-left:20px">${setup}</ul>
     <p style="margin:0 0 14px;line-height:1.6">${escapeHtml(site.artistInfo.menuNote)}</p>
     <p style="margin:0 0 18px"><a href="${site.url}/artist" style="display:inline-block;background:#3f7d22;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700">Open your artist hub →</a></p>

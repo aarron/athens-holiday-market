@@ -177,7 +177,13 @@ export async function runBoothFeeReminders(now = new Date()) {
     if (!a.invoicedAt || invalidEmail(a.email)) continue;
     if (a.reminderCount >= stage) continue;
 
-    const r = await sendBoothFeeReminder(a.email, a.name, (await feeShareFor(a.id)).amount, a.invoiceUrl);
+    const r = await sendBoothFeeReminder(
+      a.email,
+      a.name,
+      (await feeShareFor(a.id)).amount,
+      a.invoiceUrl,
+      stage === 1 ? "due" : "overdue",
+    );
     if (!emailSent(r)) continue;
     await db
       .update(applications)

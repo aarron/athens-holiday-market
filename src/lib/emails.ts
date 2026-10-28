@@ -124,16 +124,54 @@ export async function sendArtistPageReminder(to: string, name: string) {
   }
 }
 
-/** Nudge an accepted artist whose booth fee is still unpaid, linking the invoice. */
-export async function sendBoothFeeReminder(to: string, name: string, amount: number, invoiceUrl: string | null) {
+/** "October 31": the booth-fee due date, same every year. */
+export function boothFeeDueLabel(): string {
+  const { month, day } = site.applications.boothFeeDue;
+  return `${new Date(Date.UTC(2000, month - 1, day)).toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${day}`;
+}
+
+/**
+ * Nudge an accepted artist whose booth fee is still unpaid, linking the
+ * invoice. `when` picks the scheduled copy (due date / day after, approved by
+ * Aarron Oct 2026); without it, the general reminder (admin's manual button).
+ */
+export async function sendBoothFeeReminder(
+  to: string,
+  name: string,
+  amount: number,
+  invoiceUrl: string | null,
+  when?: "due" | "overdue",
+) {
   if (!resend) return { skipped: true as const };
+  const fee = formatUsd(amount);
+  const dueLabel = boothFeeDueLabel();
   const payButton = invoiceUrl
-    ? `<p style="margin:0 0 18px"><a href="${invoiceUrl}" style="display:inline-block;background:#d21c96;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:700">Pay your ${formatUsd(amount)} booth fee →</a></p>`
+    ? `<p style="margin:0 0 18px"><a href="${invoiceUrl}" style="display:inline-block;background:#d21c96;color:#fff;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:700">Pay your ${fee} booth fee →</a></p>`
     : `<p style="margin:0 0 14px;line-height:1.6">Look for the PayPal invoice in your inbox (check spam too) and follow the Pay Now button.</p>`;
+  const copy =
+    when === "due"
+      ? {
+          subject: `Your ${site.name} booth fee is due today`,
+          heading: "A quick reminder: your booth fee is due today",
+          text: `Hi ${escapeHtml(name)}, we're so glad you'll be at the ${site.event.year} ${site.name}!
+      Your <strong>${fee} booth fee</strong> is due today, <strong>${dueLabel}</strong>, and it's still showing as unpaid.`,
+        }
+      : when === "overdue"
+        ? {
+            subject: `Your ${site.name} booth fee was due yesterday`,
+            heading: "Your booth fee is past due",
+            text: `Hi ${escapeHtml(name)}, your <strong>${fee} booth fee</strong> was due yesterday, <strong>${dueLabel}</strong>,
+      and we haven't received it yet. Please pay as soon as you can so we can hold your space at the market.`,
+          }
+        : {
+            subject: `Reminder: your ${site.name} booth fee`,
+            heading: "A quick reminder about your booth fee",
+            text: `Hi ${escapeHtml(name)}, we're so glad you'll be at the ${site.event.year} ${site.name}!
+      Your <strong>${fee} booth fee</strong> is still showing as unpaid, and your space is held until it's in.`,
+          };
   const inner = `
-    <h1 style="margin:0 0 12px;font-size:22px">A quick reminder about your booth fee</h1>
-    <p style="margin:0 0 14px;line-height:1.6">Hi ${escapeHtml(name)}, we're so glad you'll be at the ${site.event.year} ${site.name}!
-      Your <strong>${formatUsd(amount)} booth fee</strong> is still showing as unpaid, and your space is held until it's in.</p>
+    <h1 style="margin:0 0 12px;font-size:22px">${copy.heading}</h1>
+    <p style="margin:0 0 14px;line-height:1.6">${copy.text}</p>
     ${payButton}
     <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.6">Already paid? Thank you — you can ignore this, it may have crossed in the mail.
       Questions? Just reply to this email.</p>`;
@@ -141,7 +179,7 @@ export async function sendBoothFeeReminder(to: string, name: string, amount: num
     return await resend.emails.send({
       from: EMAIL_FROM,
       to,
-      subject: `Reminder: your ${site.name} booth fee`,
+      subject: copy.subject,
       html: wrap(inner),
     });
   } catch (e) {

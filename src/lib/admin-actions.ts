@@ -8,7 +8,7 @@ import { applications, votes, comments, artists, artistPhotos, cycles } from "@/
 import { ensureDbUser, requireAdmin } from "@/lib/admin-auth";
 import { cleanUrl, sanitizeSocials } from "@/lib/clean";
 import { logAdminEvent } from "@/lib/audit";
-import { sendDecisionEmail, sendArtistPageLive, sendArtistLogistics } from "@/lib/emails";
+import { emailSent, sendDecisionEmail, sendArtistPageLive, sendArtistLogistics } from "@/lib/emails";
 import { promoteArtistSubmission } from "@/lib/artist-publish";
 
 function slugify(s: string) {
@@ -215,7 +215,7 @@ export async function emailAcceptedArtistsLogistics() {
   let sent = 0;
   for (const a of accepted) {
     const res = await sendArtistLogistics(a.email, a.name);
-    if (!(res && "skipped" in res) && !(res && "error" in res)) sent++;
+    if (emailSent(res)) sent++;
   }
   return { ok: true, total: accepted.length, sent };
 }

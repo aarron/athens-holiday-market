@@ -2,7 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { settings } from "@/db/schema";
-import { sendNprFlagpoleReminder } from "@/lib/emails";
+import { emailSent, sendNprFlagpoleReminder } from "@/lib/emails";
 import { normalizePhone, sendSms, twilioConfigured } from "@/lib/twilio";
 import { site } from "@/lib/site";
 
@@ -39,7 +39,7 @@ export async function runNprFlagpoleReminder(now: Date = new Date()) {
   if (!REMINDER_EMAIL && !REMINDER_PHONE) return { sent: false, note: "no reminder contact configured" };
 
   const emailRes = REMINDER_EMAIL ? await sendNprFlagpoleReminder(REMINDER_EMAIL) : { skipped: true as const };
-  const emailOk = !(emailRes && "skipped" in emailRes) && !(emailRes && "error" in emailRes);
+  const emailOk = emailSent(emailRes);
 
   let smsOk = false;
   if (twilioConfigured && REMINDER_PHONE) {

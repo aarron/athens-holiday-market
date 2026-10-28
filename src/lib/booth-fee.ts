@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { applications, cycles } from "@/db/schema";
 import { site } from "@/lib/site";
 import { createBoothFeeInvoice, paypalConfigured } from "@/lib/paypal";
-import { sendBoothFeeReminder } from "@/lib/emails";
+import { emailSent, sendBoothFeeReminder } from "@/lib/emails";
 import { NONPROFIT_CATEGORY } from "@/lib/nonprofit";
 import { pairSharedBooths } from "@/lib/booths";
 import { formatUsd } from "@/lib/money";
@@ -123,7 +123,7 @@ export async function remindApplication(appId: number) {
   if (app.mediumCategory === NONPROFIT_CATEGORY) return { error: "Non-profits don't pay a booth fee." };
   if (invalidEmail(app.email)) return { error: "No valid email on file." };
   const r = await sendBoothFeeReminder(app.email, app.name, (await feeShareFor(app.id)).amount, app.paypalInvoiceUrl);
-  if (r && "error" in r) return { error: "Couldn't send the reminder email." };
+  if (!emailSent(r)) return { error: "Couldn't send the reminder email." };
   return { ok: true };
 }
 
@@ -161,7 +161,7 @@ export async function runBoothFeeReminders(now = new Date()) {
     if (due <= a.reminderCount) continue;
 
     const r = await sendBoothFeeReminder(a.email, a.name, (await feeShareFor(a.id)).amount, a.invoiceUrl);
-    if (r && "error" in r) continue;
+    if (!emailSent(r)) continue;
     await db
       .update(applications)
       .set({ boothFeeReminderCount: due, updatedAt: sql`now()` })

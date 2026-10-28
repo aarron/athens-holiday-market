@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { settings, cycles } from "@/db/schema";
 import { publishSpotlightZip } from "@/lib/social-kit";
-import { sendJudgeSocialKit, SOCIAL_POSTING_TEAM } from "@/lib/emails";
+import { emailSent, sendJudgeSocialKit, SOCIAL_POSTING_TEAM } from "@/lib/emails";
 
 const sentKey = (cycleId: number) => `posting_team_kit_sent:${cycleId}`;
 
@@ -40,7 +40,7 @@ export async function refreshAndNotifyPostingTeam(cycleId: number): Promise<{ ur
     const res = await sendJudgeSocialKit(SOCIAL_POSTING_TEAM, url);
     // Only mark as sent if we actually handed it to Resend, so an unconfigured
     // email env retries on the next accepted-batch send instead of going silent.
-    const emailed = !(res && ("skipped" in res || "error" in res));
+    const emailed = emailSent(res);
     if (emailed) {
       await db
         .insert(settings)
@@ -62,7 +62,7 @@ export async function emailPostingTeamNow(): Promise<{ ok: true; url: string; co
   try {
     const { url, count } = await publishSpotlightZip(cycle.id);
     const res = await sendJudgeSocialKit(SOCIAL_POSTING_TEAM, url);
-    if (res && "error" in res) return { error: "Couldn't send. Please try again." };
+    if (!emailSent(res)) return { error: "Couldn't send. Please try again." };
     // Record that the team has now been notified for this cycle.
     await db
       .insert(settings)

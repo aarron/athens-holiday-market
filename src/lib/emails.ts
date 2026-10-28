@@ -4,6 +4,17 @@ import { site } from "@/lib/site";
 import { emailShell as wrap } from "@/lib/email-shell";
 
 /** Confirmation that an artist's application was received. Best-effort. */
+/**
+ * Did an email actually go out? Resend returns `{ data, error: null }` on
+ * success, so checking `"error" in res` is always true; check the value. Our
+ * own senders return `{ skipped }` (email not configured) or `{ error: true }`.
+ */
+export function emailSent(res: unknown): boolean {
+  if (!res || typeof res !== "object") return false;
+  if ("skipped" in res) return false;
+  return !("error" in res && (res as { error: unknown }).error);
+}
+
 export async function sendApplicationReceived(to: string, name: string) {
   if (!resend) {
     console.warn("[emails] RESEND not configured; skipping application-received email");

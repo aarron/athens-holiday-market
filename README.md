@@ -1,8 +1,19 @@
 # Athens Holiday Market
 
-The website and jury/admin system for the **Athens Holiday Market** — a juried, two-evening
-market of handmade goods from local artists, held each December in the Big City Bread
-courtyard in Athens, GA.
+The **Athens Holiday Market** is a two-evening holiday market of handmade goods by local
+artists. It takes place each December in the courtyard of Big City Bread, a café in Athens,
+Georgia. The market is juried: artists apply, a panel of judges reviews their work, and only
+accepted artists get a booth.
+
+Running a juried market takes a great deal of administrative work: collecting applications
+and photos, getting judges to vote, telling every applicant the outcome, collecting booth
+fees, building artist pages and keeping shoppers informed. This repository is the system
+that handles all of it, in two parts:
+
+- **The public website**, where shoppers learn about the event and browse the artists, and
+  where artists apply.
+- **The organizers' console**, where judges review and vote on applications, and organizers
+  accept artists, send email and text messages, and track booth-fee payments.
 
 Live at **[athensholidaymarket.com](https://athensholidaymarket.com)**.
 
